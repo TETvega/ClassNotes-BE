@@ -1,25 +1,33 @@
+using ClassNotes.API;
+using Microsoft.AspNetCore.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var startup = new Startup(builder.Configuration);
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+startup.ConfigureServices(builder.Services);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-	app.UseSwagger();
-	app.UseSwaggerUI();
-}
+startup.Configure(app, app.Environment);
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
+//using del seeder
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+//    try
+//    {
+//        var transactionalContext = services.GetRequiredService<CONTEXT>();
+//        var userManager = services.GetRequiredService<UserManager<USERENTITY>>();
+//        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+//        await SEEDER.LoadDataAsync(transactionalContext, userManager, roleManager, loggerFactory);
+//    }
+//    catch (Exception e)
+//    {
+//        var logger = loggerFactory.CreateLogger<Program>();
+//        logger.LogError(e, "Error al ejecutar el Seed de datos");
+//    }
+//}
 
 app.Run();
