@@ -1,4 +1,6 @@
 using ClassNotes.API;
+using ClassNotes.API.Database;
+using ClassNotes.API.Database.Entities;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,23 +13,25 @@ var app = builder.Build();
 
 startup.Configure(app, app.Environment);
 
-//using del seeder
-//using (var scope = app.Services.CreateScope())
-//{
-//    var services = scope.ServiceProvider;
-//    var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-//    try
-//    {
-//        var transactionalContext = services.GetRequiredService<CONTEXT>();
-//        var userManager = services.GetRequiredService<UserManager<USERENTITY>>();
-//        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-//        await SEEDER.LoadDataAsync(transactionalContext, userManager, roleManager, loggerFactory);
-//    }
-//    catch (Exception e)
-//    {
-//        var logger = loggerFactory.CreateLogger<Program>();
-//        logger.LogError(e, "Error al ejecutar el Seed de datos");
-//    }
-//}
+// AM: using para cargar la data del seeder
+using (var scope = app.Services.CreateScope())
+{
+	var services = scope.ServiceProvider;
+	var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+
+	try
+	{
+		var context = services.GetRequiredService<ClassNotesContext>();
+		var userManager = services.GetRequiredService<UserManager<UserEntity>>();
+		var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+		await ClassNotesSeeder.LoadDataAsync(context, loggerFactory, userManager, roleManager);
+	}
+	catch (Exception e)
+	{
+		var logger = loggerFactory.CreateLogger<Program>();
+		logger.LogError(e, "Error al ejecutar el Seed de datos");
+	}
+}
 
 app.Run();

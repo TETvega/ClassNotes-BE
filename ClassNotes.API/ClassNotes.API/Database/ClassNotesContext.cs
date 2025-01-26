@@ -4,15 +4,18 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Database.Configuration;
+using ClassNotes.API.Services.Audit;
 
 namespace ClassNotes.API.Database
 {
     public class ClassNotesContext : IdentityDbContext<UserEntity>
     {
+		private readonly IAuditService _auditService;
 
-        public ClassNotesContext(DbContextOptions options) : base(options)
+		public ClassNotesContext(DbContextOptions options, IAuditService auditService) : base(options)
         {
-        }
+			this._auditService = auditService;
+		}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,13 +74,13 @@ namespace ClassNotes.API.Database
                 {
                     if (entry.State == EntityState.Added)
                     {
-                        entity.CreatedBy = "41e958ea-a9e3-4deb-bccb-e17a987164c7";
-                        entity.CreatedDate = DateTime.Now;
+                        entity.CreatedBy = _auditService.GetUserId();
+						entity.CreatedDate = DateTime.Now;
                     }
                     else
                     {
-                        entity.UpdatedBy = "41e958ea-a9e3-4deb-bccb-e17a987164c7";
-                        entity.UpdatedDate = DateTime.Now;
+                        entity.UpdatedBy = _auditService.GetUserId();
+						entity.UpdatedDate = DateTime.Now;
                     }
                 }
             }
@@ -87,7 +90,7 @@ namespace ClassNotes.API.Database
 
         public DbSet<ActivityEntity> Activities { get; set; }
         public DbSet<AttendanceEntity> Attendances { get; set; }
-        public DbSet<CenterEntity> Centers{ get; set; }
+        public DbSet<CenterEntity> Centers { get; set; }
         public DbSet<CourseEntity> Courses { get; set; }
         public DbSet<CourseNoteEntity> CoursesNotes { get; set; }
         public DbSet<CourseSettingEntity> CoursesSettings { get; set; }

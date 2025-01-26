@@ -5,6 +5,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
+using ClassNotes.API.Services.Audit;
+using ClassNotes.API.Helpers.Automapper;
+using ClassNotes.API.Services.Auth;
+using ClassNotes.API.Services.Activities;
+using ClassNotes.API.Services.Centers;
+using ClassNotes.API.Services.CourseNotes;
+using ClassNotes.API.Services.Courses;
+using ClassNotes.API.Services.Students;
+using ClassNotes.API.Services.Attendances;
+using ClassNotes.API.Services.CoursesSettings;
 
 namespace ClassNotes.API;
 
@@ -24,58 +34,68 @@ public class Startup
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
 
-        // ----------------- CG  -----------------
-        //DbContext
+        // ----------------- CG -----------------
+        // Contexto de la base de datos
         services.AddDbContext<ClassNotesContext>(options =>
         options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-        //servicios de interfaces 
+		// Servicios personalizados
+		services.AddTransient<IActivitiesService, ActivitiesService>();
+		services.AddTransient<IAttendancesService, AttendancesService>();
+		services.AddTransient<ICentersService, CentersService>();
+		services.AddTransient<ICourseNotesService, CourseNotesService>();
+		services.AddTransient<ICourseSettingsService, CourseSettingsService>();
+		services.AddTransient<ICoursesService, CoursesService>();
+		services.AddTransient<IStudentsService, StudentsService>();
 
-            //vacio por ahora...
+		// Servicios de seguridad
+		services.AddTransient<IAuditService, AuditService>();
+		services.AddTransient<IAuthService, AuthService>();
 
-        //Identity 
-        services.AddIdentity<UserEntity, IdentityRole>(options =>
+		// Servicio de AutoMapper
+		services.AddAutoMapper(typeof(AutoMapperProfile));
+
+		// Identity 
+		services.AddIdentity<UserEntity, IdentityRole>(options =>
         {
             options.SignIn.RequireConfirmedAccount = false;
         }).AddEntityFrameworkStores<ClassNotesContext>()
           .AddDefaultTokenProviders();
 
-        //    services.AddAuthentication(options =>
-        //    {
-        //        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        //        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        //        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        //    }).AddJwtBearer(options =>
-        //    {
-        //        options.SaveToken = true;
-        //        options.RequireHttpsMetadata = false;
-        //        options.TokenValidationParameters = new TokenValidationParameters
-        //        {
-        //            ValidateIssuer = true,
-        //            ValidateAudience = false,
-        //            ValidAudience = Configuration["JWT:ValidAudience"],
-        //            ValidIssuer = Configuration["JWT:ValidIssuer"],
-        //            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))    //llave 
-        //        };
-        //    });
+		services.AddAuthentication(options =>
+		{
+			options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+			options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+			options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+		}).AddJwtBearer(options =>
+		{
+			options.SaveToken = true;
+			options.RequireHttpsMetadata = false;
+			options.TokenValidationParameters = new TokenValidationParameters
+			{
+				ValidateIssuer = true,
+				ValidateAudience = false,
+				ValidAudience = Configuration["JWT:ValidAudience"],
+				ValidIssuer = Configuration["JWT:ValidIssuer"],
+				ClockSkew = TimeSpan.Zero,
+				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
+			};
+		});
 
-        //Automapper (falta que definir el AutoMapperProfile)
-        //services.AddAutoMapper(typeof(AutoMapperProfile));
+		// CORS Configuration
+		services.AddCors(opt =>
+		{
+			var allowURLS = Configuration.GetSection("AllowURLS").Get<string[]>();
 
-        //Cors
-        //services.AddCors(opt =>
-        //{
-        //    var allowURLS = Configuration.GetSection("AllowURLS").Get<string[]>();
+			opt.AddPolicy("CorsPolicy", builder => builder
+			.WithOrigins(allowURLS)
+			.AllowAnyMethod()
+			.AllowAnyHeader()
+			.AllowCredentials());
+		});
 
-        //    opt.AddPolicy("CorsPolicy", builder => builder
-        //    .WithOrigins(allowURLS)
-        //    .AllowAnyMethod()
-        //    .AllowAnyHeader()
-        //    .AllowCredentials());
-        //});
-
-        // ----------------- CG  -----------------
-    }
+		// ----------------- CG  -----------------
+	}
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
@@ -86,12 +106,13 @@ public class Startup
         }
 
         app.UseHttpsRedirection();
+
         app.UseRouting();
 
-        //useCors
-        //app.UseCors("CorsPolicy");
+        app.UseCors("CorsPolicy");
 
         app.UseAuthentication();
+
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints =>

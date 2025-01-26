@@ -1,0 +1,15 @@
+meta {
+  name: Get by id
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/students/id
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

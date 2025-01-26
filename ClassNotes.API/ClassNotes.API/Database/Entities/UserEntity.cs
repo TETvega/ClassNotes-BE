@@ -22,7 +22,7 @@ namespace ClassNotes.API.Database.Entities
 
         
         [Column("default_course_setting_id")]
-        public Guid DefaultCourseSettingId { get; set; }
+        public Guid? DefaultCourseSettingId { get; set; }
         [ForeignKey(nameof(DefaultCourseSettingId))]
         public virtual CourseSettingEntity DefaultCourseSettings { get; set; }
 
