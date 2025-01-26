@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using ClassNotes.API.Database;
+using ClassNotes.API.Database.Entities;
 
 namespace ClassNotes.API;
 
@@ -24,17 +26,19 @@ public class Startup
 
         // ----------------- CG  -----------------
         //DbContext
-        //        services.AddDbContext<NOMBRECONTEXT>(options =>
-        //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+        services.AddDbContext<ClassNotesContext>(options =>
+        options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
         //servicios de interfaces 
 
-        //Identity (falta que agregar la entidad de usuario para que pueda implementarse)
-        //    services.AddIdentity<UserEntity, IdentityRole>(options =>
-        //    {
-        //        options.SignIn.RequireConfirmedAccount = false;
-        //    }).AddEntityFrameworkStores<ApplicaContext>()
-        //.AddDefaultTokenProviders();
+            //vacio por ahora...
+
+        //Identity 
+        services.AddIdentity<UserEntity, IdentityRole>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = false;
+        }).AddEntityFrameworkStores<ClassNotesContext>()
+          .AddDefaultTokenProviders();
 
         //    services.AddAuthentication(options =>
         //    {
