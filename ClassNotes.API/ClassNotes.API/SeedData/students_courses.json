@@ -1,0 +1,213 @@
+[
+  {
+    "id": "ABCDEFGHIJKLM123",
+    "course_id": "O5P6Q7R8S9T0U1V2",
+    "student_id": "A1B2C3D4E5F6G7H8",
+    "final_note": "80",
+    "is_active": true
+  },
+  {
+    "id": "NOPQRSTUVWXYZ987",
+    "course_id": "P6Q7R8S9T0U1V2W3",
+    "student_id": "B2C3D4E5F6G7H8I9",
+    "final_note": "75",
+    "is_active": true
+  },
+  {
+    "id": "JKLMNOPQRSTUV345",
+    "course_id": "Q7R8S9T0U1V2W3X4",
+    "student_id": "C3D4E5F6G7H8I9J0",
+    "final_note": "90",
+    "is_active": true
+  },
+  {
+    "id": "RSTUVWXYZABCDE678",
+    "course_id": "R8S9T0U1V2W3X4Y5",
+    "student_id": "D4E5F6G7H8I9J0K1",
+    "final_note": "65",
+    "is_active": false
+  },
+  {
+    "id": "VWXYZABCDEFGHIJKLMNOP901",
+    "course_id": "S9T0U1V2W3X4Y5Z6",
+    "student_id": "E5F6G7H8I9J0K1L2",
+    "final_note": "88",
+    "is_active": true
+  },
+  {
+    "id": "LMNOPQRSTUVWXYZ111",
+    "course_id": "T0U1V2W3X4Y5Z6A7",
+    "student_id": "F6G7H8I9J0K1L2M3",
+    "final_note": "70",
+    "is_active": false
+  },
+  {
+    "id": "PQRSTUVWXYZABCDE234",
+    "course_id": "U1V2W3X4Y5Z6A7B8",
+    "student_id": "G7H8I9J0K1L2M3N4",
+    "final_note": "82",
+    "is_active": true
+  },
+  {
+    "id": "QRSTUVWXABCDEFGHIJKLMNOP345",
+    "course_id": "V2W3X4Y5Z6A7B8C9",
+    "student_id": "H8I9J0K1L2M3N4O5",
+    "final_note": "78",
+    "is_active": false
+  },
+  {
+    "id": "XYZABCDEFGHIJKLMNOPQRSTUVWXYZ123",
+    "course_id": "W3X4Y5Z6A7B8C9D0",
+    "student_id": "I9J0K1L2M3N4O5P6",
+    "final_note": "85",
+    "is_active": true
+  },
+  {
+    "id": "ABCDEFGHIJKLM456",
+    "course_id": "X4Y5Z6A7B8C9D0E1",
+    "student_id": "J0K1L2M3N4O5P6Q7",
+    "final_note": "95",
+    "is_active": true
+  },
+  {
+    "id": "FGHIJKLMNOPQRS678",
+    "course_id": "Y5Z6A7B8C9D0E1F2",
+    "student_id": "K1L2M3N4O5P6Q7R8",
+    "final_note": "67",
+    "is_active": false
+  },
+  {
+    "id": "ZYXWVUTSRQPONML999",
+    "course_id": "Z6A7B8C9D0E1F2G3",
+    "student_id": "L2M3N4O5P6Q7R8S9",
+    "final_note": "88",
+    "is_active": true
+  },
+  {
+    "id": "SOMEREALIDNUMBER123",
+    "course_id": "A7B8C9D0E1F2G3H4",
+    "student_id": "M3N4O5P6Q7R8S9T0",
+    "final_note": "72",
+    "is_active": true
+  },
+  {
+    "id": "TUVWXYZABCDEF567",
+    "course_id": "B8C9D0E1F2G3H4I5",
+    "student_id": "N4O5P6Q7R8S9T0U1",
+    "final_note": "79",
+    "is_active": false
+  },
+  {
+    "id": "UVWXYZABCDE123",
+    "course_id": "C9D0E1F2G3H4I5J6",
+    "student_id": "O5P6Q7R8S9T0U1V2",
+    "final_note": "92",
+    "is_active": true
+  },
+  {
+    "id": "XYZABCDEFGHIJKLMNOP678",
+    "course_id": "D0E1F2G3H4I5J6K7",
+    "student_id": "P6Q7R8S9T0U1V2W3",
+    "final_note": "80",
+    "is_active": true
+  },
+  {
+    "id": "A1B2C3D4E5F6G7H8I9",
+    "course_id": "E1F2G3H4I5J6K7L8",
+    "student_id": "Q7R8S9T0U1V2W3X4",
+    "final_note": "78",
+    "is_active": false
+  },
+  {
+    "id": "Z1X2Y3A4B5C6D7E8F9",
+    "course_id": "F2G3H4I5J6K7L8M9",
+    "student_id": "R8S9T0U1V2W3X4Y5",
+    "final_note": "83",
+    "is_active": true
+  },
+  {
+    "id": "M1N2O3P4Q5R6S7T8U9",
+    "course_id": "G3H4I5J6K7L8M9N0",
+    "student_id": "S9T0U1V2W3X4Y5Z6",
+    "final_note": "77",
+    "is_active": true
+  },
+  {
+    "id": "T0U1V2W3X4Y5Z6A7B8",
+    "course_id": "H4I5J6K7L8M9N0O1",
+    "student_id": "T0U1V2W3X4Y5Z6A7",
+    "final_note": "91",
+    "is_active": false
+  },
+  {
+    "id": "P1Q2R3S4T5U6V7W8X9",
+    "course_id": "I5J6K7L8M9N0O1P2",
+    "student_id": "U1V2W3X4Y5Z6A7B8",
+    "final_note": "90",
+    "is_active": true
+  },
+  {
+    "id": "V2W3X4Y5Z6A7B8C9D0",
+    "course_id": "J6K7L8M9N0O1P2Q3",
+    "student_id": "V2W3X4Y5Z6A7B8C9",
+    "final_note": "81",
+    "is_active": true
+  },
+  {
+    "id": "D2E3F4G5H6I7J8K9L0",
+    "course_id": "K7L8M9N0O1P2Q3R4",
+    "student_id": "W3X4Y5Z6A7B8C9D0",
+    "final_note": "86",
+    "is_active": true
+  },
+  {
+    "id": "Q2R3S4T5U6V7W8X9Y0",
+    "course_id": "L8M9N0O1P2Q3R4S5",
+    "student_id": "X4Y5Z6A7B8C9D0E1",
+    "final_note": "66",
+    "is_active": false
+  },
+  {
+    "id": "B2C3D4E5F6G7H8I9J0",
+    "course_id": "M9N0O1P2Q3R4S5T6",
+    "student_id": "Y5Z6A7B8C9D0E1F2",
+    "final_note": "84",
+    "is_active": true
+  },
+  {
+    "id": "F2G3H4I5J6K7L8M9N0",
+    "course_id": "N0O1P2Q3R4S5T6U7",
+    "student_id": "Z6A7B8C9D0E1F2G3",
+    "final_note": "79",
+    "is_active": true
+  },
+  {
+    "id": "G3H4I5J6K7L8M9N0O1",
+    "course_id": "O1P2Q3R4S5T6U7V8",
+    "student_id": "A7B8C9D0E1F2G3H4",
+    "final_note": "82",
+    "is_active": false
+  },
+  {
+    "id": "H4I5J6K7L8M9N0O1P2",
+    "course_id": "P2Q3R4S5T6U7V8W9",
+    "student_id": "B8C9D0E1F2G3H4I5",
+    "final_note": "73",
+    "is_active": true
+  },
+  {
+    "id": "I5J6K7L8M9N0O1P2Q3",
+    "course_id": "Q3R4S5T6U7V8W9X0",
+    "student_id": "C9D0E1F2G3H4I5J6",
+    "final_note": "88",
+    "is_active": true
+  },
+  {
+    "id": "J6K7L8M9N0O1P2Q3R4",
+    "course_id": "R4S5T6U7V8W9X0Y1",
+    "student_id": "D0E1F2G3H4I5J6K7",
+    "final_note": "85",
+    "is_active": false
+  }
+]
+

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "J6K7L8M9N0O1P2Q3",
+    "score_type": "ponderado",
+    "star_date": "2025-01-01",
+    "end_date": "2025-12-31",
+    "minimum_grade": "65",
+    "minimum_attendance_time": "80"
+  },
+
+  {
+    "id": "Z9Y8X7W6V5U4T3J2",
+    "score_type": "puntos oro",
+    "star_date": "2025-02-01",
+    "end_date": "2025-11-30",
+    "minimum_grade": "70",
+    "minimum_attendance_time": "80"
+  }
+
+]

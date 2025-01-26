@@ -1,0 +1,191 @@
+[
+  {
+    "id": "A1B2C3D4E5F6G7H8",
+    "tittle": "Matematicas Avanzadas",
+    "registration_date": "2025-01-10",
+    "use_date": "2025-02-01",
+    "course_id": "O5P6Q7R8S9T0U1V2"
+  },
+  {
+    "id": "B2C3D4E5F6G7H8I9",
+    "tittle": "Algebra Lineal",
+    "registration_date": "2025-01-12",
+    "use_date": "2025-02-03",
+    "course_id": "P6Q7R8S9T0U1V2W3"
+  },
+  {
+    "id": "C3D4E5F6G7H8I9J0",
+    "tittle": "Fisica General",
+    "registration_date": "2025-01-14",
+    "use_date": "2025-02-05",
+    "course_id": "Q7R8S9T0U1V2W3X4"
+  },
+  {
+    "id": "D4E5F6G7H8I9J0K1",
+    "tittle": "Quimica Organica",
+    "registration_date": "2025-01-16",
+    "use_date": "2025-02-07",
+    "course_id": "R8S9T0U1V2W3X4Y5"
+  },
+  {
+    "id": "E5F6G7H8I9J0K1L2",
+    "tittle": "Introduccion a la Economia",
+    "registration_date": "2025-01-18",
+    "use_date": "2025-02-09",
+    "course_id": "S9T0U1V2W3X4Y5Z6"
+  },
+  {
+    "id": "F6G7H8I9J0K1L2M3",
+    "tittle": "Contabilidad Financiera",
+    "registration_date": "2025-01-20",
+    "use_date": "2025-02-11",
+    "course_id": "T0U1V2W3X4Y5Z6A7"
+  },
+  {
+    "id": "G7H8I9J0K1L2M3N4",
+    "tittle": "Historia Universal",
+    "registration_date": "2025-01-22",
+    "use_date": "2025-02-13",
+    "course_id": "U1V2W3X4Y5Z6A7B8"
+  },
+  {
+    "id": "H8I9J0K1L2M3N4O5",
+    "tittle": "Programacion Web",
+    "registration_date": "2025-01-24",
+    "use_date": "2025-02-15",
+    "course_id": "V2W3X4Y5Z6A7B8C9"
+  },
+  {
+    "id": "I9J0K1L2M3N4O5P6",
+    "tittle": "Redes de Computadoras",
+    "registration_date": "2025-01-26",
+    "use_date": "2025-02-17",
+    "course_id": "W3X4Y5Z6A7B8C9D0"
+  },
+  {
+    "id": "J0K1L2M3N4O5P6Q7",
+    "tittle": "Bases de Datos",
+    "registration_date": "2025-01-28",
+    "use_date": "2025-02-19",
+    "course_id": "X4Y5Z6A7B8C9D0E1"
+  },
+  {
+    "id": "K1L2M3N4O5P6Q7R8",
+    "tittle": "Sistemas Operativos",
+    "registration_date": "2025-01-30",
+    "use_date": "2025-02-21",
+    "course_id": "Y5Z6A7B8C9D0E1F2"
+  },
+  {
+    "id": "L2M3N4O5P6Q7R8S9",
+    "tittle": "Algoritmos y Estructuras de Datos",
+    "registration_date": "2025-02-01",
+    "use_date": "2025-02-23",
+    "course_id": "Z6A7B8C9D0E1F2G3"
+  },
+  {
+    "id": "M3N4O5P6Q7R8S9T0",
+    "tittle": "Cultura y Sociedad",
+    "registration_date": "2025-02-03",
+    "use_date": "2025-02-25",
+    "course_id": "A7B8C9D0E1F2G3H4"
+  },
+  {
+    "id": "N4O5P6Q7R8S9T0U1",
+    "tittle": "Ciencias de la Salud",
+    "registration_date": "2025-02-05",
+    "use_date": "2025-02-27",
+    "course_id": "B8C9D0E1F2G3H4I5"
+  },
+  {
+    "id": "O5P6Q7R8S9T0U1V2",
+    "tittle": "Matematicas Financieras",
+    "registration_date": "2025-02-07",
+    "use_date": "2025-03-01",
+    "course_id": "C9D0E1F2G3H4I5J6"
+  },
+  {
+    "id": "P6Q7R8S9T0U1V2W3",
+    "tittle": "Derecho Civil",
+    "registration_date": "2025-02-09",
+    "use_date": "2025-03-03",
+    "course_id": "D0E1F2G3H4I5J6K7"
+  },
+  {
+    "id": "Q7R8S9T0U1V2W3X4",
+    "tittle": "Derecho Penal",
+    "registration_date": "2025-02-11",
+    "use_date": "2025-03-05",
+    "course_id": "E1F2G3H4I5J6K7L8"
+  },
+  {
+    "id": "R8S9T0U1V2W3X4Y5",
+    "tittle": "Marketing Digital",
+    "registration_date": "2025-02-13",
+    "use_date": "2025-03-07",
+    "course_id": "F2G3H4I5J6K7L8M9"
+  },
+  {
+    "id": "S9T0U1V2W3X4Y5Z6",
+    "tittle": "Contabilidad de Costos",
+    "registration_date": "2025-02-15",
+    "use_date": "2025-03-09",
+    "course_id": "G3H4I5J6K7L8M9N0"
+  },
+  {
+    "id": "T0U1V2W3X4Y5Z6A7",
+    "tittle": "Gestion de Proyectos",
+    "registration_date": "2025-02-17",
+    "use_date": "2025-03-11",
+    "course_id": "H4I5J6K7L8M9N0O1"
+  },
+  {
+    "id": "U1V2W3X4Y5Z6A7B8",
+    "tittle": "Estadistica Avanzada",
+    "registration_date": "2025-02-19",
+    "use_date": "2025-03-13",
+    "course_id": "I5J6K7L8M9N0O1P2"
+  },
+  {
+    "id": "V2W3X4Y5Z6A7B8C9",
+    "tittle": "Analisis de Datos",
+    "registration_date": "2025-02-21",
+    "use_date": "2025-03-15",
+    "course_id": "J0K1L2M3N4O5P6Q7"
+  },
+  {
+    "id": "W3X4Y5Z6A7B8C9D0",
+    "tittle": "Desarrollo de Aplicaciones Móviles",
+    "registration_date": "2025-02-23",
+    "use_date": "2025-03-17",
+    "course_id": "K1L2M3N4O5P6Q7R8"
+  },
+  {
+    "id": "X4Y5Z6A7B8C9D0E1",
+    "tittle": "Bioquimica",
+    "registration_date": "2025-02-25",
+    "use_date": "2025-03-19",
+    "course_id": "L2M3N4O5P6Q7R8S9"
+  },
+  {
+    "id": "Y5Z6A7B8C9D0E1F2",
+    "tittle": "Estrategias de Negocios",
+    "registration_date": "2025-02-27",
+    "use_date": "2025-03-21",
+    "course_id": "M3N4O5P6Q7R8S9T0"
+  },
+  {
+    "id": "Z6A7B8C9D0E1F2G3",
+    "tittle": "Psicologia Organizacional",
+    "registration_date": "2025-03-01",
+    "use_date": "2025-03-23",
+    "course_id": "N4O5P6Q7R8S9T0U1"
+  },
+  {
+    "id": "A7B8C9D0E1F2G3H4",
+    "tittle": "Diseño Grafico",
+    "registration_date": "2025-03-03",
+    "use_date": "2025-03-25",
+    "course_id": "O5P6Q7R8S9T0U1V2"
+  }
+]

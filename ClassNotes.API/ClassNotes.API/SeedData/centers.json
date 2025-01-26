@@ -1,0 +1,133 @@
+[
+  {
+    "id": "G7P4K2H9L6J1M3N0",
+    "name": "Universidad Nacional Autónoma de Honduras",
+    "abbreviation": "UNAH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo-unah.jpg",
+    "is_archived": true,
+    "teacher_id": "Z9Y8X7W6V5U4T3S2"
+  },
+  {
+    "id": "B2C3D4E5F6G7H8I9",
+    "name": "Universidad Tecnológica Centroamericana",
+    "abbreviation": "UNITEC",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_UNITEC.svg",
+    "is_archived": true,
+    "teacher_id": "E8D7C6B5A4Z3Y2X1"
+  },
+  {
+    "id": "C3D4E5F6G7H8I9J0",
+    "name": "Universidad José Cecilio del Valle",
+    "abbreviation": "UJCV",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_UJCV.svg",
+    "is_archived": true,
+    "teacher_id": "E8D7C6B5A4Z3Y2X1"
+  },
+  {
+    "id": "D4E5F6G7H8I9J0K1",
+    "name": "Universidad Católica de Honduras",
+    "abbreviation": "UNICAH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_UNICAH.png",
+    "is_archived": true,
+    "teacher_id": "Z9Y8X7W6V5U4T3S2"
+  },
+  {
+    "id": "E5F6G7H8I9J0K1L2",
+    "name": "Universidad de San Pedro Sula",
+    "abbreviation": "USAP",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Logo_USAP.jpg",
+    "is_archived": true,
+    "teacher_id": "K8J7I6H5G4F3E2D1"
+  },
+  {
+    "id": "F6G7H8I9J0K1L2M3",
+    "name": "Universidad Nacional de Ciencias Forestales",
+    "abbreviation": "UNACIFOR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Logo_UNACIFOR.jpg",
+    "is_archived": true,
+    "teacher_id": "E8D7C6B5A4Z3Y2X1"
+  },
+  {
+    "id": "G7H8I9J0K1L2M3N4",
+    "name": "Universidad de La Ceiba",
+    "abbreviation": "ULACEC",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Logo_ULACEC.jpg",
+    "is_archived": true,
+    "teacher_id": "P9O8N7M6L5K4J3I2"
+  },
+  {
+    "id": "H8I9J0K1L2M3N4O5",
+    "name": "Universidad Tecnológica de Honduras",
+    "abbreviation": "UTH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Logo_UTH.png",
+    "is_archived": true,
+    "teacher_id": "P9O8N7M6L5K4J3I2"
+  },
+  {
+    "id": "I9J0K1L2M3N4O5P6",
+    "name": "Universidad Metropolitana de Honduras",
+    "abbreviation": "UMH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Logo_UMH.jpg",
+    "is_archived": true,
+    "teacher_id": "K8J7I6H5G4F3E2D1 "
+  },
+  {
+    "id": "J0K1L2M3N4O5P6Q7",
+    "name": "Universidad Adventista de Honduras",
+    "abbreviation": "UAH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Logo_UAH.jpg",
+    "is_archived": true,
+    "teacher_id": "E8D7C6B5A4Z3Y2X1"
+  },
+
+  {
+    "id": "J0K1L2M3N4O5P6Q7",
+    "name": "Universidad Adventista de Honduras",
+    "abbreviation": "UAH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Logo_UAH.jpg",
+    "is_archived": true,
+    "teacher_id": "F6G7H8I9J0K1L2M3N4O5"
+  },
+
+  {
+    "id": "J0K1L2M3N4O5P6Q7",
+    "name": "Universidad Adventista de Honduras",
+    "abbreviation": "UAH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Logo_UAH.jpg",
+    "is_archived": true,
+    "teacher_id": "G7H8I9J0K1L2M3N4O5P6"
+  },
+  {
+    "id": "I9J0K1L2M3N4O5P6",
+    "name": "Universidad Metropolitana de Honduras",
+    "abbreviation": "UMH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Logo_UMH.jpg",
+    "is_archived": true,
+    "teacher_id": "G7H8I9J0K1L2M3N4O5P6 "
+  },
+  {
+    "id": "H8I9J0K1L2M3N4O5P6Q7",
+    "name": "Universidad Nacional de Ciencias Forestales",
+    "abbreviation": "UNACIFOR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Logo_UNACIFOR.jpg",
+    "is_archived": true,
+    "teacher_id": "E8D7C6B5A4Z3Y2X1"
+  },
+
+  {
+    "id": "G7P4K2H9L6J1M3N0",
+    "name": "Universidad Nacional Autónoma de Honduras",
+    "abbreviation": "UNAH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo-unah.jpg",
+    "is_archived": true,
+    "teacher_id": "I9J0K1L2M3N4O5P6Q7R8"
+  },
+  {
+    "id": "G7P4K2H9L6J1M3N0",
+    "name": "Universidad Nacional Autónoma de Honduras",
+    "abbreviation": "UNAH",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo-unah.jpg",
+    "is_archived": true,
+    "teacher_id": "J0K1L2M3N4O5P6Q7R8S9"
+  }
+]

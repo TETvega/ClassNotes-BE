@@ -1,0 +1,191 @@
+[
+  {
+    "id": "O5P6Q7R8S9T0U1V2",
+    "name": "Programacion I",
+    "section": "0700",
+    "code": "MM-314",
+    "center_id": "G7P4K2H9L6J1M3N0",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": false
+  },
+  {
+    "id": "P6Q7R8S9T0U1V2W3",
+    "name": "Programacion II",
+    "section": "0800",
+    "code": "IS-210",
+    "center_id": "B2C3D4E5F6G7H8I9",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": true
+  },
+  {
+    "id": "Q7R8S9T0U1V2W3X4",
+    "name": "Estadistica",
+    "section": "1500",
+    "code": "MM-401",
+    "center_id": "C3D4E5F6G7H8I9J0",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  },
+  {
+    "id": "R8S9T0U1V2W3X4Y5",
+    "name": "Dibujo",
+    "section": "16000",
+    "code": "DQ-101",
+    "center_id": "D4E5F6G7H8I9J0K1",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": false
+  },
+  {
+    "id": "S9T0U1V2W3X4Y5Z6",
+    "name": "Fisica",
+    "section": "1000",
+    "code": "FS-100",
+    "center_id": "E5F6G7H8I9J0K1L2",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  },
+  {
+    "id": "T0U1V2W3X4Y5Z6A7",
+    "name": "Contabilidad",
+    "section": "13000",
+    "code": "S-721",
+    "center_id": "F6G7H8I9J0K1L2M3",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": false
+  },
+  {
+    "id": "U1V2W3X4Y5Z6A7B8",
+    "name": "Calculo I",
+    "section": "9000",
+    "code": "MM-201",
+    "center_id": "G7H8I9J0K1L2M3N4",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  },
+  {
+    "id": "V2W3X4Y5Z6A7B8C9",
+    "name": "Calculo II",
+    "section": "1800",
+    "code": "MM-202",
+    "center_id": "H8I9J0K1L2M3N4O5",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": false
+  },
+  {
+    "id": "W3X4Y5Z6A7B8C9D0",
+    "name": "Sociologia",
+    "section": "16000",
+    "code": "SC-101",
+    "center_id": "I9J0K1L2M3N4O5P6",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  },
+  {
+    "id": "X4Y5Z6A7B8C9D0E1",
+    "name": "Ingles I",
+    "section": "1100",
+    "code": "IN-101",
+    "center_id": "J0K1L2M3N4O5P6Q7",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": true
+  },
+  {
+    "id": "Y5Z6A7B8C9D0E1F2",
+    "name": "Fisica II",
+    "section": "1500",
+    "code": "FS-200",
+    "center_id": "G7P4K2H9L6J1M3N0",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": false
+  },
+  {
+    "id": "Z6A7B8C9D0E1F2G3",
+    "name": "Historia de Honduras",
+    "section": "1000",
+    "code": "HH-101",
+    "center_id": "B2C3D4E5F6G7H8I9",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": true
+  },
+  {
+    "id": "A7B8C9D0E1F2G3H4",
+    "name": "Economia",
+    "section": "1800",
+    "code": "IS-905",
+    "center_id": "C3D4E5F6G7H8I9J0",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  },
+  {
+    "id": "B8C9D0E1F2G3H4I5",
+    "name": "Administracion",
+    "section": "2000",
+    "code": "IS-720",
+    "center_id": "D4E5F6G7H8I9J0K1",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": false
+  },
+  {
+    "id": "C9D0E1F2G3H4I5J6",
+    "name": "Computacion II",
+    "section": "2000",
+    "code": "DAE-305",
+    "center_id": "E5F6G7H8I9J0K1L2",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  },
+  {
+    "id": "D0E1F2G3H4I5J6K7",
+    "name": "Biofisica",
+    "section": "0700",
+    "code": "FS-210",
+    "center_id": "F6G7H8I9J0K1L2M3",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": false
+  },
+  {
+    "id": "E1F2G3H4I5J6K7L8",
+    "name": "Medicina I",
+    "section": "0900",
+    "code": "CL-205",
+    "center_id": "G7H8I9J0K1L2M3N4",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  },
+  {
+    "id": "F2G3H4I5J6K7L8M9",
+    "name": "Pediatria",
+    "section": "1000",
+    "code": "CL-208",
+    "center_id": "H8I9J0K1L2M3N4O5",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": true
+  },
+  {
+    "id": "G3H4I5J6K7L8M9N0",
+    "name": "Radiologia",
+    "section": "1300",
+    "code": "RD-301",
+    "center_id": "I9J0K1L2M3N4O5P6",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": false
+  },
+  {
+    "id": "H4I5J6K7L8M9N0O1",
+    "name": "Ortopedia",
+    "section": "1500",
+    "code": "OT-403",
+    "center_id": "J0K1L2M3N4O5P6Q7",
+    "setting_id": "Z9Y8X7W6V5U4T3J2",
+    "is_active": true
+  },
+  {
+    "id": "I5J6K7L8M9N0O1P2",
+    "name": "Dermatologia",
+    "section": "1900",
+    "code": "DE-403",
+    "center_id": "G7P4K2H9L6J1M3N0",
+    "setting_id": "A1B2C3D4E5F6G7H8",
+    "is_active": true
+  }
+]

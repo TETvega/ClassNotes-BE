@@ -27,4 +27,6 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties seeddata_4activities_1json__JsonSchema="https://bitbucket.org/atlassianlabs/intellij-bitbucket-references-plugin/raw/master/src/main/resources/schemas/bitbucket-pipelines.schema.json" /></VisualStudio></ProjectExtensions>
+
 </Project>
