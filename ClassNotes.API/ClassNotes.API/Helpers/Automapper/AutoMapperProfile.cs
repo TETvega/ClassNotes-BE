@@ -7,6 +7,7 @@ using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Dtos.Students;
+using ClassNotes.API.Services.Audit;
 
 namespace ClassNotes.API.Helpers.Automapper
 {
@@ -40,7 +41,7 @@ namespace ClassNotes.API.Helpers.Automapper
 		private void MapsForCenters()
 		{
 			CreateMap<CenterEntity, CenterDto>();
-			CreateMap<CenterCreateDto, CenterEntity>();
+			CreateMap<CenterCreateDto, CenterEntity>().ForMember(dest => dest.IsArchived, opt => opt.MapFrom(src => false));
 			CreateMap<CenterEditDto, CenterEntity>();
 		}
 
