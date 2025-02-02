@@ -34,5 +34,13 @@ namespace ClassNotes.API.Controllers
 			var response = await _centersService.EditAsync(dto, id);
             return StatusCode(response.StatusCode, response);
         }
+
+        [HttpPut("archive/{id}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ResponseDto<CenterDto>>> archive( Guid id)
+        {
+            var response = await _centersService.ArchiveAsync( id);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

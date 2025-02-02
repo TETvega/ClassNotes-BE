@@ -6,6 +6,7 @@ using ClassNotes.API.Dtos.Centers;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Services.Audit;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClassNotes.API.Services.Centers
 {
@@ -59,11 +60,24 @@ namespace ClassNotes.API.Services.Centers
                         dto.Logo = null;
                     }
 
+
                     var centerEntity = _mapper.Map<CenterEntity>(dto);
 
-
-
                     centerEntity.TeacherId = _auditService.GetUserId();
+
+                    var nameCheck = await _context.Centers.FirstOrDefaultAsync(x => x.Name == dto.Name && x.TeacherId == centerEntity.TeacherId);
+
+                    if (nameCheck != null)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 409,
+                            Status = false,
+                            Message = "Ya existe un centro con este nombre, ingrese uno nuevo."
+                        };
+                    }
+
+
 
                     _context.Centers.Add(centerEntity);
                     await _context.SaveChangesAsync();
@@ -93,6 +107,7 @@ namespace ClassNotes.API.Services.Centers
                 }
             }
         }
+
 
         public async Task<ResponseDto<CenterDto>> EditAsync(CenterEditDto dto, Guid id)
         {
@@ -127,6 +142,19 @@ namespace ClassNotes.API.Services.Centers
                         };
                     }
 
+                    var nameCheck = await _context.Centers.FirstOrDefaultAsync(x => x.Name==dto.Name && x.TeacherId==centerEntity.TeacherId);
+
+                    if (nameCheck != null && nameCheck.Id != id)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 409,
+                            Status = false,
+                            Message = "Ya existe un centro con este nombre, ingrese uno nuevo."
+                        };
+                    }
+
+
                     if (dto.Abbreviation.Trim() == "")
                     {
                         dto.Abbreviation = null;
@@ -160,6 +188,72 @@ namespace ClassNotes.API.Services.Centers
                         StatusCode = 200,
                         Status = true,
                         Message = MessagesConstant.UPDATE_SUCCESS,
+                        Data = centerDto
+                    };
+                }
+
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, MessagesConstant.UPDATE_ERROR);
+                    return new ResponseDto<CenterDto>
+                    {
+                        StatusCode = 500,
+                        Status = false,
+                        Message = MessagesConstant.UPDATE_ERROR
+
+                    };
+                }
+            }
+        }
+
+        public async Task<ResponseDto<CenterDto>> ArchiveAsync( Guid id)
+        {
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+
+                    var userId = _auditService.GetUserId();
+                    var centerEntity = await _context.Centers.FindAsync(id);
+
+                    if (centerEntity is null)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 404,
+                            Status = false,
+                            Message = MessagesConstant.RECORD_NOT_FOUND + " " + id,
+                        };
+                    }
+
+                    //(Ken)
+                    //Aun quedaria probarlo con autenticación...
+                    if (centerEntity.TeacherId != userId)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 401,
+                            Status = false,
+                            Message = "No esta autorizado para archivar este registro."
+                        };
+                    }
+
+
+                    centerEntity.IsArchived = true;
+
+                    _context.Centers.Update(centerEntity);
+                    await _context.SaveChangesAsync();
+
+                    var centerDto = _mapper.Map<CenterDto>(centerEntity);
+
+                    await transaction.CommitAsync();
+                    return new ResponseDto<CenterDto>
+                    {
+                        StatusCode = 200,
+                        Status = true,
+                        Message = "Se archivó correctamente.",
                         Data = centerDto
                     };
                 }

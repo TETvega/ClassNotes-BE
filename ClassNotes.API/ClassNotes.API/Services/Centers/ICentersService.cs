@@ -5,6 +5,7 @@ namespace ClassNotes.API.Services.Centers
 {
     public interface ICentersService
     {
+        Task<ResponseDto<CenterDto>> ArchiveAsync(Guid id);
         Task<ResponseDto<CenterDto>> CreateAsync(CenterCreateDto dto);
         Task<ResponseDto<CenterDto>> EditAsync(CenterEditDto dto, Guid id);
     }
