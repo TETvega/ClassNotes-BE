@@ -97,6 +97,7 @@ namespace ClassNotes.API.Services.Auth
                     new Claim(ClaimTypes.Email, userEntity.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim("UserId", userEntity.Id),
+                    new Claim("DefaultConfigCourse", (userEntity.DefaultCourseSettingId ?? null).ToString())
                 };
 
             var userRoles = await _userManager.GetRolesAsync(userEntity);
