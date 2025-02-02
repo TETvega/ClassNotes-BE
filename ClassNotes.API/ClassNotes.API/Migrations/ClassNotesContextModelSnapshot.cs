@@ -610,6 +610,15 @@ namespace ClassNotes.API.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("resfesh_token");
+
+                    b.Property<DateTime>("RefreshTokenExpire")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("resfesh_token_expire");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
