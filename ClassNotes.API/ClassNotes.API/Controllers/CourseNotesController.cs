@@ -57,7 +57,7 @@ namespace ClassNotes.API.Controllers
 		}
 
 		// Editar
-		[HttpPut]
+		[HttpPut("{id}")]
 		[Authorize(Roles = $"{RolesConstant.USER}")]
 
 		public async Task<ActionResult<ResponseDto<CourseNoteDto>>> Edit(CourseNoteEditDto dto, Guid id)
@@ -68,7 +68,7 @@ namespace ClassNotes.API.Controllers
 		}
 
 		// Eliminar 
-		[HttpDelete]
+		[HttpDelete("{id}")]
 		[Authorize(Roles = $"{RolesConstant.USER}")]
 
 		public async Task<ActionResult<ResponseDto<CourseNoteDto>>> Delete(Guid id)

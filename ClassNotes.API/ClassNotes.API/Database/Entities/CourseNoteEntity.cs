@@ -27,11 +27,11 @@ namespace ClassNotes.API.Database.Entities
         [Column("use_date")]
         public DateTime UseDate { get; set; }
 
-        [Required]
-        [Column("course_id")]
-        public Guid CourseId { get; set; }
-        [ForeignKey(nameof(CourseId))]
-        public virtual CourseEntity Course { get; set; }
+       [Required]
+       [Column("course_id")]
+       public Guid CourseId { get; set; }
+       [ForeignKey(nameof(CourseId))]
+       public virtual CourseEntity Course { get; set; }
 
 
         public virtual UserEntity CreatedByUser { get; set; }

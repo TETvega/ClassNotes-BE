@@ -277,9 +277,8 @@ namespace ClassNotes.API.Migrations
                         .HasColumnType("nvarchar(1000)")
                         .HasColumnName("content");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("course_id");
+                    b.Property<Guid?>("CourseEntityId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(450)
@@ -315,7 +314,7 @@ namespace ClassNotes.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CourseEntityId");
 
                     b.HasIndex("CreatedBy");
 
@@ -894,11 +893,10 @@ namespace ClassNotes.API.Migrations
 
             modelBuilder.Entity("ClassNotes.API.Database.Entities.CourseNoteEntity", b =>
                 {
-                    b.HasOne("ClassNotes.API.Database.Entities.CourseEntity", "Course")
+                    b.HasOne("ClassNotes.API.Database.Entities.CourseEntity", null)
                         .WithMany("CourseNotes")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("CourseEntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ClassNotes.API.Database.Entities.UserEntity", "CreatedByUser")
                         .WithMany()
@@ -909,8 +907,6 @@ namespace ClassNotes.API.Migrations
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Course");
 
                     b.Navigation("CreatedByUser");
 
