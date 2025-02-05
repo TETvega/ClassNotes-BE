@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using OtpNet;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -31,7 +32,18 @@ namespace ClassNotes.API.Database.Entities
         [ForeignKey(nameof(DefaultCourseSettingId))]
         public virtual CourseSettingEntity DefaultCourseSettings { get; set; }
 
-        public virtual ICollection<CenterEntity> Centers { get; set; }
+		[Column("secret_key")] // AM: Llave secreta para la generación del OTP
+		[Required]
+		public string SecretKey { get; set; } = Base32Encoding.ToString(KeyGeneration.GenerateRandomKey(20));
+
+		[Column("otp_code")]
+		public string? OtpCode { get; set; }
+
+		[Column("otp_expiration")]
+		public DateTime? OtpExpiration { get; set; }
+
+		public virtual ICollection<CenterEntity> Centers { get; set; }
+        
         public virtual ICollection<StudentEntity> Students { get; set; }
     }
 }

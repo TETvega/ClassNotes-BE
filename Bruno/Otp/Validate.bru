@@ -1,0 +1,17 @@
+meta {
+  name: Validate
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/otp/validate
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "otpCode": "343077"
+  }
+}
