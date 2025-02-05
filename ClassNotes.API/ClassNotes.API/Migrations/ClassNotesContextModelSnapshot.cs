@@ -601,6 +601,14 @@ namespace ClassNotes.API.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("OtpCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("otp_code");
+
+                    b.Property<DateTime?>("OtpExpiration")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("otp_expiration");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
@@ -609,6 +617,11 @@ namespace ClassNotes.API.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("SecretKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("secret_key");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
