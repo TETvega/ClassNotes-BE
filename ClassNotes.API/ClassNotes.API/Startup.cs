@@ -61,6 +61,9 @@ public class Startup
 		// Servicio de AutoMapper
 		services.AddAutoMapper(typeof(AutoMapperProfile));
 
+		// Habilitar cache en memoria
+		services.AddMemoryCache();
+
 		// Identity 
 		services.AddIdentity<UserEntity, IdentityRole>(options =>
         {

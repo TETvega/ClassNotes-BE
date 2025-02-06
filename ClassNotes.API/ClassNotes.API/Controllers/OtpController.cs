@@ -29,5 +29,13 @@ namespace ClassNotes.API.Controllers
 			var response = await _otpService.ValidateOtpAsync(dto);
 			return StatusCode(response.StatusCode, response);
 		}
-	}
+
+		[HttpGet("cache/{email}")]
+		public async Task<ActionResult<ResponseDto<OtpDto>>> GetCachedOtp(string email)
+		{
+			var response = await _otpService.GetCachedOtpAsync(email);
+            return StatusCode(response.StatusCode, response);
+        }
+
+    }
 }

@@ -6,6 +6,7 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using OtpNet;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ClassNotes.API.Services.Otp
 {
@@ -13,15 +14,17 @@ namespace ClassNotes.API.Services.Otp
 	{
 		private readonly ClassNotesContext _context;
 		private readonly IConfiguration _configuration;
+        private readonly IMemoryCache _memoryCache;
 
-		// AM: Tiempo de expiración del codigo otp
-		private readonly int _otpExpirationSeconds = 120; 
+        // AM: Tiempo de expiración del codigo otp
+        private readonly int _otpExpirationSeconds = 120; 
 
-		public OtpService(ClassNotesContext context, IConfiguration configuration)
+		public OtpService(ClassNotesContext context, IConfiguration configuration, IMemoryCache memoryCache)
         {
 			this._context = context;
 			this._configuration = configuration;
-		}
+            this._memoryCache = memoryCache;
+        }
 
 		// AM: Función para generar y enviar el codigo otp por correo
 		public async Task<ResponseDto<OtpDto>> CreateAndSendOtpAsync(OtpCreateDto dto)
@@ -37,16 +40,15 @@ namespace ClassNotes.API.Services.Otp
 				};
 			}
 
-			// AM: Generar código OTP y actualizar usuario
+			// CG: Guardar el OTP en memoria
 			var otpCode = GenerateOtp(user.SecretKey);
-			user.OtpCode = otpCode;
-			user.OtpExpiration = DateTime.UtcNow.AddSeconds(_otpExpirationSeconds);
+            var cacheKey = $"OTP_{user.Email}";
+            var otpData = new { Code = otpCode, Expiration = DateTime.UtcNow.AddSeconds(_otpExpirationSeconds) };
+            
+            _memoryCache.Set(cacheKey, otpData, TimeSpan.FromSeconds(_otpExpirationSeconds));
 
-			// AM: Guardar cambios en la BD
-			await _context.SaveChangesAsync(); 
-
-			// AM: Generar el correo electronico que se va enviar con Smtp
-			var email = new MimeMessage();
+            // AM: Generar el correo electronico que se va enviar con Smtp
+            var email = new MimeMessage();
 			email.From.Add(MailboxAddress.Parse(_configuration.GetSection("Smtp:Username").Value));
 			email.To.Add(MailboxAddress.Parse(dto.Email));
 			email.Subject = "Tu código OTP de verificación";
@@ -87,34 +89,33 @@ namespace ClassNotes.API.Services.Otp
 		// AM: Función para validar codigos otp
 		public async Task<ResponseDto<OtpDto>> ValidateOtpAsync(OtpValidateDto dto)
 		{
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.OtpCode == dto.OtpCode);
+            //Verificar OTP desde memoria
+            var cacheKey = $"OTP_{dto.Email}";
 
-			if (user == null)
-			{
-				return new ResponseDto<OtpDto>
-				{
-					StatusCode = 400,
-					Status = false,
-					Message = "El código OTP ingresado no es válido."
-				};
-			}
+            if (!_memoryCache.TryGetValue(cacheKey, out dynamic otpData))
+            {
+                return new ResponseDto<OtpDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El código OTP ingresado no es válido o ha expirado."
+                };
+            }
 
-			if (user.OtpExpiration < DateTime.UtcNow)
-			{
-				return new ResponseDto<OtpDto>
-				{
-					StatusCode = 400,
-					Status = false,
-					Message = "El código OTP ingresado ya ha expirado."
-				};
-			}
+            if (otpData.Code != dto.OtpCode)
+            {
+                return new ResponseDto<OtpDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El código OTP ingresado no es válido."
+                };
+            }
 
-			// AM: Limpiar el OTP después de validarlo
-			user.OtpCode = null;
-			user.OtpExpiration = null;
-			await _context.SaveChangesAsync();
+            // CG: Eliminar OTP después de validarlo
+            _memoryCache.Remove(cacheKey);
 
-			return new ResponseDto<OtpDto>
+            return new ResponseDto<OtpDto>
 			{
 				StatusCode = 200,
 				Status = true,
@@ -128,5 +129,37 @@ namespace ClassNotes.API.Services.Otp
 			var otpGenerator = new Totp(Base32Encoding.ToBytes(secretKey), step: _otpExpirationSeconds);
 			return otpGenerator.ComputeTotp();
 		}
-	}
+
+		// CG: Este metodo solo sirve para verificar que la cache esta siendo limpiada tras usar o expirar un OTP
+		public async Task<ResponseDto<OtpDto>> GetCachedOtpAsync(string email)
+		{
+
+            var cacheKey = $"OTP_{email}";
+
+			if(_memoryCache.TryGetValue(cacheKey, out dynamic otpData))
+			{
+				return new ResponseDto<OtpDto>
+				{
+					Message = "OTP encontrando en caché",
+					Data = new OtpDto 
+					{ 
+						Email = email, 
+						OtpCode = otpData.Code,
+                        // ExpirationSeconds = otpData.Expiration
+                        // ExpirationSeconds es entero y Expiration es DateTime
+                    },
+					Status = true,
+					StatusCode = 200,
+				};
+			}
+
+            return new ResponseDto<OtpDto>
+            {
+                StatusCode = 404,
+                Status = false,
+                Message = "OTP no encontrado o expirado",
+            };
+        }
+
+    }
 }
