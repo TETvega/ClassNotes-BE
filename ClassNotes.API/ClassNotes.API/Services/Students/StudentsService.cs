@@ -1,6 +1,214 @@
-﻿namespace ClassNotes.API.Services.Students
+﻿using AutoMapper;
+using Azure;
+using ClassNotes.API.Database;
+using ClassNotes.API.Database.Entities;
+using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.Students;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+
+namespace ClassNotes.API.Services.Students
 {
-	public class StudentsService : IStudentsService
-	{
-	}
+    public class StudentsService : IStudentsService
+    {
+        private readonly ClassNotesContext classNotesContext_;
+        private readonly IMapper mapper_;
+        private readonly int PAGE_SIZE;
+
+        public StudentsService(ClassNotesContext classNotesContext, IMapper mapper, IConfiguration configuration)
+        {
+            classNotesContext_ = classNotesContext;
+            mapper_ = mapper;
+            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+        }
+
+        public async Task<ResponseDto<StudentDto>> CreateStudentAsync(StudentCreateDto studentCreateDto)
+        {
+            // Verificar si el correo ya esta registrado
+            var existingStudent = await classNotesContext_.Students
+                .FirstOrDefaultAsync(s => s.Email == studentCreateDto.Email);
+
+            if (existingStudent != null)
+            {
+                // Si el correo ya existe, verificar si los nombres son iguales
+                if (existingStudent.FirstName == studentCreateDto.FirstName &&
+                    existingStudent.LastName == studentCreateDto.LastName)
+                {
+                    // Si los nombres son iguales, apuntamos a ese estudiante
+                    var studentDtos = mapper_.Map<StudentDto>(existingStudent);
+
+                    return new ResponseDto<StudentDto>
+                    {
+                        StatusCode = 200,
+                        Status = true,
+                        Message = "El estudiante ya existe y se ha referenciado correctamente.",
+                        Data = studentDtos
+                    };
+                }
+                else
+                {
+                    // Si los nombres no son iguales, retornar un error porque el correo ya esta registrado
+                    return new ResponseDto<StudentDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "El correo electrónico ya está registrado con nombres diferentes.",
+                        Data = null
+                    };
+                }
+            }
+
+            // Si el correo no existe, crear un nuevo estudiante
+            var studentEntity = mapper_.Map<StudentEntity>(studentCreateDto);
+
+            // Agregar la entidad al contexto
+            classNotesContext_.Students.Add(studentEntity);
+
+            // Guardar los cambios en la base de datos
+            await classNotesContext_.SaveChangesAsync();
+
+            // Mapear la entidad guardada a un DTO para la respuesta
+            var studentDto = mapper_.Map<StudentDto>(studentEntity);
+
+            // Retornar la respuesta con el DTO
+            return new ResponseDto<StudentDto>
+            {
+                StatusCode = 201,
+                Status = true,
+                Message = "Estudiante creado correctamente.",
+                Data = studentDto
+            };
+        }
+        public async Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int page = 1)
+        {
+            // Calculamos el Indice de inicio para la paginaciOn
+            int startIndex = (page - 1) * PAGE_SIZE;
+
+            // Obtenemos la consulta base de los estudiantes registrados en la base de datos
+            var studentEntityQuery = classNotesContext_.Students
+                .Where(x => x.CreatedDate <= DateTime.Now); // Solo incluimos estudiantes creados hasta la fecha actual
+
+            // Si se proporciona un termino de busqueda, filtramos los estudiantes por nombre
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower(); // Convertimos a minusculas
+                studentEntityQuery = studentEntityQuery.Where(x =>
+                    (x.FirstName + " " + x.LastName).ToLower().Contains(searchTerm) // podemos buscar por nombre completo
+                );
+            }
+
+            // Obtenemos el total de estudiantes despues de filtrar
+            int totalStudents = await studentEntityQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalStudents / PAGE_SIZE);
+            var studentEntity = await studentEntityQuery
+                .OrderByDescending(x => x.CreatedDate) // Ordenamos por fecha de creación en orden descendente
+                .Skip(startIndex) // Omitimos los registros de páginas anteriores
+                .Take(PAGE_SIZE) // Tomamos solo la cantidad definida por PAGE_SIZE
+                .ToListAsync();
+
+            // Mapeamos las entidades obtenidas a DTOs
+            var studentsDtos = mapper_.Map<List<StudentDto>>(studentEntity);
+
+            // Retornamos la respuesta con los datos paginados
+            return new ResponseDto<PaginationDto<List<StudentDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Lista de estudiantes obtenida correctamente.",
+                Data = new PaginationDto<List<StudentDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = PAGE_SIZE,
+                    TotalItems = totalStudents,
+                    TotalPages = totalPages,
+                    Items = studentsDtos,
+                    HasPreviousPage = page > 1, // Indica si hay una página anterior disponible
+                    HasNextPage = page < totalPages, // Indica si hay una página siguiente disponible
+                }
+            };
+        }
+        public async Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto)
+        {
+            // Buscar el estudiante por su ID
+            var studentEntity = await classNotesContext_.Students
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            // Si el estudiante no existe, retornamos el mensaje que no existe
+            if (studentEntity == null)
+            {
+                return new ResponseDto<StudentDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "Estudiante no encontrado.",
+                    Data = null
+                };
+            }
+
+            // Verificar si el nuevo correo ya esta registrado con otro estudiante
+            if (studentEditDto.Email != studentEntity.Email)
+            {
+                var emailExists = await classNotesContext_.Students
+                    .AnyAsync(s => s.Email == studentEditDto.Email);
+
+                if (emailExists)
+                {
+                    return new ResponseDto<StudentDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "El correo electrónico ya está registrado.",
+                        Data = null
+                    };
+                }
+            }
+
+            // Actualizar los campos del estudiante
+            mapper_.Map(studentEditDto, studentEntity);
+
+            // Guardar los cambios en la base de datos
+            await classNotesContext_.SaveChangesAsync();
+
+            // Mapear la entidad actualizada a un DTO para la respuesta
+            var studentDto = mapper_.Map<StudentDto>(studentEntity);
+
+            // Retornar la respuesta con el DTO
+            return new ResponseDto<StudentDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Estudiante actualizado correctamente.",
+                Data = studentDto
+            };
+        }
+        public async Task<ResponseDto<StudentDto>> DeleteStudentAsync(Guid id)
+        {
+            // Buscar el estudiante por su ID
+            var studentEntity = await classNotesContext_.Students
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            // Si el estudiante no existe, retornar un error
+            if (studentEntity == null)
+            {
+                return new ResponseDto<StudentDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "El estudiante no existe.",
+                };
+            }
+
+            // Eliminar el estudiante
+            classNotesContext_.Students.Remove(studentEntity);
+            await classNotesContext_.SaveChangesAsync();
+
+            // Retornarnamos una respuesta exitosa
+            return new ResponseDto<StudentDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Estudiante Borrado correctamente"
+            };
+        }
+    }
 }
