@@ -25,6 +25,9 @@ namespace ClassNotes.API.Database
             modelBuilder.UseCollation("SQL_Latin1_General_CP1_CI_AS");
             modelBuilder.HasDefaultSchema("security");
 
+            /*
+             Aqui se encuentran las propiedades y tablas necesarias para IDENTITY
+             */
             modelBuilder.Entity<UserEntity>().ToTable("users");
             modelBuilder.Entity<IdentityRole>().ToTable("roles");
             modelBuilder.Entity<IdentityUserRole<string>>().ToTable("users_roles");
@@ -33,6 +36,7 @@ namespace ClassNotes.API.Database
             modelBuilder.Entity<IdentityRoleClaim<string>>().ToTable("roles_claims");
             modelBuilder.Entity<IdentityUserToken<string>>().ToTable("users_tokens");
 
+            //Aplican las Configuraciones de LLaves Foraneas
             modelBuilder.ApplyConfiguration(new ActivityConfiguration());
             modelBuilder.ApplyConfiguration(new AttendanceConfiguration());
             modelBuilder.ApplyConfiguration(new CenterConfiguration());
@@ -45,7 +49,8 @@ namespace ClassNotes.API.Database
 
 
             //(Ken)
-            //Configuracion basica para evitar eliminacion en cascada, lo pongo de un solo para que no se nos olvide...
+            //Configuracion basica para evitar eliminacion en cascada
+            //
             var eTypes = modelBuilder.Model.GetEntityTypes();
             foreach (var type in eTypes)
             {
@@ -58,6 +63,7 @@ namespace ClassNotes.API.Database
 
         }
 
+        /*El siguiente Codigo Sive para los Campos de Auditoria, saber quien esta mandando las peticiones editando o creando*/
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker
@@ -72,11 +78,13 @@ namespace ClassNotes.API.Database
                 var entity = entry.Entity as BaseEntity;
                 if (entity != null)
                 {
+                    //El usuario esta creando 
                     if (entry.State == EntityState.Added)
                     {
                         entity.CreatedBy = _auditService.GetUserId();
 						entity.CreatedDate = DateTime.Now;
                     }
+                      //El usuario esta editando 
                     else
                     {
                         entity.UpdatedBy = _auditService.GetUserId();
@@ -88,6 +96,7 @@ namespace ClassNotes.API.Database
             return base.SaveChangesAsync(cancellationToken);
         }
 
+        //Entidades de la Base de Datos SQL 
         public DbSet<ActivityEntity> Activities { get; set; }
         public DbSet<AttendanceEntity> Attendances { get; set; }
         public DbSet<CenterEntity> Centers { get; set; }

@@ -10,7 +10,7 @@
 			IHttpContextAccessor httpContextAccessor
 			)
 		{
-			this._httpContextAccessor = httpContextAccessor;
+			_httpContextAccessor = httpContextAccessor;
 		}
 
 		public string GetUserId()

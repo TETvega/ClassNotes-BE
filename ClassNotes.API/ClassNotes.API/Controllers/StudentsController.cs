@@ -14,7 +14,7 @@ namespace ClassNotes.API.Controllers
 
 		public StudentsController(IStudentsService studentsService)
         {
-			this._studentsService = studentsService;
+			_studentsService = studentsService;
 		}
 
 		// AM: Agregar los endpoints del CRUD

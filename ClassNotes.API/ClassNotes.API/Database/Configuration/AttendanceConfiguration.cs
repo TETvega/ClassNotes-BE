@@ -10,8 +10,8 @@ namespace ClassNotes.API.Database.Configuration
         {
             builder.HasOne(e => e.CreatedByUser)
                 .WithMany()
-                .HasForeignKey(e => e.CreatedBy)
-                .HasPrincipalKey(e => e.Id);
+                .HasForeignKey(e => e.CreatedBy) // LLave Foranea
+                .HasPrincipalKey(e => e.Id); // LLave Principal
 
             builder.HasOne(e => e.UpdatedByUser)
                 .WithMany()

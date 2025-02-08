@@ -31,7 +31,7 @@ namespace ClassNotes.API.Database.Entities
 
         //(ken)
         //No se puede limitar digitos despues del decimal con DataNotations
-        //Asi que lo tienen que hacer en el servicio o frontend...
+        //Esta limitado en el Servicio a [2] decimales despues del Punto
         [Required]
         [Range(0, 100)]
         [Column("minimum_grade")]

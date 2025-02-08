@@ -17,15 +17,15 @@ namespace ClassNotes.API.Controllers
 
 		public CourseNotesController(ICourseNotesService courseNotesService)
 		{
-			this._courseNotesService = courseNotesService;
+			_courseNotesService = courseNotesService;
 		}
 
 		// Traer todos 
 
 		[HttpGet]
-		[AllowAnonymous]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
 
-		public async Task<ActionResult<ResponseDto<CourseNoteDto>>> GetAll(
+        public async Task<ActionResult<ResponseDto<CourseNoteDto>>> GetAll(
 			string searchTerm = "",
 			int page = 1)
 		{
@@ -36,9 +36,9 @@ namespace ClassNotes.API.Controllers
 
 		// Traer por id 
 		[HttpGet("{id}")]
-		[AllowAnonymous]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
 
-		public async Task<ActionResult<ResponseDto<CourseNoteDto>>> Get(Guid id)
+        public async Task<ActionResult<ResponseDto<CourseNoteDto>>> Get(Guid id)
 		{
 			var response = await _courseNotesService.GetCourseNoteByIdAsync(id);
 
