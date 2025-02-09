@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Database.Configuration;
 using ClassNotes.API.Services.Audit;
+using System.Diagnostics;
 
 namespace ClassNotes.API.Database
 {
@@ -49,8 +50,7 @@ namespace ClassNotes.API.Database
 
 
             //(Ken)
-            //Configuracion basica para evitar eliminacion en cascada
-            //
+            //Configuracion basica para evitar eliminacion en cascada, lo pongo de un solo para que no se nos olvide...
             var eTypes = modelBuilder.Model.GetEntityTypes();
             foreach (var type in eTypes)
             {
@@ -96,7 +96,6 @@ namespace ClassNotes.API.Database
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        //Entidades de la Base de Datos SQL 
         public DbSet<ActivityEntity> Activities { get; set; }
         public DbSet<AttendanceEntity> Attendances { get; set; }
         public DbSet<CenterEntity> Centers { get; set; }

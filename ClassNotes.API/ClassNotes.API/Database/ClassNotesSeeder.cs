@@ -2,6 +2,7 @@
 using ClassNotes.API.Database.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace ClassNotes.API.Database
 {
@@ -13,22 +14,27 @@ namespace ClassNotes.API.Database
 			UserManager<UserEntity> userManager,
 			RoleManager<IdentityRole> roleManager)
 		{
-			try
-			{
-				await LoadUsersAndRolesAsync(userManager, roleManager, loggerFactory);
+            try
+            {
+                await LoadCourseSenttingsAsync(loggerFactory, context);
+                await LoadUsersAndRolesAsync(userManager, roleManager, loggerFactory);
+                await LoadCenterAsync(loggerFactory, context);
+                await LoadCourseAsync(loggerFactory, context);
+                await LoadCourseNotesAsync(loggerFactory, context);
+                await LoadActivitiesAsync(loggerFactory, context);
+                await LoadStudentsAsync(loggerFactory, context);
+                await LoadAttendanceAsync(loggerFactory, context);
+                await LoadStudentCourseAsync(loggerFactory, context);
+                await LoadStudentsActivitesNotesAsync(loggerFactory, context);
 
-				// AM: Aquí se cargarían los datos del SeedData que por ahora no se encuentran en la rama development
 
-				//await LoadCentersAsync(context, loggerFactory);
-				//await LoadStudentsAsync(context, loggerFactory);
-				//await LoadCoursesAsync(context, loggerFactory);
-			}
-			catch (Exception ex)
-			{
-				var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
-				logger.LogError(ex, "Error al inicializar la Data del API.");
-			}
-		}
+            }
+            catch (Exception ex)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                logger.LogError(ex, "Error al inicializar la Data del API.");
+            }
+        }
 
 		public static async Task LoadUsersAndRolesAsync(
 			UserManager<UserEntity> userManager,
@@ -69,5 +75,287 @@ namespace ClassNotes.API.Database
 				logger.LogError(e.Message);
 			}
 		}
-	}
+	
+        // AM: Aqui se llama el json de Estudiantes 
+        public static async Task LoadStudentsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/students.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var students = JsonConvert.DeserializeObject<List<StudentEntity>>(jsonContent);
+
+                // Verificar si los estudiantes son null o vacíos
+                foreach (var student in students)
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    bool exists = await context.Students.AnyAsync(s => s.Id == student.Id);
+                    if (!exists)
+                    {
+                        student.CreatedDate = DateTime.Now;
+                        student.UpdatedDate = DateTime.Now;
+                        student.CreatedBy = user.Id;
+                        student.UpdatedBy = user.Id;
+                        await context.Students.AddAsync(student);
+                    }
+                }
+
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                logger.LogError(e, "Error al ejecutar el Seed de Estudiantes");
+            }
+        }
+
+        // AM : Aqui se llama el json de Actividades 
+        public static async Task LoadActivitiesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/activities.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var Activities = JsonConvert.DeserializeObject<List<ActivityEntity>>(jsonContent);
+              foreach (var activity in Activities) 
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    bool exists = await context.Activities.AnyAsync(s => s.Id == activity.Id);
+                    if (!exists) 
+                    {
+                        activity.CreatedBy = user.Id;
+                        activity.UpdatedBy = user.Id;
+                        activity.CreatedDate = DateTime.Now;
+                        activity.UpdatedDate = DateTime.Now;
+                        context.Activities.AddAsync(activity);
+                    }
+                }
+              await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                logger.LogError(e, "Error al ejecutar el Seed de Actividades");
+            }
+        }
+        // AM: Aqui se llama el json de Center
+        public static async Task LoadCenterAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/centers.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var center = JsonConvert.DeserializeObject<List<CenterEntity>>(jsonContent);
+                if (!await context.Centers.AnyAsync())
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+
+                    for (int i = 0; i < center.Count; i++)
+                    {
+                        center[i].CreatedBy = user.Id;
+                        center[i].CreatedDate = DateTime.Now;
+                        center[i].UpdatedBy = user.Id;
+                        center[i].UpdatedDate = DateTime.Now;
+                    }
+
+                    await context.Centers.AddRangeAsync(center);
+                    await context.SaveChangesAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesContext>();
+                logger.LogError(e, "Error al ejecutar el Seed de Centros");
+            }
+        }
+        //AM: Aqui se llama el json de Cursos 
+        public static async Task LoadCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/courses.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var courses = JsonConvert.DeserializeObject<List<CourseEntity>>(jsonContent);
+                foreach (var course in courses) 
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    bool exist = await context.Courses.AnyAsync(s => s.Id == course.Id);
+                    if (!exist) { 
+                      course.CreatedBy = user.Id;
+                        course.CreatedDate = DateTime.Now;
+                        course.UpdatedBy = user.Id;
+                        course.UpdatedDate = DateTime.Now;
+                        await context.Courses.AddAsync(course);
+                    }
+                }
+                await context.SaveChangesAsync();
+            }
+
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesContext>();
+                logger.LogError(e, "Error al ejecutar el Seed de Cursos");
+            }
+        }
+
+       
+        
+        //AM: Aqui se llama el json de Asistencias 
+        public static async Task LoadAttendanceAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/attendance.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var attendances = JsonConvert.DeserializeObject<List<AttendanceEntity>>(jsonContent);
+              foreach(var attendace in attendances)
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    bool exist = await context.Attendances.AnyAsync(s =>s.Id == attendace.Id);
+                    if (!exist) 
+                    {
+                        attendace.CreatedBy = user.Id;
+                        attendace.CreatedDate = DateTime.Now;
+                        attendace.UpdatedBy = user.Id;
+                        attendace.UpdatedDate = DateTime.Now;
+                        await context.Attendances.AddAsync(attendace);
+                    }
+                }
+                await context.SaveChangesAsync();
+
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesContext>();
+                logger.LogError(e, "Error al ejecutar el Seed de Asistencia ");
+            }
+        }
+        //AM: Aqui se llama el json de Notas de Cursos 
+
+        public static async Task LoadCourseNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/course_notes.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var course_notes = JsonConvert.DeserializeObject<List<CourseNoteEntity>>(jsonContent);
+                foreach (var courseNote in course_notes)  
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    
+                    bool exist = await context.CoursesNotes.AnyAsync(s => s.Id == courseNote.Id);
+                    if (!exist) 
+                    {
+                        courseNote.CreatedBy = user.Id;
+                        courseNote.CreatedDate = DateTime.Now;
+                        courseNote.UpdatedBy = user.Id;
+                        courseNote.UpdatedDate = DateTime.Now;
+                        await context.CoursesNotes.AddAsync(courseNote);
+                    }
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesContext>();
+                logger.LogError(e, "Error al ejecutar el Seed de Notas del Curso");
+            }
+        }
+
+        //AM: Aqui se llama el json de Ajustes de los Cursos 
+
+        public static async Task LoadCourseSenttingsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/courses_settings.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var courseSettings = JsonConvert.DeserializeObject<List<CourseSettingEntity>>(jsonContent);
+
+                foreach( var courseSetting in courseSettings) 
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    bool exists = await context.CoursesSettings.AnyAsync(s => s.Id == courseSetting.Id);
+                    if (!exists) 
+                    {
+                        courseSetting.CreatedBy = user.Id;
+                        courseSetting.CreatedDate = DateTime.Now;
+                        courseSetting.UpdatedBy = user.Id;
+                        courseSetting.UpdatedDate = DateTime.Now;
+                       context.CoursesSettings.AddAsync(courseSetting);
+                    }
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                logger.LogError(e, $"Error al ejecutar el Seed de Configuraciones de Curso: {e.Message}\n{e.StackTrace}");
+            }
+        }
+
+
+        // AM: Aqui se llama el json de Notas de Actividades 
+        public static async Task LoadStudentsActivitesNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/students_activities_notes.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var students_activities_notes = JsonConvert.DeserializeObject<List<StudentActivityNoteEntity>>(jsonContent);
+                foreach (var students_activities_note in students_activities_notes) 
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    bool exists = await context.StudentsActivitiesNotes.AnyAsync(s => s.Id == students_activities_note.Id);
+                    if (!exists) 
+                    {
+                        students_activities_note.CreatedBy = user.Id;
+                        students_activities_note.CreatedDate = DateTime.Now;
+                        students_activities_note.UpdatedBy = user.Id;
+                        students_activities_note.UpdatedDate = DateTime.Now;
+                        context.StudentsActivitiesNotes.AddAsync(students_activities_note);
+                    }
+
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory?.CreateLogger<ClassNotesContext>();
+                logger.LogError(e, "Error al ejecutar el Seed de Notas de Actividades");
+            }
+        }
+        //AM: Aqui se llama el json de Curso de Estudiantes 
+
+        public static async Task LoadStudentCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/students_courses.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var student_courses = JsonConvert.DeserializeObject<List<StudentCourseEntity>>(jsonContent);
+                foreach ( var student_course in student_courses) 
+                {
+                    var user = await context.Users.FirstOrDefaultAsync();
+                    bool exists = await context.StudentsCourses.AnyAsync(s => s.Id == student_course.Id);
+                    if (!exists) 
+                    {
+                        student_course.CreatedBy = user.Id;
+                        student_course.CreatedDate = DateTime.Now;
+                        student_course.UpdatedBy = user.Id;
+                        student_course.UpdatedDate = DateTime.Now;
+                        context.StudentsCourses.AddAsync(student_course);
+                    }
+                }
+                await context.SaveChangesAsync();
+
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesContext>();
+                logger.LogError(e, "Error al ejecutar el Seeder de Curos de Estudiantes");
+            }
+        }
+
+    }
 }
