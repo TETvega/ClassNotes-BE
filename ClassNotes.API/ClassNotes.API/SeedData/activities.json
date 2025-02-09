@@ -1,163 +1,34 @@
 [
-  [
     {
-      "id": "1234567890ABCDE",
-      "name": "Examen Parcial 1",
-      "grading_period": "2025-01-01",
-      "max_score": "100",
-      "course_id": "O5P6Q7R8S9T0U1V2",
-      "qualification_date": "2025-02-01"
+        "id": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c9",
+        "name": "Examen Parcial 1",
+        "GradingPeriod": 20250101,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-02-01"
     },
     {
-      "id": "2345678901BCDEF",
-      "name": "Examen Parcial 2",
-      "grading_period": "2025-02-01",
-      "max_score": "100",
-      "course_id": "P6Q7R8S9T0U1V2W3",
-      "qualification_date": "2025-03-01"
+        "id": "2b21e890-1187-45be-bf3f-3c883759b8c6",
+        "name": "Examen Parcial 2",
+        "GradingPeriod ": 20250201,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-03-01"
     },
     {
-      "id": "3456789012CDEF1",
-      "name": "Trabajo Final",
-      "grading_period": "2025-03-01",
-      "max_score": "100",
-      "course_id": "Q7R8S9T0U1V2W3X4",
-      "qualification_date": "2025-04-01"
+        "id": "62f2f2b0-d00b-4562-9f3b-2832a080b65e",
+        "name": "Trabajo Final",
+        "GradingPeriod ": 20250301,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-04-01"
     },
     {
-      "id": "4567890123DEF12",
-      "name": "Examen Final",
-      "grading_period": "2025-04-01",
-      "max_score": "100",
-      "course_id": "R8S9T0U1V2W3X4Y5",
-      "qualification_date": "2025-05-01"
-    },
-    {
-      "id": "5678901234EF123",
-      "name": "Proyecto de Investigación",
-      "grading_period": "2025-05-01",
-      "max_score": "100",
-      "course_id": "S9T0U1V2W3X4Y5Z6",
-      "qualification_date": "2025-06-01"
-    },
-    {
-      "id": "6789012345F1234",
-      "name": "Examen de Laboratorio",
-      "grading_period": "2025-06-01",
-      "max_score": "100",
-      "course_id": "T0U1V2W3X4Y5Z6A7",
-      "qualification_date": "2025-07-01"
-    },
-    {
-      "id": "7890123456G2345",
-      "name": "Examen de Unidad 1",
-      "grading_period": "2025-07-01",
-      "max_score": "100",
-      "course_id": "U1V2W3X4Y5Z6A7B8",
-      "qualification_date": "2025-08-01"
-    },
-    {
-      "id": "8901234567H3456",
-      "name": "Examen de Unidad 2",
-      "grading_period": "2025-08-01",
-      "max_score": "100",
-      "course_id": "V2W3X4Y5Z6A7B8C9",
-      "qualification_date": "2025-09-01"
-    },
-    {
-      "id": "9012345678I4567",
-      "name": "Trabajo de Investigación",
-      "grading_period": "2025-09-01",
-      "max_score": "100",
-      "course_id": "W3X4Y5Z6A7B8C9D0",
-      "qualification_date": "2025-10-01"
-    },
-    {
-      "id": "0123456789J5678",
-      "name": "Examen Oral",
-      "grading_period": "2025-10-01",
-      "max_score": "100",
-      "course_id": "X4Y5Z6A7B8C9D0E1",
-      "qualification_date": "2025-11-01"
-    },
-    {
-      "id": "1234567890K6789",
-      "name": "Trabajo Final II",
-      "grading_period": "2025-11-01",
-      "max_score": "100",
-      "course_id": "Y5Z6A7B8C9D0E1F2",
-      "qualification_date": "2025-12-01"
-    },
-    {
-      "id": "2345678901L7890",
-      "name": "Investigación Histórica",
-      "grading_period": "2025-12-01",
-      "max_score": "100",
-      "course_id": "Z6A7B8C9D0E1F2G3",
-      "qualification_date": "2026-01-01"
-    },
-    {
-      "id": "3456789012M8901",
-      "name": "Trabajo de Economía",
-      "grading_period": "2026-01-01",
-      "max_score": "100",
-      "course_id": "A7B8C9D0E1F2G3H4",
-      "qualification_date": "2026-02-01"
-    },
-    {
-      "id": "4567890123N9012",
-      "name": "Examen de Administración",
-      "grading_period": "2026-02-01",
-      "max_score": "100",
-      "course_id": "B8C9D0E1F2G3H4I5",
-      "qualification_date": "2026-03-01"
-    },
-    {
-      "id": "5678901234O0123",
-      "name": "Examen de Computación",
-      "grading_period": "2026-03-01",
-      "max_score": "100",
-      "course_id": "C9D0E1F2G3H4I5J6",
-      "qualification_date": "2026-04-01"
-    },
-    {
-      "id": "6789012345P1234",
-      "name": "Examen de Biofísica",
-      "grading_period": "2026-04-01",
-      "max_score": "100",
-      "course_id": "D0E1F2G3H4I5J6K7",
-      "qualification_date": "2026-05-01"
-    },
-    {
-      "id": "7890123456Q2345",
-      "name": "Medicina en Primer Año",
-      "grading_period": "2026-05-01",
-      "max_score": "100",
-      "course_id": "E1F2G3H4I5J6K7L8",
-      "qualification_date": "2026-06-01"
-    },
-    {
-      "id": "8901234567R3456",
-      "name": "Pediatría Avanzada",
-      "grading_period": "2026-06-01",
-      "max_score": "100",
-      "course_id": "F2G3H4I5J6K7L8M9",
-      "qualification_date": "2026-07-01"
-    },
-    {
-      "id": "9012345678S4567",
-      "name": "Radiología",
-      "grading_period": "2026-07-01",
-      "max_score": "100",
-      "course_id": "G3H4I5J6K7L8M9N0",
-      "qualification_date": "2026-08-01"
-    },
-    {
-      "id": "0123456789T5678",
-      "name": "Ortopedia Avanzada",
-      "grading_period": "2026-08-01",
-      "max_score": "100",
-      "course_id": "H4I5J6K7L8M9N0O1",
-      "qualification_date": "2026-09-01"
+        "id": "279221cf-e6b8-4a5d-b207-3be9f406963b",
+        "name": "Examen Final",
+        "GradingPeriod": 20250401,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-05-01"
     }
-  ]
+]

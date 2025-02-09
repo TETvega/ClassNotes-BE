@@ -1,82 +1,34 @@
 [
-  {
-    "id": "Z9Y8X7W6V5U4T3S2",
-    "first_name": "Juan",
-    "last_name": "Pérez",
-    "email": "juan.perez@example.com",
-    "password": "contraseña123",
-    "default_course_setting_id": "J6K7L8M9N0O1P2Q3"
-  },
-  {
-    "id": "E8D7C6B5A4Z3Y2X1",
-    "first_name": "Ana",
-    "last_name": "González",
-    "email": "ana.gonzalez@example.com",
-    "password": "1234abcd",
-    "default_course_setting_id": "Z9Y8X7W6V5U4T3J2"
-  },
-  {
-    "id": "K8J7I6H5G4F3E2D1",
-    "first_name": "Luis",
-    "last_name": "Rodríguez",
-    "email": "luis.rodriguez@example.com",
-    "password": "abcd1234",
-    "default_course_setting_id": "J6K7L8M9N0O1P2Q3"
-  },
-  {
-    "id": "P9O8N7M6L5K4J3I2",
-    "first_name": "Marta",
-    "last_name": "López",
-    "email": "marta.lopez@example.com",
-    "password": "marta2025",
-    "default_course_setting_id": "Z9Y8X7W6V5U4T3J2"
-  },
-  {
-    "id": "E5F6G7H8I9J0K1L2M3N4",
-    "first_name": "Carlos",
-    "last_name": "Martínez",
-    "email": "carlos.martinez@example.com",
-    "password": "carlos9876",
-    "default_course_setting_id": "J6K7L8M9N0O1P2Q3"
-  },
-  {
-    "id": "F6G7H8I9J0K1L2M3N4O5",
-    "first_name": "Elena",
-    "last_name": "Sánchez",
-    "email": "elena.sanchez@example.com",
-    "password": "elena2025",
-    "default_course_setting_id": "Z9Y8X7W6V5U4T3J2"
-  },
-  {
-    "id": "G7H8I9J0K1L2M3N4O5P6",
-    "first_name": "David",
-    "last_name": "Pérez",
-    "email": "david.perez@example.com",
-    "password": "david2025",
-    "default_course_setting_id": "J6K7L8M9N0O1P2Q3"
-  },
-  {
-    "id": "H8I9J0K1L2M3N4O5P6Q7",
-    "first_name": "Sara",
-    "last_name": "Vargas",
-    "email": "sara.vargas@example.com",
-    "password": "sara1234",
-    "default_course_setting_id": "Z9Y8X7W6V5U4T3J2"
-  },
-  {
-    "id": "I9J0K1L2M3N4O5P6Q7R8",
-    "first_name": "Jorge",
-    "last_name": "Fernández",
-    "email": "jorge.fernandez@example.com",
-    "password": "jorge2025",
-    "default_course_setting_id": "J6K7L8M9N0O1P2Q3"
-  },
-  {
-    "id": "J0K1L2M3N4O5P6Q7R8S9",
-    "first_name": "Clara",
-    "last_name": "Ramírez",
-    "email": "clara.ramirez@example.com",
-    "password": "clara2025",
-    "default_course_setting_id": "Z9Y8X7W6V5U4T3J2"
-  }
+    {
+        "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "first_name": "Juan",
+        "last_name": "Pérez",
+        "email": "juanperez@example.com",
+        "password": "contraseña123",
+        "default_course_setting_id": "f47c3c99-d52d-4f33-95f1-63e4cd07ab39"
+    },
+    {
+        "id": "c56a4180-65aa-42ec-a945-5fd21dec0538",
+        "first_name": "Ana",
+        "last_name": "González",
+        "email": "anagonzalez@example.com",
+        "password": "1234abcd",
+        "default_course_setting_id": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d"
+    },
+    {
+        "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+        "first_name": "Luis",
+        "last_name": "Rodríguez",
+        "email": "luisrodriguez@example.com",
+        "password": "abcd1234",
+        "default_course_setting_id": "f47c3c99-d52d-4f33-95f1-63e4cd07ab39"
+    },
+    {
+        "id": "550e8400-e29b-41d4-a716-446655440004",
+        "first_name": "Marta",
+        "last_name": "López",
+        "email": "martalopez@example.com",
+        "password": "marta2025",
+        "default_course_setting_id": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d"
+    }
 ]
