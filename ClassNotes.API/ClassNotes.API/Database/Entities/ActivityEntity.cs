@@ -32,6 +32,7 @@ namespace ClassNotes.API.Database.Entities
         [Required]
         [Column("course_id")]
         public Guid CourseId { get; set; }
+
         [ForeignKey(nameof(CourseId))]
         public virtual CourseEntity Course { get; set; }
 

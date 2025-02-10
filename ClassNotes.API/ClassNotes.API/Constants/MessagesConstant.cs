@@ -1,4 +1,4 @@
-﻿namespace ClassNotes.API.Constants
+namespace ClassNotes.API.Constants
 {
 	public static class MessagesConstant
 	{

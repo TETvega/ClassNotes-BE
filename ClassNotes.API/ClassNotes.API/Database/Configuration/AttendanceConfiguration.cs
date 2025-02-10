@@ -18,6 +18,17 @@ namespace ClassNotes.API.Database.Configuration
                 .HasForeignKey(e => e.UpdatedBy)
                 .HasPrincipalKey(e => e.Id);
 
+            //DD: Relación entre AttendanceEntity y CourseEntity
+            builder.HasOne(a => a.Course)  
+                .WithMany(c => c.Attendances) 
+                .HasForeignKey(a => a.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //DD: Relación entre AttendanceEntity y StudentEntity
+            builder.HasOne(a => a.Student)   
+                .WithMany(s => s.Attendances) 
+                .HasForeignKey(a => a.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

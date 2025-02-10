@@ -1,4 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -17,7 +20,7 @@ namespace ClassNotes.API.Services.Auth
     // --------------------- CP --------------------- //
 	public class AuthService : IAuthService
 	{
-        //Declaracion de las Variables Globales 
+    //Declaracion de las Variables Globales 
 		private readonly SignInManager<UserEntity> _signInManager;
 		private readonly UserManager<UserEntity> _userManager;
 		private readonly IConfiguration _configuration;
@@ -37,20 +40,20 @@ namespace ClassNotes.API.Services.Auth
 			_userManager = userManager;
 			_configuration = configuration;
 			_logger = logger;
-            _context = context;
+      _context = context;
+
 		}
 
 		public async Task<ResponseDto<LoginResponseDto>> LoginAsync(LoginDto dto)
 		{
             //Método que verifica si el usuario puede iniciar sesión con las credenciales dadas.
             var result = await _signInManager
-				.PasswordSignInAsync(dto.Email,
+			    	.PasswordSignInAsync(dto.Email,
 									 dto.Password,
 									 isPersistent: false,
 									 lockoutOnFailure: false);
-
             /*El resultado(result) puede ser:
-`               SignInResult.Success → Inicio de sesión exitoso.
+               SignInResult.Success → Inicio de sesión exitoso.
                 SignInResult.Failed → Credenciales incorrectas.
                 SignInResult.LockedOut → La cuenta está bloqueada.
                 SignInResult.RequiresTwoFactor → Se requiere autenticación de dos factores(2FA).
@@ -68,7 +71,6 @@ namespace ClassNotes.API.Services.Auth
 				var refreshToken = GenerateRefreshTokenString();
 
                 userEntity.RefreshToken = refreshToken;
-
                 /*
                  * Refresh dejado en 30 mins
                  */
@@ -95,12 +97,11 @@ namespace ClassNotes.API.Services.Auth
 				};
 			}
 
+			return new ResponseDto<LoginResponseDto>
             /*
              * TODO!!
              * Validar las tipos de respuestas como Credenciales Incorrectas o cuenta Bloqueada.
              */
-
-            return new ResponseDto<LoginResponseDto>
 			{
 				Status = false,
 				StatusCode = 401,
@@ -137,17 +138,11 @@ namespace ClassNotes.API.Services.Auth
             try 
             {
                 var principal = GetTokenPrincipal(dto.Token);
-
                 /*Busca dentro de principal.Claims el primer claim donde el tipo sea "emailaddress".
                    Si existe, se almacena en emailClaim, si no, será null.*/
-
                 var emailClaim = principal.Claims.FirstOrDefault(c => 
                     c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");//ASP.NET Identity usa estos esquemas para representar ciertos claims.
-
-
                 var userIdCLaim = principal.Claims.Where(x => x.Type == "UserId").FirstOrDefault();
-
-
                 //Email es Nulo, [Acceso no Autorizado][1001]
                 if (emailClaim is null) 
                 {
@@ -229,6 +224,7 @@ namespace ClassNotes.API.Services.Auth
             {
                 _logger.LogError(exception: e, message: e.Message);
 
+
                 //Email es Nulo, [Error interno del Servidor{Token}][5001]
                 return new ResponseDto<LoginResponseDto> 
                 {
@@ -241,6 +237,7 @@ namespace ClassNotes.API.Services.Auth
         /*
          * Funcion para obtener un refresh Token
          */
+
         private string GenerateRefreshTokenString()
         {
             var randomNumber  = new byte[64];
@@ -252,12 +249,7 @@ namespace ClassNotes.API.Services.Auth
 
             return Convert.ToBase64String(randomNumber);
         }
-
-		/// <summary>
-        /// 
-        /// </summary>
-        /// <param name="dto"></param>
-        /// <returns></returns>
+		
         public async Task<ResponseDto<LoginResponseDto>> RegisterAsync(RegisterDto dto)
 		{
 			var user = new UserEntity 
@@ -269,6 +261,7 @@ namespace ClassNotes.API.Services.Auth
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
+
 
             if (result.Succeeded)
             {

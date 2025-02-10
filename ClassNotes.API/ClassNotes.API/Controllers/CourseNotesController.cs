@@ -23,9 +23,9 @@ namespace ClassNotes.API.Controllers
 		// Traer todos 
 
 		[HttpGet]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
+    [Authorize(Roles = $"{RolesConstant.USER}")]
 
-        public async Task<ActionResult<ResponseDto<CourseNoteDto>>> GetAll(
+    public async Task<ActionResult<ResponseDto<CourseNoteDto>>> GetAll(
 			string searchTerm = "",
 			int page = 1)
 		{
@@ -36,7 +36,7 @@ namespace ClassNotes.API.Controllers
 
 		// Traer por id 
 		[HttpGet("{id}")]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
+    [Authorize(Roles = $"{RolesConstant.USER}")]
 
         public async Task<ActionResult<ResponseDto<CourseNoteDto>>> Get(Guid id)
 		{

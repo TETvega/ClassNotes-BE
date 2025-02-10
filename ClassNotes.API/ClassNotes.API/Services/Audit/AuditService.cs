@@ -10,6 +10,7 @@
 			IHttpContextAccessor httpContextAccessor
 			)
 		{
+
 			_httpContextAccessor = httpContextAccessor;
 		}
 
