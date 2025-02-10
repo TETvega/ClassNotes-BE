@@ -16,8 +16,8 @@ namespace ClassNotes.API.Database
 		{
             try
             {
-                await LoadCourseSenttingsAsync(loggerFactory, context);
                 await LoadUsersAndRolesAsync(userManager, roleManager, loggerFactory);
+                await LoadCourseSenttingsAsync(loggerFactory, context);
                 await LoadCenterAsync(loggerFactory, context);
                 await LoadCourseAsync(loggerFactory, context);
                 await LoadCourseNotesAsync(loggerFactory, context);
