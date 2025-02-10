@@ -56,6 +56,7 @@ namespace ClassNotes.API.Database
                     foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
                 }
             }
+<<<<<<< HEAD
             // AM : Relacione ntre CenterEntity y UserEntity
             modelBuilder.Entity<CenterEntity>()
             .HasOne(a => a.Teacher)
@@ -136,6 +137,9 @@ namespace ClassNotes.API.Database
             .WithMany(c => c.Activities)
              .HasForeignKey(a => a.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
+=======
+        
+>>>>>>> 077fa5de0c18152006001d421f090c06fbce5f54
 
         }
 
