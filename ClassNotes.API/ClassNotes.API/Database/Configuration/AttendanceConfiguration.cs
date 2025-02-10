@@ -8,13 +8,11 @@ namespace ClassNotes.API.Database.Configuration
     {
         public void Configure(EntityTypeBuilder<AttendanceEntity> builder)
         {
-            
             builder.HasOne(e => e.CreatedByUser)
                 .WithMany()
-                .HasForeignKey(e => e.CreatedBy)
-                .HasPrincipalKey(e => e.Id);
+                .HasForeignKey(e => e.CreatedBy) // LLave Foranea
+                .HasPrincipalKey(e => e.Id); // LLave Principal
 
-           
             builder.HasOne(e => e.UpdatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.UpdatedBy)
@@ -32,6 +30,5 @@ namespace ClassNotes.API.Database.Configuration
                 .HasForeignKey(a => a.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
-
     }
 }

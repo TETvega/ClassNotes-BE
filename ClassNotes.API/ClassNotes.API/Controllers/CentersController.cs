@@ -13,7 +13,7 @@ namespace ClassNotes.API.Controllers
 
 		public CentersController(ICentersService centersService)
         {
-			this._centersService = centersService;
+			_centersService = centersService;
 		}
 
 		// AM: Agregar los endpoints del CRUD

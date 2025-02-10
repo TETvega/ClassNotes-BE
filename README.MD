@@ -19,8 +19,17 @@
 4. [Como instalar](#instrucciones-de-instalacion)
  
 
-
 ## Descripcion 
+
+**El siguiente Link es un video producido para que los usarios comprendan mejor la herramienta:**
+> - [Click aqui para ver video ](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+
+**Documentos que pueden ser de Utilidad para comprender la APLICACION**
+> - [Carpeta Completa:](https://drive.google.com/drive/folders/1kPBFMYXlIRq8aMxl9twHtC5yoGz2SAsU?usp=sharing)
+
+> - [Flow APP:](#)
+
+> - [DER:](https://drive.google.com/file/d/1l-2s2lGYKF2_S9rv7Xj0SdmgdOzKV0xX/view?usp=sharing)
 
 
 **¿Que es el proyecto ClassNote?** 

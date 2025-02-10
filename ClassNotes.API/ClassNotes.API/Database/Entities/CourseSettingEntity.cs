@@ -11,7 +11,9 @@ namespace ClassNotes.API.Database.Entities
         [Required]
         [StringLength(15)]
         [Column("score_type")]
-        public string ScoreType { get; set; } = "DefaultValue";
+
+        public string ScoreType { get; set; };
+
 
         //(Ken) 
         //Limito las unidades de uno a 7 para que tenga sentido por los dias a la semana.
@@ -31,7 +33,8 @@ namespace ClassNotes.API.Database.Entities
 
         //(ken)
         //No se puede limitar digitos despues del decimal con DataNotations
-        //Asi que lo tienen que hacer en el servicio o frontend...
+        //Esta limitado en el Servicio a [2] decimales despues del Punto
+
         [Required]
         [Range(0, 100)]
         [Column("minimum_grade")]
@@ -44,8 +47,10 @@ namespace ClassNotes.API.Database.Entities
         [DefaultValue(10)]
         public int MinimumAttendanceTime { get; set; }
 
+
         public virtual ICollection<CourseEntity> Courses { get; set; } = new List<CourseEntity>();
         public virtual ICollection<UserEntity> Teachers { get; set; } = new List<UserEntity>();
+
         public virtual UserEntity CreatedByUser { get; set; }
         public virtual UserEntity UpdatedByUser { get; set; }
     }

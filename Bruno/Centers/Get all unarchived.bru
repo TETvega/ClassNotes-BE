@@ -1,0 +1,15 @@
+meta {
+  name: Get all unarchived
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/centers/unarchived
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

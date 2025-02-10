@@ -8,13 +8,12 @@ namespace ClassNotes.API.Database.Configuration
     {
         public void Configure(EntityTypeBuilder<CenterEntity> builder)
         {
-          
+
             builder.HasOne(e => e.CreatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.CreatedBy)
                 .HasPrincipalKey(e => e.Id);
 
-            
             builder.HasOne(e => e.UpdatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.UpdatedBy)
@@ -31,6 +30,7 @@ namespace ClassNotes.API.Database.Configuration
                 .WithOne(c => c.Center)     
                 .HasForeignKey(c => c.CenterId)
                 .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

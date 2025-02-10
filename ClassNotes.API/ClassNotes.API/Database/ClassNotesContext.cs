@@ -26,6 +26,9 @@ namespace ClassNotes.API.Database
             modelBuilder.UseCollation("SQL_Latin1_General_CP1_CI_AS");
             modelBuilder.HasDefaultSchema("security");
 
+            /*
+             Aqui se encuentran las propiedades y tablas necesarias para IDENTITY
+             */
             modelBuilder.Entity<UserEntity>().ToTable("users");
             modelBuilder.Entity<IdentityRole>().ToTable("roles");
             modelBuilder.Entity<IdentityUserRole<string>>().ToTable("users_roles");
@@ -34,6 +37,7 @@ namespace ClassNotes.API.Database
             modelBuilder.Entity<IdentityRoleClaim<string>>().ToTable("roles_claims");
             modelBuilder.Entity<IdentityUserToken<string>>().ToTable("users_tokens");
 
+            //Aplican las Configuraciones de LLaves Foraneas
             modelBuilder.ApplyConfiguration(new ActivityConfiguration());
             modelBuilder.ApplyConfiguration(new AttendanceConfiguration());
             modelBuilder.ApplyConfiguration(new CenterConfiguration());
@@ -56,122 +60,42 @@ namespace ClassNotes.API.Database
                     foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
                 }
             }
-<<<<<<< HEAD
-            // AM : Relacione ntre CenterEntity y UserEntity
-            modelBuilder.Entity<CenterEntity>()
-            .HasOne(a => a.Teacher)
-            .WithMany(U => U.Centers)
-            .HasForeignKey(c => c.TeacherId)
-            .OnDelete(DeleteBehavior.Restrict);
-            //AM : Relacion entre CourseEntity y CurseSettingEntity
-            modelBuilder.Entity<CourseEntity>()
-            .HasOne(c => c.CourseSetting)
-            .WithMany(s => s.Courses)
-            .HasForeignKey(c => c.SettingId)
-            .OnDelete(DeleteBehavior.Cascade);
-            //AM : Relacion entre CourseEntity y CenterEntity
-            modelBuilder.Entity<CourseEntity>()
-            .HasOne(c => c.Center)
-            .WithMany(tp => tp.Courses)
-            .HasForeignKey(c => c.CenterId)
-            .OnDelete(DeleteBehavior.Cascade);
 
-            // //AM : Relacion entre UserEntity y CourseEntity
-            modelBuilder.Entity<UserEntity>()
-             .HasOne(u => u.DefaultCourseSettings)
-             .WithMany()
-             .HasForeignKey(u => u.DefaultCourseSettingId)
-             .OnDelete(DeleteBehavior.Restrict);
-
-            //AM Relacion entre StudentsEntity y UserEntity
-            modelBuilder.Entity<StudentEntity>()
-            .HasOne(s => s.Teacher)
-            .WithMany(u => u.Students)
-            .HasForeignKey(s => s.TeacherId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-
-
-            //AM: Relacionentre StudentEntity y CourseEntity
-            modelBuilder.Entity<StudentCourseEntity>()
-            .HasOne(sc => sc.Course)
-            .WithMany(c => c.Students)
-            .HasForeignKey(sc => sc.CourseId)
-            .OnDelete(DeleteBehavior.Restrict);
-            //AM: Relacion entre StudentEntity y ActivityEntity 
-            modelBuilder.Entity<StudentActivityNoteEntity>()
-            .HasOne(san => san.Student)
-            .WithMany(s => s.Activities)
-            .HasForeignKey(san => san.StudentId)
-            .OnDelete(DeleteBehavior.Restrict);
-            //Am: Relacion entre ActivityEntity y StudentActivityENtity
-            modelBuilder.Entity<StudentActivityNoteEntity>()
-            .HasOne(san => san.Activity)
-             .WithMany(a => a.StudentNotes)
-            .HasForeignKey(san => san.ActivityId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-            //Am: Relacion entre AttendanceEntity y CourseEntity 
-            modelBuilder.Entity<AttendanceEntity>()
-            .HasOne(a => a.Course)
-            .WithMany(c => c.Attendances)
-            .HasForeignKey(a => a.CourseId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-            //Am: Relación entre AttendanceEntity y StudentEntity
-            modelBuilder.Entity<AttendanceEntity>()
-                .HasOne(a => a.Student)
-                .WithMany(s => s.Attendances)
-                .HasForeignKey(a => a.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            //Am: Relación entre CourseNoteEntity y CourseEntity
-            modelBuilder.Entity<CourseNoteEntity>()
-                .HasOne(cn => cn.Course)
-                .WithMany(c => c.CourseNotes)
-                .HasForeignKey(cn => cn.CourseId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ActivityEntity>()
-            .HasOne(a => a.Course)
-            .WithMany(c => c.Activities)
-             .HasForeignKey(a => a.CourseId)
-                .OnDelete(DeleteBehavior.Cascade);
-=======
-        
->>>>>>> 077fa5de0c18152006001d421f090c06fbce5f54
 
         }
 
-        //  public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        //  {
-        //      var entries = ChangeTracker
-        //          .Entries()
-        //          .Where(e => e.Entity is BaseEntity && (
-        //              e.State == EntityState.Added ||
-        //              e.State == EntityState.Modified
-        //          ));
+        /*El siguiente Codigo Sive para los Campos de Auditoria, saber quien esta mandando las peticiones editando o creando*/
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is BaseEntity && (
+                    e.State == EntityState.Added ||
+                    e.State == EntityState.Modified
+                ));
 
-        //      foreach (var entry in entries)
-        //      {
-        //          var entity = entry.Entity as BaseEntity;
-        //          if (entity != null)
-        //          {
-        //              if (entry.State == EntityState.Added)
-        //              {
-        //                  entity.CreatedBy = _auditService.GetUserId();
-        //entity.CreatedDate = DateTime.Now;
-        //              }
-        //              else
-        //              {
-        //                  entity.UpdatedBy = _auditService.GetUserId();
-        //entity.UpdatedDate = DateTime.Now;
-        //              }
-        //          }
-        //      }
+            foreach (var entry in entries)
+            {
+                var entity = entry.Entity as BaseEntity;
+                if (entity != null)
+                {
+                    //El usuario esta creando 
+                    if (entry.State == EntityState.Added)
+                    {
+                        entity.CreatedBy = _auditService.GetUserId();
+						entity.CreatedDate = DateTime.Now;
+                    }
+                      //El usuario esta editando 
+                    else
+                    {
+                        entity.UpdatedBy = _auditService.GetUserId();
+						entity.UpdatedDate = DateTime.Now;
+                    }
+                }
+            }
 
-        //      return base.SaveChangesAsync(cancellationToken);
-        //  }
+            return base.SaveChangesAsync(cancellationToken);
+        }
 
         public DbSet<ActivityEntity> Activities { get; set; }
         public DbSet<AttendanceEntity> Attendances { get; set; }

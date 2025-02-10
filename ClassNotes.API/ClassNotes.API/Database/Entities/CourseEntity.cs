@@ -28,7 +28,6 @@ namespace ClassNotes.API.Database.Entities
         public Guid CenterId { get; set; }
         [ForeignKey(nameof(CenterId))]
 
-
         public virtual CenterEntity Center { get; set; }
 
 
@@ -36,6 +35,7 @@ namespace ClassNotes.API.Database.Entities
         [Column("setting_id")]
         public Guid SettingId { get; set; }
         [ForeignKey(nameof(SettingId))]
+
         public virtual CourseSettingEntity CourseSetting { get; set;}
 
 

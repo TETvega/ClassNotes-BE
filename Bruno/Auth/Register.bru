@@ -1,0 +1,21 @@
+meta {
+  name: Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "Mario",
+    "lastName": "Lopez",
+    "email": "marlopez@me.com",
+    "password": "Hola12345!",
+    "confirmPassword": "Hola12345!"
+  }
+}

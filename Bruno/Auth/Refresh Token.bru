@@ -1,0 +1,24 @@
+meta {
+  name: Refresh Token
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/auth/refresh-token
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "token": "{{TOKEN}}",
+    "refreshToken": "{{REFRESH_TOKEN}}"
+  }
+}
+
+script:post-response {
+  let response = res.getBody()
+  bru.setEnvVar("TOKEN", response.data?.token ?? '')
+  bru.setEnvVar("REFRESH_TOKEN", response.data?.refreshToken ?? '')
+}

@@ -194,6 +194,9 @@ _pkginfo.txt
 # Comando para omitir el archivo appsettings.Development.json
 ClassNotes.API/ClassNotes.API/appsettings.Development.json
 
+# Comando para omitir la carpeta de migraciones
+ClassNotes.API/ClassNotes.API/Migrations
+
 # Others
 ClientBin/
 ~$*

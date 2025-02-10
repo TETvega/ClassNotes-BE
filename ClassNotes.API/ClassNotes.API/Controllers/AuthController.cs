@@ -15,7 +15,7 @@ namespace ClassNotes.API.Controllers
 
         public AuthController(IAuthService authService)
         {
-            this._authService = authService;
+            _authService = authService;
         }
 
         // AM: Agregar los endpoints del CRUD
