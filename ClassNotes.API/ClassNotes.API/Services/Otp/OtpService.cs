@@ -7,6 +7,9 @@ using MimeKit;
 using OtpNet;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ClassNotes.API.Database.Entities;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ClassNotes.API.Services.Otp
 {
@@ -40,8 +43,11 @@ namespace ClassNotes.API.Services.Otp
 				};
 			}
 
+			// CG: Si existe usuario, crear su secreto de Otp
+			var secretKey = GenerateSecretKey(user);
+			
 			// CG: Guardar el OTP en memoria
-			var otpCode = GenerateOtp(user.SecretKey);
+			var otpCode = GenerateOtp(secretKey);
             var cacheKey = $"OTP_{user.Email}";
             var otpData = new { Code = otpCode, Expiration = DateTime.UtcNow.AddSeconds(_otpExpirationSeconds) };
             
@@ -130,8 +136,18 @@ namespace ClassNotes.API.Services.Otp
 			return otpGenerator.ComputeTotp();
 		}
 
-		// CG: Este metodo solo sirve para verificar que la cache esta siendo limpiada tras usar o expirar un OTP
-		public async Task<ResponseDto<OtpDto>> GetCachedOtpAsync(string email)
+
+        // CG: Generar SecretKey dinamicamente en base a la contraseña e id del usuario
+        private string GenerateSecretKey(UserEntity user)
+        {
+            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(user.PasswordHash)))
+            {
+                return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Id.ToString())));
+            }
+        }
+
+        // CG: Este metodo solo sirve para verificar que la cache esta siendo limpiada tras usar o expirar un OTP
+        public async Task<ResponseDto<OtpDto>> GetCachedOtpAsync(string email)
 		{
 
             var cacheKey = $"OTP_{email}";
