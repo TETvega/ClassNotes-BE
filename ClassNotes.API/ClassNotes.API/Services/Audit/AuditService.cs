@@ -1,27 +1,30 @@
-﻿namespace ClassNotes.API.Services.Audit
+﻿using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+
+namespace ClassNotes.API.Services.Audit
 {
-	public class AuditService : IAuditService
-	{
-		// --------------------- CP --------------------- //
+    public class AuditService : IAuditService
+    {
+        // --------------------- CP --------------------- //
 
-		private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-		public AuditService(
-			IHttpContextAccessor httpContextAccessor
-			)
-		{
+        public AuditService(
+            IHttpContextAccessor httpContextAccessor
+            )
+        {
+            this._httpContextAccessor = httpContextAccessor;
+        }
 
-			_httpContextAccessor = httpContextAccessor;
-		}
+        public string GetUserId()
+        {
+            var idClaim = _httpContextAccessor.HttpContext
+                .User.Claims.Where(x => x.Type == "UserId").FirstOrDefault();
 
-		public string GetUserId()
-		{
-			var idClaim = _httpContextAccessor.HttpContext
-				.User.Claims.Where(x => x.Type == "UserId").FirstOrDefault();
+            return idClaim.Value;
+        }
 
-			return idClaim.Value;
-		}
-
-		// --------------------- CP --------------------- //
-	}
+        // --------------------- CP --------------------- //
+    }
 }

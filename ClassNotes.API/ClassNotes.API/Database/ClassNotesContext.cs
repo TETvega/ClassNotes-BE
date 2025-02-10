@@ -7,6 +7,7 @@ using ClassNotes.API.Database.Configuration;
 using ClassNotes.API.Services.Audit;
 using System.Diagnostics;
 
+
 namespace ClassNotes.API.Database
 {
     public class ClassNotesContext : IdentityDbContext<UserEntity>

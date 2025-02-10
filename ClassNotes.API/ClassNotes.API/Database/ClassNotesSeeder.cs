@@ -109,7 +109,7 @@ namespace ClassNotes.API.Database
             }
         }
 
-        // AM : Aqui se llama el json de Actividades 
+        // DD : Aqui se llama el json de Actividades 
         public static async Task LoadActivitiesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -138,7 +138,7 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Actividades");
             }
         }
-        // AM: Aqui se llama el json de Center
+        // DD: Aqui se llama el json de Center
         public static async Task LoadCenterAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -168,7 +168,7 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Centros");
             }
         }
-        //AM: Aqui se llama el json de Cursos 
+        //DD: Aqui se llama el json de Cursos 
         public static async Task LoadCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -200,7 +200,7 @@ namespace ClassNotes.API.Database
 
        
         
-        //AM: Aqui se llama el json de Asistencias 
+        //DD: Aqui se llama el json de Asistencias 
         public static async Task LoadAttendanceAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -230,7 +230,7 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Asistencia ");
             }
         }
-        //AM: Aqui se llama el json de Notas de Cursos 
+        //DD: Aqui se llama el json de Notas de Cursos 
 
         public static async Task LoadCourseNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
@@ -262,7 +262,7 @@ namespace ClassNotes.API.Database
             }
         }
 
-        //AM: Aqui se llama el json de Ajustes de los Cursos 
+        //DD: Aqui se llama el json de Ajustes de los Cursos 
 
         public static async Task LoadCourseSenttingsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
@@ -295,7 +295,7 @@ namespace ClassNotes.API.Database
         }
 
 
-        // AM: Aqui se llama el json de Notas de Actividades 
+        // DD: Aqui se llama el json de Notas de Actividades 
         public static async Task LoadStudentsActivitesNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -325,7 +325,7 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Notas de Actividades");
             }
         }
-        //AM: Aqui se llama el json de Curso de Estudiantes 
+        //DD: Aqui se llama el json de Curso de Estudiantes 
 
         public static async Task LoadStudentCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {

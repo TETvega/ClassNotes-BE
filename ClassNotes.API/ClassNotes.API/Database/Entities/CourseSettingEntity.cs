@@ -12,7 +12,7 @@ namespace ClassNotes.API.Database.Entities
         [StringLength(15)]
         [Column("score_type")]
 
-        public string ScoreType { get; set; };
+        public string ScoreType { get; set; }
 
 
         //(Ken) 
