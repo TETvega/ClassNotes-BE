@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClassNotes.API.Controllers
 {
-	// --------------------- CP --------------------- //
+    // --------------------- CP --------------------- //
     [ApiController]
     [Route("api/activities")]
     [Authorize(AuthenticationSchemes = "Bearer")]
@@ -32,6 +32,15 @@ namespace ClassNotes.API.Controllers
         )
         {
             var response = await _activitiesService.GetActivitiesListAsync(searchTerm, page);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        // Traer una actividad mediante su id
+        [HttpGet("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<ActivityDto>>> Get(Guid id)
+        {
+            var response = await _activitiesService.GetActivityByIdAsync(id);
             return StatusCode(response.StatusCode, response);
         }
     }

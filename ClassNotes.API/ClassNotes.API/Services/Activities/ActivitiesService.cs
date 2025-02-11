@@ -71,9 +71,28 @@ namespace ClassNotes.API.Services.Activities
             };
         }
 
-		public Task<ResponseDto<ActivityDto>> GetActivityByIdAsync(Guid id)
+        // Obtener una actividad mediante su id
+		public async Task<ResponseDto<ActivityDto>> GetActivityByIdAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var activityEntity = await _context.Activities
+                .FirstOrDefaultAsync(a => a.Id == id);
+            if (activityEntity == null)
+            {
+                return new ResponseDto<ActivityDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+            var activityDto = _mapper.Map<ActivityDto>(activityEntity);
+            return new ResponseDto<ActivityDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORD_FOUND,
+                Data = activityDto
+            };
         }
 
         public Task<ResponseDto<ActivityDto>> CreateAsync(ActivityCreateDto dto)
