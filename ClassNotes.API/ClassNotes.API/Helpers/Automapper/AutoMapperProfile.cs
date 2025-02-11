@@ -7,6 +7,7 @@ using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Dtos.Students;
+using ClassNotes.API.Dtos.Users;
 
 namespace ClassNotes.API.Helpers.Automapper
 {
@@ -21,6 +22,7 @@ namespace ClassNotes.API.Helpers.Automapper
 			MapsForStudents();
 			MapsForCourseNotes();
 			MapsForCourseSettings();
+			MapsForUsers();
 		}
 
 		private void MapsForActivities()
@@ -70,6 +72,12 @@ namespace ClassNotes.API.Helpers.Automapper
 			CreateMap<CourseSettingEntity, CourseSettingDto>();
 			CreateMap<CourseSettingCreateDto, CourseSettingEntity>();
 			CreateMap<CourseSettingEditDto, CourseSettingEntity>();
+		}
+
+		private void MapsForUsers()
+		{
+			CreateMap<UserEntity, UserDto>();
+			CreateMap<UserEditDto, UserEntity>();
 		}
 	}
 }

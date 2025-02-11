@@ -49,10 +49,10 @@ namespace ClassNotes.API.Database
 					var normalUser = new UserEntity
 					{
 						Id = "41e958ea-a9e3-4deb-bccb-e17a987164c7",
-						Email = "hectormartinez1vg@gmail.com",
-						UserName = "hectormartinez1vg@gmail.com",
-						FirstName = "Anthony",
-						LastName = "Miranda",
+						Email = "jperez@me.com",
+						UserName = "jperez@me.com",
+						FirstName = "Juan",
+						LastName = "Perez",
 						//DefaultCourseSettingId = Guid.NewGuid(),
 					};
 
