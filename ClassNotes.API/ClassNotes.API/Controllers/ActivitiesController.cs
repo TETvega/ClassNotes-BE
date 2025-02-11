@@ -43,5 +43,14 @@ namespace ClassNotes.API.Controllers
             var response = await _activitiesService.GetActivityByIdAsync(id);
             return StatusCode(response.StatusCode, response);
         }
+
+        // Crear una actividad
+        [HttpPost]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<ActivityDto>>> Create(ActivityCreateDto dto)
+        {
+            var response = await _activitiesService.CreateAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }
