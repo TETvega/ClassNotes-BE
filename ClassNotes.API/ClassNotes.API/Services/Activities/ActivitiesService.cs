@@ -161,9 +161,28 @@ namespace ClassNotes.API.Services.Activities
             };
         }
 
-        public Task<ResponseDto<ActivityDto>> DeleteAsync(Guid id)
+        // Eliminar una actividad
+        public async Task<ResponseDto<ActivityDto>> DeleteAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var activityEntity = await _context.Activities
+                .FirstOrDefaultAsync(a => a.Id == id);
+            if (activityEntity == null)
+            {
+                return new ResponseDto<ActivityDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+            _context.Activities.Remove(activityEntity);
+            await _context.SaveChangesAsync();
+            return new ResponseDto<ActivityDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.DELETE_SUCCESS
+            };
         }
     }
 }

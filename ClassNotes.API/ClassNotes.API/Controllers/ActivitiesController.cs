@@ -61,5 +61,14 @@ namespace ClassNotes.API.Controllers
             var response = await _activitiesService.EditAsync(dto, id);
             return StatusCode(response.StatusCode, response);
         }
+
+        // Eliminar una actividad
+        [HttpDelete("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<ActivityDto>>> Delete(Guid id)
+        {
+            var response = await _activitiesService.DeleteAsync(id);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }
