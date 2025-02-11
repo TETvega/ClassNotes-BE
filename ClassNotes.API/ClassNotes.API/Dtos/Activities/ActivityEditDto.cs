@@ -1,6 +1,6 @@
 ﻿namespace ClassNotes.API.Dtos.Activities
 {
-	public class ActivityEditDto
+	public class ActivityEditDto : ActivityCreateDto
 	{
 	}
 }
