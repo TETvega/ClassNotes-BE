@@ -123,9 +123,42 @@ namespace ClassNotes.API.Services.Activities
             };
         }
 
-        public Task<ResponseDto<ActivityDto>> EditAsync(ActivityEditDto dto, Guid id)
+        // Editar una actividad
+        public async Task<ResponseDto<ActivityDto>> EditAsync(ActivityEditDto dto, Guid id)
         {
-            throw new NotImplementedException();
+            // Validar que la fecha de calificación no sea menor a la fecha actual
+            if (dto.QualificationDate < DateTime.UtcNow.Date)
+            {
+                return new ResponseDto<ActivityDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "La fecha de calificación no puede ser menor a la fecha actual."
+                };
+            }
+
+            var activityEntity = await _context.Activities
+                .FirstOrDefaultAsync(a => a.Id == id);
+            if (activityEntity == null)
+            {
+                return new ResponseDto<ActivityDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+            _mapper.Map(dto, activityEntity);
+            _context.Activities.Update(activityEntity);
+            await _context.SaveChangesAsync();
+            var activityDto = _mapper.Map<ActivityDto>(activityEntity);
+            return new ResponseDto<ActivityDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.UPDATE_SUCCESS,
+                Data = activityDto
+            };
         }
 
         public Task<ResponseDto<ActivityDto>> DeleteAsync(Guid id)

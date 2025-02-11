@@ -52,5 +52,14 @@ namespace ClassNotes.API.Controllers
             var response = await _activitiesService.CreateAsync(dto);
             return StatusCode(response.StatusCode, response);
         }
+
+        // Editar una actividad
+        [HttpPut("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<ActivityDto>>> Edit(ActivityEditDto dto, Guid id)
+        {
+            var response = await _activitiesService.EditAsync(dto, id);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

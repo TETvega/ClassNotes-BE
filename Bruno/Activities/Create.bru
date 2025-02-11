@@ -6,10 +6,20 @@ meta {
 
 post {
   url: {{PATH}}/activities
-  body: none
+  body: json
   auth: bearer
 }
 
 auth:bearer {
   token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Guia de trabajo 6.0",
+    "gradingPeriod": 3,
+    "maxScore": 0,
+    "qualificationDate": "2025-07-11T00:00:00.763Z",
+    "courseId": "CAAB5305-52D2-463D-BC77-C579B41167FA"
+  }
 }
