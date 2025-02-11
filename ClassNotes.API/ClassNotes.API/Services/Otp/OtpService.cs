@@ -43,11 +43,11 @@ namespace ClassNotes.API.Services.Otp
 				};
 			}
 
-			// CG: Si existe usuario, crear su secreto de Otp
+			// CG: Si existe usuario, crear su secreto de Otp en base a su id y contraseña en base32
 			var secretKey = GenerateSecretKey(user);
-			
-			// CG: Guardar el OTP en memoria
-			var otpCode = GenerateOtp(secretKey);
+
+            // CG: Guardar el OTP en memoria
+            var otpCode = GenerateOtp(secretKey);
             var cacheKey = $"OTP_{user.Email}";
             var otpData = new { Code = otpCode, Expiration = DateTime.UtcNow.AddSeconds(_otpExpirationSeconds) };
             
@@ -140,10 +140,12 @@ namespace ClassNotes.API.Services.Otp
         // CG: Generar SecretKey dinamicamente en base a la contraseña e id del usuario
         private string GenerateSecretKey(UserEntity user)
         {
-            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(user.PasswordHash)))
-            {
-                return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Id.ToString())));
-            }
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(user.PasswordHash));
+            byte[] hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Id.ToString()));
+
+
+            return Base32Encoding.ToString(hashBytes);
+
         }
 
         // CG: Este metodo solo sirve para verificar que la cache esta siendo limpiada tras usar o expirar un OTP
