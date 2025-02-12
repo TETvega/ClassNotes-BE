@@ -3,7 +3,9 @@ using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.Otp;
 using ClassNotes.API.Dtos.Users;
+using ClassNotes.API.Services.Otp;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,17 +17,21 @@ namespace ClassNotes.API.Services.Users
 		private readonly UserManager<UserEntity> _userManager;
 		private readonly IMapper _mapper;
 		private readonly ILogger<UsersService> _logger;
+		private readonly IOtpService _otpService;
 
 		public UsersService(
 			ClassNotesContext context, 
 			UserManager<UserEntity> userManager, 
 			IMapper mapper, 
-			ILogger<UsersService> logger)
+			ILogger<UsersService> logger,
+			IOtpService otpService
+			)
         {
 			this._context = context;
 			this._userManager = userManager;
 			this._mapper = mapper;
 			this._logger = logger;
+			this._otpService = otpService;
 		}
 
 		// AM: Función para editar información del usuario (nombre completo)
@@ -125,9 +131,57 @@ namespace ClassNotes.API.Services.Users
 		}
 
 		// AM: Función para cambiar la contraseña mediante validación OTP
-		public Task<ResponseDto<UserDto>> ChangePasswordWithOtpAsync(UserEditPasswordOtpDto dto)
+		public async Task<ResponseDto<UserDto>> ChangePasswordWithOtpAsync(UserEditPasswordOtpDto dto)
 		{
-			throw new NotImplementedException();
+			// AM: Validar el OTP ingresado
+			var otpValidationResult = await _otpService.ValidateOtpAsync(new OtpValidateDto { Email = dto.Email, OtpCode = dto.OtpCode });
+
+			if (!otpValidationResult.Status)
+			{
+				return new ResponseDto<UserDto>
+				{
+					StatusCode = 400,
+					Status = false,
+					Message = otpValidationResult.Message
+				};
+			}
+
+			// AM: Buscar al usuario por email
+			var user = await _userManager.FindByEmailAsync(dto.Email);
+			if (user is null)
+			{
+				return new ResponseDto<UserDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = "El correo ingresado no está registrado."
+				};
+			}
+
+			// AM: Cambiar la contraseña sin necesidad de la actual
+			var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+			var passwordChangeResult = await _userManager.ResetPasswordAsync(user, resetToken, dto.NewPassword);
+
+			if (!passwordChangeResult.Succeeded)
+			{
+				return new ResponseDto<UserDto>
+				{
+					StatusCode = 400,
+					Status = false,
+					Message = "No se pudo cambiar la contraseña."
+				};
+			}
+
+			// AM: Mapear Entity a Dto para la respuesta
+			var userDto = _mapper.Map<UserDto>(user);
+
+			return new ResponseDto<UserDto>
+			{
+				StatusCode = 200,
+				Status = true,
+				Message = "La contraseña fue actualizada satisfactoriamente.",
+				Data = userDto
+			};
 		}
 
 		// AM: Función para cambiar el correo electrónico

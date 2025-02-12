@@ -34,5 +34,13 @@ namespace ClassNotes.API.Controllers
 			var response = await _usersService.ChangePasswordAsync(dto, id);
 			return StatusCode(response.StatusCode, response);
 		}
+
+		[HttpPut("password-otp")]
+		[AllowAnonymous]
+		public async Task<ActionResult<ResponseDto<UserDto>>> ChangePasswordOtp(UserEditPasswordOtpDto dto)
+		{
+			var response = await _usersService.ChangePasswordWithOtpAsync(dto);
+			return StatusCode(response.StatusCode, response);
+		}
 	}
 }
