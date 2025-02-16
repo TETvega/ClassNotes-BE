@@ -47,5 +47,32 @@ namespace ClassNotes.API.Services.Courses
                 Data = courseDto
             };
 		}
+
+        // CP -> Eliminar un curso
+        public async Task<ResponseDto<CourseDto>> DeleteAsync(Guid id)
+        {
+            var courseEntity = await _context.Courses
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (courseEntity == null)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+            _context.Courses.Remove(courseEntity);
+
+            await _context.SaveChangesAsync();
+
+            return new ResponseDto<CourseDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.DELETE_SUCCESS
+            };
+        }
 	}
 }

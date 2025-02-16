@@ -26,5 +26,14 @@ namespace ClassNotes.API.Controllers
             var response = await _coursesService.GetCourseByNameAsync(name);
             return StatusCode(response.StatusCode, response);
         }
+
+        // Eliminar un curso
+        [HttpDelete("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<CourseDto>>> Delete(Guid id)
+        {
+            var response = await _coursesService.DeleteAsync(id);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }
