@@ -12,7 +12,7 @@ namespace ClassNotes.API.Database.Entities
         public string Name { get; set; }
 
 
-        [StringLength(5)]
+        [StringLength(10)]
         [Column("abbreviation")]
         public string Abbreviation { get; set; }
 

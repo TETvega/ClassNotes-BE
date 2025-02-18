@@ -1,0 +1,34 @@
+[
+    {
+        "id": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c9",
+        "name": "Examen Parcial 1",
+        "GradingPeriod": 20250101,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-02-01"
+    },
+    {
+        "id": "2b21e890-1187-45be-bf3f-3c883759b8c6",
+        "name": "Examen Parcial 2",
+        "GradingPeriod ": 20250201,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-03-01"
+    },
+    {
+        "id": "62f2f2b0-d00b-4562-9f3b-2832a080b65e",
+        "name": "Trabajo Final",
+        "GradingPeriod ": 20250301,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-04-01"
+    },
+    {
+        "id": "279221cf-e6b8-4a5d-b207-3be9f406963b",
+        "name": "Examen Final",
+        "GradingPeriod": 20250401,
+        "MaxScore": 100,
+        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "QualificationDate": "2025-05-01"
+    }
+]

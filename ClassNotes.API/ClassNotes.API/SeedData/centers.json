@@ -1,0 +1,34 @@
+[
+    {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Universidad_Nacional_Autónoma_de_Honduras",
+        "abbreviation": "UNAH",
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo-unah.jpg",
+        "is_archived": true,
+        "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    },
+    {
+        "id": "e29b8400-e29b-41d4-a716-446655440001",
+        "name": "Universidad_Tecnológica_Centroamericana",
+        "abbreviation": "UNITEC",
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_UNITEC.svg",
+        "is_archived": true,
+        "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    },
+    {
+        "id": "e29b8400-e29b-41d4-a716-446655440002",
+        "name": "Universidad_José_Cecilio_del_Valle",
+        "abbreviation": "UJCV",
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_UJCV.svg",
+        "is_archived": true,
+        "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    },
+    {
+        "id": "e29b8400-e29b-41d4-a716-446655440003",
+        "name": "Universidad_Católica_de_Honduras",
+        "abbreviation": "UNICAH",
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_UNICAH.png",
+        "is_archived": true,
+        "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    }
+]

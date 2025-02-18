@@ -24,6 +24,7 @@ namespace ClassNotes.API.Helpers.Automapper
 			MapsForCourseSettings();
 		}
 
+		// Si escala a mas de 3 y son complejos se escalara a archvivos individuales  TIPO [Carpeta] Maps/[Entidad].cs
 		private void MapsForActivities()
 		{
 			CreateMap<ActivityEntity, ActivityDto>();

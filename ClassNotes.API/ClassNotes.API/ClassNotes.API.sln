@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassNotes.API", "ClassNotes.API.csproj", "{FA8FDAD4-F283-F4F9-8284-D68487E0036C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA8FDAD4-F283-F4F9-8284-D68487E0036C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA8FDAD4-F283-F4F9-8284-D68487E0036C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA8FDAD4-F283-F4F9-8284-D68487E0036C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA8FDAD4-F283-F4F9-8284-D68487E0036C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F26B345F-B16A-451E-BBD0-9207F34100A0}
+	EndGlobalSection
+EndGlobal

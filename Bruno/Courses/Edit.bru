@@ -1,0 +1,15 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/courses/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

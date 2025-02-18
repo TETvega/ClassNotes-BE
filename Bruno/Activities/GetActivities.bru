@@ -1,0 +1,20 @@
+meta {
+  name: GetActivities
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/activities?searchTerm&page=2
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  page: 2
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

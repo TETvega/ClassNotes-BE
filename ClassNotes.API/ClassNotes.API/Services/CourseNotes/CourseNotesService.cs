@@ -1,6 +1,182 @@
-﻿namespace ClassNotes.API.Services.CourseNotes
+﻿using AutoMapper;
+using ClassNotes.API.Constants;
+using ClassNotes.API.Database;
+using ClassNotes.API.Database.Entities;
+using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Services.Audit;
+using Microsoft.EntityFrameworkCore;
+
+namespace ClassNotes.API.Services.CourseNotes
 {
-	public class CourseNotesService : ICourseNotesService
-	{
-	}
+    public class CourseNotesService : ICourseNotesService
+    {
+        private readonly ClassNotesContext _context;
+        private readonly IAuditService _auditService;
+        private readonly IMapper _mapper;
+        private readonly int PAGE_SIZE;
+
+        public CourseNotesService(
+            ClassNotesContext context,
+            IAuditService auditService, 
+            IConfiguration configuration,
+            IMapper mapper)
+        {
+            _context = context;
+            _auditService = auditService;
+            _mapper = mapper;
+            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+        }
+
+        public async Task<ResponseDto<PaginationDto<List<CourseNoteDto>>>> GetAllCourseNotesAsync(string searchTerm = "",
+            int page = 1)
+          
+        {
+            int startIndex = (page - 1) * PAGE_SIZE;
+            var courseNoteQuery = _context.CoursesNotes.AsQueryable();
+
+            // aplicar filto de busqueda en el titulo y contenido 
+            if (searchTerm != null) 
+            {
+                courseNoteQuery = courseNoteQuery.Where(c => 
+                c.Title.ToLower().Contains(searchTerm.ToLower()) ||
+                c.Content.ToLower().Contains(searchTerm.ToLower()));
+            }
+
+            int totalItems = await courseNoteQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+
+            // aplicar paginacion 
+
+            var courseNoteEntities = await courseNoteQuery
+                .OrderByDescending(n => n.RegistrationDate )  // esto lo ordenara por fecha 
+                .Skip(startIndex)
+                .Take(PAGE_SIZE)
+                .ToListAsync();
+
+            var courseNoteDtos = _mapper.Map<List<CourseNoteDto>>(courseNoteEntities);
+
+            return new ResponseDto<PaginationDto<List<CourseNoteDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = new PaginationDto<List<CourseNoteDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = PAGE_SIZE,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Items = courseNoteDtos,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
+            };
+
+        }
+
+        public async Task<ResponseDto<CourseNoteDto>> GetCourseNoteByIdAsync(Guid id)
+        {
+            var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (courseNoteEntity == null) 
+            {
+                return new ResponseDto<CourseNoteDto>
+                { 
+                  StatusCode = 404,
+                  Status = false,
+                  Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+            var courseNoteDto = _mapper.Map<CourseNoteDto>(courseNoteEntity);
+
+            return new ResponseDto<CourseNoteDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = courseNoteDto
+            };
+
+        }
+        public async Task<ResponseDto<CourseNoteDto>> CreateAsync(CourseNoteCreateDto dto)
+        {
+            var courseNoteEntity = _mapper.Map<CourseNoteEntity>(dto);
+
+            _context.CoursesNotes.Add(courseNoteEntity);
+
+            await _context.SaveChangesAsync();
+
+            var courseNoteDto = _mapper.Map<CourseNoteDto>(courseNoteEntity);
+
+            return new ResponseDto<CourseNoteDto>
+            { 
+               StatusCode = 201,
+               Status = true,
+               Message = MessagesConstant.CREATE_SUCCESS,
+               Data = courseNoteDto
+            };
+        }
+
+        public async Task<ResponseDto<CourseNoteDto>> EditAsync(CourseNoteEditDto dto, Guid id)
+        {
+             var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(x => x.Id == id);
+
+            if (courseNoteEntity == null) 
+            {
+                return new ResponseDto<CourseNoteDto>
+                { 
+                   StatusCode = 404,
+                   Status = false,
+                   Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+            _mapper.Map<CourseNoteEditDto, CourseNoteEntity>(dto, courseNoteEntity);
+
+            _context.CoursesNotes.Update(courseNoteEntity);
+            await _context.SaveChangesAsync();
+
+            var courseNoteDto = _mapper.Map<CourseNoteDto>(courseNoteEntity);
+
+            return new ResponseDto<CourseNoteDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.UPDATE_SUCCESS,
+                Data = courseNoteDto
+            };
+
+        }
+
+        public async Task<ResponseDto<CourseNoteDto>> DeleteAsync(Guid id)
+        {
+            var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (courseNoteEntity == null)
+            {
+                return new ResponseDto<CourseNoteDto>
+                {
+                    StatusCode  = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+
+            }
+
+            _context.CoursesNotes.Remove(courseNoteEntity);
+            await _context.SaveChangesAsync();
+
+            return new ResponseDto<CourseNoteDto>
+            { 
+               StatusCode = 200,
+               Status = true,
+               Message = MessagesConstant.DELETE_SUCCESS,
+            };
+
+        }
+
+
+    }
 }

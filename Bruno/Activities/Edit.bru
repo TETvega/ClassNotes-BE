@@ -1,0 +1,25 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/activities/048F286A-BB66-4D44-067C-08DD4A6F952D
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Guia de trabajo 6.0.1",
+    "gradingPeriod": 4,
+    "maxScore": 100,
+    "qualificationDate": "2025-02-11T07:48:59.079Z",
+    "courseId": "B941094A-2646-470F-A18B-5BD75F9B067C"
+  }
+}

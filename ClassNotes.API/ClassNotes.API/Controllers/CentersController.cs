@@ -15,7 +15,7 @@ namespace ClassNotes.API.Controllers
 
 		public CentersController(ICentersService centersService)
         {
-			this._centersService = centersService;
+			_centersService = centersService;
 		}
 
 		[HttpPost]
