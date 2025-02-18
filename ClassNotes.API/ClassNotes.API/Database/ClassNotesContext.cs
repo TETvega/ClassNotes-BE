@@ -84,13 +84,13 @@ namespace ClassNotes.API.Database
                     if (entry.State == EntityState.Added)
                     {
                         entity.CreatedBy = _auditService.GetUserId();
-						entity.CreatedDate = DateTime.Now;
+                        entity.CreatedDate = DateTime.Now;
                     }
-                      //El usuario esta editando 
+                    //El usuario esta editando 
                     else
                     {
                         entity.UpdatedBy = _auditService.GetUserId();
-						entity.UpdatedDate = DateTime.Now;
+                        entity.UpdatedDate = DateTime.Now;
                     }
                 }
             }
