@@ -27,6 +27,24 @@ namespace ClassNotes.API.Controllers
         }
 
 
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<ActionResult<ResponseDto<List<CenterDto>>>> GetAll(string searchTerm = "", bool isArchived = false, int page = 1)
+        {
+            var response = await _centersService.GetCentersListAsync(searchTerm, isArchived, page);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
+        [HttpGet("{id}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ResponseDto<CenterDto>>> Get(Guid id)
+        {
+            var response = await _centersService.GetCenterByIdAsync(id);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
         [HttpPut("{id}")]
         [AllowAnonymous]
         public async Task<ActionResult<ResponseDto<CenterDto>>> Edit(CenterEditDto dto, Guid id)
@@ -34,6 +52,8 @@ namespace ClassNotes.API.Controllers
 			var response = await _centersService.EditAsync(dto, id);
             return StatusCode(response.StatusCode, response);
         }
+
+
 
         [HttpPut("archive/{id}")]
         [AllowAnonymous]

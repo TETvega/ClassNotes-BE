@@ -1,0 +1,15 @@
+meta {
+  name: Archive
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{PATH}}/centers/id
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
