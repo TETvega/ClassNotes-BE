@@ -5,11 +5,15 @@ meta {
 }
 
 put {
-  url: {{PATH}}/centers/id
+  url: {{PATH}}/centers/archive/{{id}}
   body: json
   auth: bearer
 }
 
 auth:bearer {
   token: {{TOKEN}}
+}
+
+vars:pre-request {
+  id: E29B8400-E29B-41D4-A716-446655440001
 }
