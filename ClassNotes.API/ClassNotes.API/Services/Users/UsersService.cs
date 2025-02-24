@@ -3,8 +3,10 @@ using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.Otp;
 using ClassNotes.API.Dtos.Users;
+using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,13 +20,15 @@ namespace ClassNotes.API.Services.Users
 		private readonly IMapper _mapper;
 		private readonly ILogger<UsersService> _logger;
 		private readonly IOtpService _otpService;
+		private readonly IEmailsService _emailsService;
 
 		public UsersService(
 			ClassNotesContext context, 
 			UserManager<UserEntity> userManager, 
 			IMapper mapper, 
 			ILogger<UsersService> logger,
-			IOtpService otpService
+			IOtpService otpService,
+			IEmailsService emailsService
 			)
         {
 			this._context = context;
@@ -32,6 +36,7 @@ namespace ClassNotes.API.Services.Users
 			this._mapper = mapper;
 			this._logger = logger;
 			this._otpService = otpService;
+			this._emailsService = emailsService;
 		}
 
 		// AM: Función para editar información del usuario (nombre completo)
@@ -185,9 +190,74 @@ namespace ClassNotes.API.Services.Users
 		}
 
 		// AM: Función para cambiar el correo electrónico
-		public Task<ResponseDto<UserDto>> ChangeEmailAsync(UserEditEmailDto dto, string id)
+		public async Task<ResponseDto<UserDto>> ChangeEmailAsync(UserEditEmailDto dto, string id)
 		{
-			throw new NotImplementedException();
+			// AM: Obtener usuario y validar su existencia
+			var userEntity = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+			if (userEntity is null)
+			{
+				return new ResponseDto<UserDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = MessagesConstant.RECORD_NOT_FOUND
+				};
+			}
+
+			// AM: Validar que el nuevo correo electrónico no este registrado
+			var existingEmail = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == dto.NewEmail);
+			if (existingEmail is not null)
+			{
+				return new ResponseDto<UserDto>
+				{
+					StatusCode = 400,
+					Status = false,
+					Message = "El correo electrónico ingresado ya está registrado."
+				};
+			}
+
+			// AM: Notificar al nuevo y antiguo correo
+			await _emailsService.SendEmailAsync(new EmailDto
+			{
+				To = dto.NewEmail,
+				Subject = "Correo Actualizado",
+				Content = $"Hola {userEntity.FirstName}! Tu correo electrónico ha sido actualizado correctamente."
+			});
+			await _emailsService.SendEmailAsync(new EmailDto
+			{
+				To = userEntity.Email,
+				Subject = "Correo Actualizado",
+				Content = $"Tu dirección de correo electrónico fue actualizada a {dto.NewEmail} Si tu no realizaste este cambio, contacta a soporte."
+			});
+
+			// AM: Actualizar el nuevo correo
+			var token = await _userManager.GenerateChangeEmailTokenAsync(userEntity, dto.NewEmail);
+			var result = await _userManager.ChangeEmailAsync(userEntity, dto.NewEmail, token);
+			if (!result.Succeeded)
+			{
+				return new ResponseDto<UserDto>
+				{
+					StatusCode = 400,
+					Status = false,
+					Message = "No se pudo cambiar el correo electrónico."
+				};
+			}
+
+			// AM: Actualizar el username del correo
+			userEntity.UserName = dto.NewEmail;
+			userEntity.NormalizedEmail = _userManager.NormalizeEmail(dto.NewEmail);
+			await _userManager.UpdateAsync(userEntity);
+
+			// AM: Mapear Entity a Dto para la respuesta
+			var userDto = _mapper.Map<UserDto>(userEntity);
+
+			return new ResponseDto<UserDto>
+			{
+				StatusCode = 200,
+				Status = true,
+				Message = "El correo electrónico fue actualizado satisfactoriamente.",
+				Data = userDto
+			};
 		}
 
 		// AM: Función para borrar el usuario

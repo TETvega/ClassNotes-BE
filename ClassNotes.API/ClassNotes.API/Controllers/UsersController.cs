@@ -42,5 +42,13 @@ namespace ClassNotes.API.Controllers
 			var response = await _usersService.ChangePasswordWithOtpAsync(dto);
 			return StatusCode(response.StatusCode, response);
 		}
+
+		[HttpPut("email/{id}")]
+		[Authorize(Roles = $"{RolesConstant.USER}")]
+		public async Task<ActionResult<ResponseDto<UserDto>>> ChangeEmail(UserEditEmailDto dto, string id)
+		{
+			var response = await _usersService.ChangeEmailAsync(dto, id);
+			return StatusCode(response.StatusCode, response);
+		}
 	}
 }

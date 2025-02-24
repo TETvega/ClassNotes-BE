@@ -136,7 +136,6 @@ namespace ClassNotes.API.Services.Otp
 			return otpGenerator.ComputeTotp();
 		}
 
-
         // CG: Generar SecretKey dinamicamente en base a la contraseña e id del usuario
         private string GenerateSecretKey(UserEntity user)
         {
