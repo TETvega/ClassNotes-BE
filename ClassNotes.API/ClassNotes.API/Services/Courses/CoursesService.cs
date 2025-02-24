@@ -98,6 +98,50 @@ namespace ClassNotes.API.Services.Courses
             };
 		}
 
+        // EG -> Editar un curso 
+
+        public async Task<ResponseDto<CourseDto>> EditAsync(CourseEditDto dto, Guid id)
+        {
+            // Incluir la relación con settings
+            var courseEntity = await _context.Courses
+                .Include(c => c.CourseSetting)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (courseEntity == null)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+            _mapper.Map(dto, courseEntity);
+
+            // Verificar si la configuración del curso también debe actualizarse
+            if (courseEntity.CourseSetting != null && dto.SettingId != Guid.Empty)
+            {
+                // Actualizar solo si es necesario
+                courseEntity.SettingId = dto.SettingId;
+
+            }
+
+            _context.Courses.Update(courseEntity);
+            await _context.SaveChangesAsync();
+
+            var courseDto = _mapper.Map<CourseDto>(courseEntity);
+
+            return new ResponseDto<CourseDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.UPDATE_SUCCESS,
+                Data = courseDto
+            };
+        }
+
+
         // CP -> Eliminar un curso
         public async Task<ResponseDto<CourseDto>> DeleteAsync(Guid id)
         {

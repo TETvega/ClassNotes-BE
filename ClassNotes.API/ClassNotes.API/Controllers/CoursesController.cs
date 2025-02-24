@@ -41,7 +41,14 @@ namespace ClassNotes.API.Controllers
         }
 
         //Editar curso 
-        
+        [HttpPut("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<CourseDto>>> Edit(CourseEditDto dto, Guid id)
+        {
+            var response = await _coursesService.EditAsync(dto, id);
+            return StatusCode(response.StatusCode, response);
+        }
+
 
         // Eliminar un curso
         [HttpDelete("{id}")]

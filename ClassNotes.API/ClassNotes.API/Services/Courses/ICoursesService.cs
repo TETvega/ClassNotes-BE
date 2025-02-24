@@ -12,8 +12,8 @@ namespace ClassNotes.API.Services.Courses
         // CP -> Listar un curso en especifico (por nombre)
        Task<ResponseDto<CourseDto>> GetCourseByNameAsync(string name);
 
-		// EG -> Editar cursos 
-        
+        // EG -> Editar cursos 
+        Task<ResponseDto<CourseDto>> EditAsync(CourseEditDto dto, Guid id);
 
         // CP -> Eliminar un curso
         Task<ResponseDto<CourseDto>> DeleteAsync(Guid id);
