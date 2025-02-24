@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
+using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,8 +26,56 @@ namespace ClassNotes.API.Services.Courses
             PAGE_SIZE = configuration.GetValue<int>("PageSize");
         }
 
-		// CP -> Para listar un curso mediante su nombre 
-		public async Task<ResponseDto<CourseDto>> GetCourseByNameAsync(string name)
+        // EG -> Enlistar todos los cursos, paginacion
+
+        public async Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(string searchTerm = "", int page = 1) 
+        { 
+           int startIndex = (page - 1 ) * PAGE_SIZE;
+
+            var coursesQuery = _context.Courses.AsQueryable();
+
+            // buscar por nombre o codgio del curso 
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                coursesQuery = coursesQuery.Where(c =>
+               c.Name.ToLower().Contains(searchTerm.ToLower()) ||
+               c.Code.ToLower().Contains(searchTerm.ToLower()));
+            }
+
+            int totalItems = await coursesQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+
+            // aplicar paginacion 
+
+            var courseEntities = await coursesQuery
+                .OrderByDescending(n => n.Section) //Ordenara por seccion   
+                .Skip(startIndex)
+                .Take(PAGE_SIZE)
+                .ToListAsync();
+
+            var coursesDto = _mapper.Map<List<CourseDto>>(courseEntities);
+
+            return new ResponseDto<PaginationDto<List<CourseDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = new PaginationDto<List<CourseDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = PAGE_SIZE,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Items = coursesDto,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
+            };
+        }
+
+
+        // CP -> Para listar un curso mediante su nombre 
+        public async Task<ResponseDto<CourseDto>> GetCourseByNameAsync(string name)
 		{
 			var courseEntity = await _context.Courses
                 .FirstOrDefaultAsync(a => a.Name == name);

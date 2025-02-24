@@ -5,11 +5,24 @@ meta {
 }
 
 put {
-  url: {{PATH}}/courses/
-  body: none
+  url: {{PATH}}/courses/45d85f5a-6c74-4a7b-8d1f-1c736730116f
+  body: json
   auth: bearer
 }
 
 auth:bearer {
   token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "id": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+    "name": "Dibujo Técnico",
+    "section": "1600",
+    "code": "DQ-102",
+    "isActive": true,
+    "centerId": "550e8400-e29b-41d4-a716-446655440000",
+    "settingId": "f47c3c99-d52d-4f33-95f1-63e4cd07ab39"
+  }
+  
 }
