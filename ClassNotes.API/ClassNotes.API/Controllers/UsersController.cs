@@ -50,5 +50,13 @@ namespace ClassNotes.API.Controllers
 			var response = await _usersService.ChangeEmailAsync(dto, id);
 			return StatusCode(response.StatusCode, response);
 		}
+
+		[HttpDelete("{id}")]
+		[Authorize(Roles = $"{RolesConstant.USER}")]
+		public async Task<ActionResult<ResponseDto<UserDto>>> Delete(string id)
+		{
+			var response = await _usersService.DeleteAsync(id);
+			return StatusCode(response.StatusCode, response);
+		}
 	}
 }

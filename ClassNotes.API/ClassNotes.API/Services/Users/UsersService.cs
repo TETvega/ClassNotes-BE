@@ -267,7 +267,76 @@ namespace ClassNotes.API.Services.Users
 			{
 				try
 				{
-					throw new NotImplementedException();
+					// AM: Obtener usuario y validar su existencia
+					var userEntity = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+					if (userEntity is null)
+					{
+						return new ResponseDto<UserDto>
+						{
+							StatusCode = 404,
+							Status = false,
+							Message = MessagesConstant.RECORD_NOT_FOUND
+						};
+					}
+
+					/*** AM: En esta parte se tienen que eliminar todos los registros relacionados al usuario ***/
+					// AM: Eliminar entidades creadas por el usuario
+					await _context.Centers.Where(c => c.TeacherId == id).ExecuteDeleteAsync();
+					await _context.Students.Where(s => s.TeacherId == id).ExecuteDeleteAsync();
+					await _context.Courses.Where(c => c.CreatedBy == id).ExecuteDeleteAsync();
+					await _context.CoursesSettings.Where(cs => cs.CreatedBy == id).ExecuteDeleteAsync();
+
+					// AM: Eliminar relaciones en tablas intermedias
+					await _context.StudentsCourses.Where(sc => sc.CreatedBy == id).ExecuteDeleteAsync();
+					await _context.Attendances.Where(a => a.CreatedBy == id).ExecuteDeleteAsync();
+					await _context.StudentsActivitiesNotes.Where(sa => sa.CreatedBy == id).ExecuteDeleteAsync();
+
+					// AM: Eliminar actividades y notas asociadas a cursos del usuario
+					var userCourses = await _context.Courses.Where(c => c.CreatedBy == id).Select(c => c.Id).ToListAsync();
+					await _context.Activities.Where(a => userCourses.Contains(a.CourseId)).ExecuteDeleteAsync();
+					await _context.CoursesNotes.Where(cn => userCourses.Contains(cn.CourseId)).ExecuteDeleteAsync();
+
+					// AM: Notificar al correo
+					await _emailsService.SendEmailAsync(new EmailDto
+					{
+						To = userEntity.Email,
+						Subject = "Cuenta Eliminada",
+						Content = $"Hola {userEntity.FirstName}!\n" +
+						$"Tu cuenta de ClassNotes ha sido eliminada correctamente.\n" +
+						$"Si en algún momento decides volver, estaremos encantados de recibirte nuevamente. " +
+						$"Mientras tanto, si necesitas asistencia o tienes alguna pregunta, no dudes en ponerte en contacto con nuestro equipo de soporte en classnotes.service@gmail.com." +
+						$"\r\n\r\nGracias por haber sido parte de nuestra comunidad 😄"
+					});
+
+					// AM: Remover los roles del usuario
+					var currentRoles = await _userManager.GetRolesAsync(userEntity);
+					if (currentRoles.Any())
+					{
+						await _userManager.RemoveFromRolesAsync(userEntity, currentRoles);
+					}
+
+					// AM: Eliminar el usuario
+					var result = await _userManager.DeleteAsync(userEntity);
+					if (!result.Succeeded)
+					{
+						return new ResponseDto<UserDto>
+						{
+							StatusCode = 400,
+							Status = false,
+							Message = "No se pudo eliminar el usuario."
+						};
+					}
+
+					// AM: Guardar cambios y confirmar la transacción
+					await _context.SaveChangesAsync();
+					await transaction.CommitAsync();
+
+					return new ResponseDto<UserDto>
+					{
+						StatusCode = 200,
+						Status = true,
+						Message = MessagesConstant.DELETE_SUCCESS
+					};
 				}
 				catch (Exception ex)
 				{
