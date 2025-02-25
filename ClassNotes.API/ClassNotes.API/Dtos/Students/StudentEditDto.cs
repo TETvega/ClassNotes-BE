@@ -1,6 +1,6 @@
 ﻿namespace ClassNotes.API.Dtos.Students
 {
-	public class StudentEditDto
+	public class StudentEditDto : StudentCreateDto
 	{
 	}
 }

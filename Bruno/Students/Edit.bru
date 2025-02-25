@@ -5,11 +5,20 @@ meta {
 }
 
 put {
-  url: {{PATH}}/students/id
+  url: {{PATH}}/students/74AEC052-2E17-439B-19C3-08DD45AF3B1B
   body: json
   auth: bearer
 }
 
 auth:bearer {
   token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7",
+    "firstName": "Jeison",
+    "lastName": "Arita",
+    "email": "jomaarita@gmail.com"
+  }
 }
