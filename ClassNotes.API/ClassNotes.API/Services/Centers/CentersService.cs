@@ -40,12 +40,12 @@ namespace ClassNotes.API.Services.Centers
                 try
                 {
 
-                    if (dto.Abbreviation.Trim() == "")
+                    if (dto.Abbreviation?.Trim() == "")
                     {
                         dto.Abbreviation = null;
                     }
 
-                    if (dto.Name.Trim() == "" )
+                    if (dto.Name?.Trim() == "" )
                     {
                         return new ResponseDto<CenterDto>
                         {
@@ -55,7 +55,7 @@ namespace ClassNotes.API.Services.Centers
                         };
                     }
 
-                    if (dto.Logo.Trim() == "")
+                    if (dto.Logo?.Trim() == "")
                     {
                         dto.Logo = null;
                     }
@@ -108,6 +108,164 @@ namespace ClassNotes.API.Services.Centers
             }
         }
 
+         //(ken)
+        //Por Ahora este metodo separa completamente los centros archivados y no archivados, quiza cambie si se quiere la opcion de recibirlos todos en una sola llamada...
+        public async Task<ResponseDto<PaginationDto<List<CenterDto>>>> GetCentersListAsync(string searchTerm = "",bool isArchived = false,int page = 1)
+        {
+            int startIndex = (page - 1) * PAGE_SIZE;
+
+            var userId = _auditService.GetUserId();
+
+            var centersQuery = _context.Centers.AsQueryable().Where(x => x.IsArchived == isArchived && x.TeacherId == userId);
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                centersQuery = centersQuery
+                    .Where(x => (x.Name + " " + x.Abbreviation)
+                    .ToLower().Contains(searchTerm.ToLower()));
+            }
+
+            int totalCenters = await centersQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalCenters / PAGE_SIZE);
+
+            var centersEntity = await centersQuery
+                .OrderByDescending(x => x.CreatedDate)
+                .Skip(startIndex)
+                .Take(PAGE_SIZE)
+                .ToListAsync();
+
+            var centersDto = _mapper.Map<List<CenterDto>>(centersEntity);
+
+            return new ResponseDto<PaginationDto<List<CenterDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = new PaginationDto<List<CenterDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = PAGE_SIZE,
+                    TotalItems = totalCenters,
+                    TotalPages = totalPages,
+                    Items = centersDto,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
+            };
+        }
+
+        public async Task<ResponseDto<CenterDto>> GetCenterByIdAsync(Guid id)
+        {
+            var userId = _auditService.GetUserId();
+            var centerEntity = await _context.Centers.FirstOrDefaultAsync(a => a.Id == id && a.TeacherId == userId);
+            if (centerEntity == null)
+            {
+                return new ResponseDto<CenterDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+            var centerDto = _mapper.Map<CenterDto>(centerEntity);
+            return new ResponseDto<CenterDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORD_FOUND,
+                Data = centerDto
+            };
+        }
+
+
+
+        public async Task<ResponseDto<CenterDto>> DeleteAsync(bool confirmation,  Guid id)
+        {
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    if (!confirmation)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 409,
+                            Status = false,
+                            Message = "No se confirmó la eliminación del centro."
+                        };
+                    }
+
+                    var courseEntity = await _context.Courses.FirstOrDefaultAsync(a => a.CenterId == id);
+                    var userId = _auditService.GetUserId();
+                    var centerEntity = await _context.Centers.FindAsync(id);
+
+                    if (centerEntity.TeacherId != userId)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 401,
+                            Status = false,
+                            Message = "No esta autorizado para borrar este registro."
+                        };
+                    }
+
+
+
+                    if (courseEntity != null)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 409,
+                            Status = false,
+                            Message = "No se puede eliminar un centro si aún contiene clases asignadas."
+                        };
+                    }
+
+
+                    if (centerEntity is null)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 404,
+                            Status = false,
+                            Message = MessagesConstant.RECORD_NOT_FOUND + " " + id,
+                        };
+                    }
+
+
+
+                    _context.Centers.Remove(centerEntity);
+                    await _context.SaveChangesAsync();
+
+                    var centerDto = _mapper.Map<CenterDto>(centerEntity);
+
+                    await transaction.CommitAsync();
+                    return new ResponseDto<CenterDto>
+                    {
+                        StatusCode = 200,
+                        Status = true,
+                        Message = MessagesConstant.DELETE_SUCCESS,
+
+                    };
+                }
+
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, MessagesConstant.DELETE_ERROR);
+                    return new ResponseDto<CenterDto>
+                    {
+                        StatusCode = 500,
+                        Status = false,
+                        Message = MessagesConstant.DELETE_ERROR
+
+                    };
+                }
+            }
+        }
+
+
 
         public async Task<ResponseDto<CenterDto>> EditAsync(CenterEditDto dto, Guid id)
         {
@@ -120,18 +278,8 @@ namespace ClassNotes.API.Services.Centers
                     var userId = _auditService.GetUserId();
                     var centerEntity = await _context.Centers.FindAsync(id);
 
-                    if (centerEntity is null)
-                    {
-                        return new ResponseDto<CenterDto>
-                        {
-                            StatusCode = 404,
-                            Status = false,
-                            Message = MessagesConstant.RECORD_NOT_FOUND + " " + id,
-                        };
-                    }
 
-                    //(Ken)
-                    //Aun quedaria probarlo con autenticación...
+
                     if (centerEntity.TeacherId != userId)
                     {
                         return new ResponseDto<CenterDto>
@@ -139,6 +287,17 @@ namespace ClassNotes.API.Services.Centers
                             StatusCode = 401,
                             Status = false,
                             Message = "No esta autorizado para editar este registro."
+                        };
+                    }
+
+
+                    if (centerEntity is null)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 404,
+                            Status = false,
+                            Message = MessagesConstant.RECORD_NOT_FOUND + " " + id,
                         };
                     }
 
@@ -155,12 +314,12 @@ namespace ClassNotes.API.Services.Centers
                     }
 
 
-                    if (dto.Abbreviation.Trim() == "")
+                    if (dto.Abbreviation?.Trim() == "")
                     {
                         dto.Abbreviation = null;
                     }
 
-                    if (dto.Name.Trim() == "")
+                    if (dto.Name?.Trim() == "")
                     {
                         return new ResponseDto<CenterDto>
                         {
@@ -170,7 +329,7 @@ namespace ClassNotes.API.Services.Centers
                         };
                     }
 
-                    if (dto.Logo.Trim() == "")
+                    if (dto.Logo?.Trim() == "")
                     {
                         dto.Logo = null;
                     }
@@ -218,6 +377,18 @@ namespace ClassNotes.API.Services.Centers
                     var userId = _auditService.GetUserId();
                     var centerEntity = await _context.Centers.FindAsync(id);
 
+
+                    if (centerEntity.TeacherId != userId)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 401,
+                            Status = false,
+                            Message = "No esta autorizado para archivar este centro."
+                        };
+                    }
+
+
                     if (centerEntity is null)
                     {
                         return new ResponseDto<CenterDto>
@@ -228,17 +399,16 @@ namespace ClassNotes.API.Services.Centers
                         };
                     }
 
-                    //(Ken)
-                    //Aun quedaria probarlo con autenticación...
-                    if (centerEntity.TeacherId != userId)
+                    if (centerEntity.IsArchived)
                     {
                         return new ResponseDto<CenterDto>
                         {
                             StatusCode = 401,
                             Status = false,
-                            Message = "No esta autorizado para archivar este registro."
+                            Message = "Ya archivó este centro."
                         };
                     }
+                
 
 
                     centerEntity.IsArchived = true;

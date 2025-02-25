@@ -6,6 +6,9 @@ namespace ClassNotes.API.Dtos.Centers
 {
 	public class CenterDto
 	{
+
+        public Guid Id { get; set; }
+
         public string Name { get; set; }
 
 
