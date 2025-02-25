@@ -1,0 +1,21 @@
+meta {
+  name: Change Email
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/users/email/20c24c50-66e8-490d-befa-79ee0cd872b7
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "newEmail": "anthony07miranda@gmail.com"
+  }
+}

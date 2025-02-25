@@ -22,8 +22,10 @@ namespace ClassNotes.API.Database.Entities
 
         //(Ken)
         //Rango para calificacion = 1 a 100...
-        //No se puede limitar digitos despues del decimal con DataNotations
-        //Asi que lo tienen que hacer en el servicio o frontend...
+        /*
+         Se limita a 2 decimales en el servicio [2] despues del punto 
+         ejemplo x.[][]
+         */
         [Required]
         [Column("note")]
         [Range(0, 100)]

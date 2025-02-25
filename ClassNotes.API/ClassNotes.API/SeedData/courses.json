@@ -1,0 +1,30 @@
+[
+
+    {
+        "id": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "name": "Dibujo",
+        "section": "1600",
+        "code": "DQ-101",
+        "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+        "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+        "is_active": false
+    },
+    {
+        "id": "caab5305-52d2-463d-bc77-c579b41167fa",
+        "name": "Fisica",
+        "section": "1000",
+        "code": "FS-100",
+        "CenterId": "e29b8400-e29b-41d4-a716-446655440001",
+        "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+        "is_active": true
+    },
+    {
+        "id": "b941094a-2646-470f-a18b-5bd75f9b067c",
+        "name": "Matematicas",
+        "section": "1100",
+        "code": "MM-110",
+        "CenterId": "e29b8400-e29b-41d4-a716-446655440003",
+        "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+        "is_active": true
+    },
+]

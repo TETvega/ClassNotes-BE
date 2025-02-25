@@ -15,6 +15,9 @@ using ClassNotes.API.Services.Courses;
 using ClassNotes.API.Services.Students;
 using ClassNotes.API.Services.Attendances;
 using ClassNotes.API.Services.CoursesSettings;
+using ClassNotes.API.Services.Emails;
+using ClassNotes.API.Services.Otp;
+using ClassNotes.API.Services.Users;
 
 namespace ClassNotes.API;
 
@@ -47,13 +50,21 @@ public class Startup
 		services.AddTransient<ICourseSettingsService, CourseSettingsService>();
 		services.AddTransient<ICoursesService, CoursesService>();
 		services.AddTransient<IStudentsService, StudentsService>();
+		services.AddTransient<IUsersService, UsersService>();
 
 		// Servicios de seguridad
 		services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();
 
+		// Servicio para el envio de correos (SMTP)
+		services.AddTransient<IEmailsService, EmailsService>();
+		services.AddTransient<IOtpService, OtpService>();
+
 		// Servicio de AutoMapper
 		services.AddAutoMapper(typeof(AutoMapperProfile));
+
+		// Habilitar cache en memoria
+		services.AddMemoryCache();
 
 		// Identity 
 		services.AddIdentity<UserEntity, IdentityRole>(options =>
