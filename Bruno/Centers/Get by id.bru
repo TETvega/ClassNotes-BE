@@ -1,17 +1,13 @@
 meta {
-  name: Delete
+  name: Get by id
   type: http
-  seq: 1
+  seq: 5
 }
 
-delete {
-  url: {{PATH}}/centers/{{id}}?confirmation=true
+get {
+  url: {{PATH}}/centers/{{id}}
   body: none
   auth: bearer
-}
-
-params:query {
-  confirmation: true
 }
 
 auth:bearer {

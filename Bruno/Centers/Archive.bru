@@ -1,22 +1,17 @@
 meta {
-  name: Edit
+  name: Archive
   type: http
-  seq: 1
+  seq: 6
 }
 
 put {
-  url: {{PATH}}/centers/{{id}}
+  url: {{PATH}}/centers/archive/{{id}}
   body: json
   auth: bearer
 }
 
 auth:bearer {
   token: {{TOKEN}}
-}
-
-body:json {
-  {"name": "Jeronimo J Reina",
-  "abbreviation": "JJR"}
 }
 
 vars:pre-request {
