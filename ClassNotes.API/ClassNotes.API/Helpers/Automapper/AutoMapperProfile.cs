@@ -7,6 +7,7 @@ using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Dtos.Students;
+using ClassNotes.API.Dtos.Users;
 using ClassNotes.API.Services.Audit;
 
 namespace ClassNotes.API.Helpers.Automapper
@@ -22,6 +23,7 @@ namespace ClassNotes.API.Helpers.Automapper
 			MapsForStudents();
 			MapsForCourseNotes();
 			MapsForCourseSettings();
+			MapsForUsers();
 		}
 
 		// Si escala a mas de 3 y son complejos se escalara a archvivos individuales  TIPO [Carpeta] Maps/[Entidad].cs
@@ -81,6 +83,12 @@ namespace ClassNotes.API.Helpers.Automapper
 			CreateMap<CourseSettingEntity, CourseSettingDto>();
 			CreateMap<CourseSettingCreateDto, CourseSettingEntity>();
 			CreateMap<CourseSettingEditDto, CourseSettingEntity>();
+		}
+
+		private void MapsForUsers()
+		{
+			CreateMap<UserEntity, UserDto>();
+			CreateMap<UserEditDto, UserEntity>();
 		}
 	}
 }

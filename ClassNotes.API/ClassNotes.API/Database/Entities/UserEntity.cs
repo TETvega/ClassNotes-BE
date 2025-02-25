@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using OtpNet;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -31,7 +32,10 @@ namespace ClassNotes.API.Database.Entities
         [ForeignKey(nameof(DefaultCourseSettingId))]
         public virtual CourseSettingEntity DefaultCourseSettings { get; set; }
 
-        public virtual ICollection<CenterEntity> Centers { get; set; }
+        // CG: se eliminaron los atributos relacionados a lo del OTP porque se maneja a traves de memoria
+
+		public virtual ICollection<CenterEntity> Centers { get; set; }
+        
         public virtual ICollection<StudentEntity> Students { get; set; }
     }
 }
