@@ -1,6 +1,7 @@
 ﻿namespace ClassNotes.API.Dtos.Courses
 {
-	public class CourseEditDto
+    // --------------------- CP --------------------- //
+	public class CourseEditDto : CourseCreateDto
 	{
 	}
 }

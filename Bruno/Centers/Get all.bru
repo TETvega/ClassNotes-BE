@@ -1,0 +1,20 @@
+meta {
+  name: Get all
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/centers/?isArchived=false&page=1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  isArchived: false
+  page: 1
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

@@ -5,11 +5,20 @@ meta {
 }
 
 put {
-  url: {{PATH}}/centers/id
+  url: {{PATH}}/centers/{{id}}
   body: json
   auth: bearer
 }
 
 auth:bearer {
   token: {{TOKEN}}
+}
+
+body:json {
+  {"name": "Jeronimo J Reina",
+  "abbreviation": "JJR"}
+}
+
+vars:pre-request {
+  id: E29B8400-E29B-41D4-A716-446655440001
 }

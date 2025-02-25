@@ -5,11 +5,19 @@ meta {
 }
 
 delete {
-  url: {{PATH}}/centers/id
+  url: {{PATH}}/centers/{{id}}?confirmation=true
   body: none
   auth: bearer
 }
 
+params:query {
+  confirmation: true
+}
+
 auth:bearer {
   token: {{TOKEN}}
+}
+
+vars:pre-request {
+  id: 550E8400-E29B-41D4-A716-446655440000
 }

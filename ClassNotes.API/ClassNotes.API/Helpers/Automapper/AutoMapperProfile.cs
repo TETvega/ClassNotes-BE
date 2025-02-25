@@ -8,6 +8,7 @@ using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Dtos.Users;
+using ClassNotes.API.Services.Audit;
 
 namespace ClassNotes.API.Helpers.Automapper
 {
@@ -25,6 +26,7 @@ namespace ClassNotes.API.Helpers.Automapper
 			MapsForUsers();
 		}
 
+		// Si escala a mas de 3 y son complejos se escalara a archvivos individuales  TIPO [Carpeta] Maps/[Entidad].cs
 		private void MapsForActivities()
 		{
 			CreateMap<ActivityEntity, ActivityDto>();
@@ -41,10 +43,19 @@ namespace ClassNotes.API.Helpers.Automapper
 
 		private void MapsForCenters()
 		{
+			//(Ken)
+			//Aparentemente no se puede hacer con ForAllMembers esto, ya vere como simplificar...
 			CreateMap<CenterEntity, CenterDto>();
-			CreateMap<CenterCreateDto, CenterEntity>();
-			CreateMap<CenterEditDto, CenterEntity>();
-		}
+			CreateMap<CenterCreateDto, CenterEntity>()
+				.ForMember(dest => dest.IsArchived, opt => opt.MapFrom(src => false))
+				.ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
+				.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
+                .ForMember(dest => dest.Abbreviation, opt => opt.MapFrom(src => src.Abbreviation.Trim()));
+            CreateMap<CenterEditDto, CenterEntity>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
+                .ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
+                .ForMember(dest => dest.Abbreviation, opt => opt.MapFrom(src => src.Abbreviation.Trim()));
+        }
 
 		private void MapsForCourses()
 		{
