@@ -15,7 +15,14 @@ namespace ClassNotes.API.Database.Entities
         [Column("section")]
         public string Section { get; set; }
 
-        [StringLength(15)]
+        [Required]
+        [Column("start_time")]
+		public TimeOnly StartTime { get; set; }
+
+        [Column("finish_time")]
+		public TimeOnly FinishTime { get; set; }
+
+		[StringLength(15)]
         [Column("code")]
         public string Code { get; set; }
 
@@ -38,9 +45,8 @@ namespace ClassNotes.API.Database.Entities
 
         public virtual CourseSettingEntity CourseSetting { get; set;}
 
-
-        public virtual ICollection<ActivityEntity> Activities { get; set; }
-        public virtual ICollection<AttendanceEntity> Attendances { get; set; }
+		public virtual ICollection<UnitEntity> Units { get; set; }
+		public virtual ICollection<AttendanceEntity> Attendances { get; set; }
         public virtual ICollection<StudentCourseEntity> Students { get; set; }
         public virtual ICollection<CourseNoteEntity> CourseNotes { get; set; }
 

@@ -49,6 +49,7 @@ namespace ClassNotes.API.Database
             modelBuilder.ApplyConfiguration(new StudentConfiguration());
             modelBuilder.ApplyConfiguration(new StudentCourseConfiguration());
             modelBuilder.ApplyConfiguration(new TagActivityConfiguration());
+            modelBuilder.ApplyConfiguration(new UnitConfiguration());
 
 
             //(Ken)
@@ -62,8 +63,6 @@ namespace ClassNotes.API.Database
                     foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
                 }
             }
-
-
         }
 
         /*El siguiente Codigo Sive para los Campos de Auditoria, saber quien esta mandando las peticiones editando o creando*/
@@ -108,8 +107,8 @@ namespace ClassNotes.API.Database
         public DbSet<StudentActivityNoteEntity> StudentsActivitiesNotes { get; set; }
         public DbSet<StudentCourseEntity> StudentsCourses { get; set; }
         public DbSet<StudentEntity> Students { get; set; }
-
-        public DbSet<TagActivityEntity> TagsActivities { get; set; }
+		public DbSet<UnitEntity> Units { get; set; }
+		public DbSet<TagActivityEntity> TagsActivities { get; set; }
 
     }
 }

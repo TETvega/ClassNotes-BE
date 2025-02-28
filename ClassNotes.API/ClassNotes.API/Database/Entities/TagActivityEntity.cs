@@ -22,7 +22,6 @@ namespace ClassNotes.API.Database.Entities
         public string Icon { get; set; }
 
 
-
         [Required]
         [StringLength(450)]
         [Column("teacher_id")]

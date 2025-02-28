@@ -293,7 +293,7 @@ namespace ClassNotes.API.Services.Users
 
 					// AM: Eliminar actividades y notas asociadas a cursos del usuario
 					var userCourses = await _context.Courses.Where(c => c.CreatedBy == id).Select(c => c.Id).ToListAsync();
-					await _context.Activities.Where(a => userCourses.Contains(a.CourseId)).ExecuteDeleteAsync();
+					await _context.Units.Where(a => userCourses.Contains(a.Id)).ExecuteDeleteAsync();
 					await _context.CoursesNotes.Where(cn => userCourses.Contains(cn.CourseId)).ExecuteDeleteAsync();
 
 					// AM: Notificar al correo

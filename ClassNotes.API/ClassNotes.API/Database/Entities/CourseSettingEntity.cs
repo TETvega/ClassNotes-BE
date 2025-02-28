@@ -11,7 +11,6 @@ namespace ClassNotes.API.Database.Entities
         [Required]
         [StringLength(15)]
         [Column("score_type")]
-
         public string ScoreType { get; set; }
 
 
@@ -31,17 +30,21 @@ namespace ClassNotes.API.Database.Entities
         public DateTime EndDate { get; set; }
 
 
-        //(ken)
+        // Kenn
         //No se puede limitar digitos despues del decimal con DataNotations
-        //Esta limitado en el Servicio a [2] decimales despues del Punto
+        //Hay que limitarlo en el Servicio a [2] decimales despues del Punto
 
         [Required]
         [Range(0, 100)]
         [Column("minimum_grade")]
         public float MinimumGrade { get; set; }
 
+		[Required]
+		[Range(0, 100)]
+		[Column("maximum_grade")]
+		public float MaximumGrade { get; set; }
 
-        [Required]
+		[Required]
         [Column("minimum_attendance_time")]
         [Range(5, 59)]
         [DefaultValue(10)]
