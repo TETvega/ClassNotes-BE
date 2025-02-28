@@ -25,10 +25,19 @@ namespace ClassNotes.API.Database.Configuration
                 .OnDelete(DeleteBehavior.Restrict);
 
             //DD: Relación entre ActivityEntity y CourseEntity
+            // TODO: EXPLICAR BIEN ESTE CODIGO
             builder.HasOne(a => a.Course)   
                 .WithMany(c => c.Activities)
                 .HasForeignKey(a => a.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Revisar Esto !!!
+            //HR: Relacion 
+            builder.HasOne(a => a.TagActivity)
+                .WithMany()
+                .HasForeignKey(a => a.TagActivityId)
+                .HasPrincipalKey(a =>  a.Id)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

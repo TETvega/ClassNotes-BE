@@ -25,6 +25,15 @@ namespace ClassNotes.API.Database.Entities
 
 
         [Required]
+        [StringLength(450)]
+        [Column("tag_activity_id")]
+        public Guid TagActivityId { get; set; }
+        [ForeignKey(nameof(TagActivityId))]
+        public virtual TagActivityEntity TagActivity { get; set; }
+
+
+
+        [Required]
         [Column("qualification_date")]
         public DateTime QualificationDate { get; set; }
 

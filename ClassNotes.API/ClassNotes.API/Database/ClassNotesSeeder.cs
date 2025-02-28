@@ -62,8 +62,10 @@ namespace ClassNotes.API.Database
 						//DefaultCourseSettingId = Guid.NewGuid(),
 					};
 
-					// AM: Aquí se asigna la contraseña "Temporal01*"
-					await userManager.CreateAsync(normalUser, "Temporal01*");
+
+
+                    // AM: Aquí se asigna la contraseña "Temporal01*"
+                    await userManager.CreateAsync(normalUser, "Temporal01*");
 
 					// AM: Aquí se aigna el rol al usuario
 					await userManager.AddToRoleAsync(normalUser, RolesConstant.USER);
@@ -127,7 +129,7 @@ namespace ClassNotes.API.Database
                         activity.UpdatedBy = user.Id;
                         activity.CreatedDate = DateTime.Now;
                         activity.UpdatedDate = DateTime.Now;
-                        context.Activities.AddAsync(activity);
+                        await context.Activities.AddAsync(activity);
                     }
                 }
               await context.SaveChangesAsync();
@@ -282,7 +284,7 @@ namespace ClassNotes.API.Database
                         courseSetting.CreatedDate = DateTime.Now;
                         courseSetting.UpdatedBy = user.Id;
                         courseSetting.UpdatedDate = DateTime.Now;
-                       context.CoursesSettings.AddAsync(courseSetting);
+                       await context.CoursesSettings.AddAsync(courseSetting);
                     }
                 }
                 await context.SaveChangesAsync();
@@ -313,7 +315,7 @@ namespace ClassNotes.API.Database
                         students_activities_note.CreatedDate = DateTime.Now;
                         students_activities_note.UpdatedBy = user.Id;
                         students_activities_note.UpdatedDate = DateTime.Now;
-                        context.StudentsActivitiesNotes.AddAsync(students_activities_note);
+                        await context.StudentsActivitiesNotes.AddAsync(students_activities_note);
                     }
 
                 }
@@ -344,7 +346,7 @@ namespace ClassNotes.API.Database
                         student_course.CreatedDate = DateTime.Now;
                         student_course.UpdatedBy = user.Id;
                         student_course.UpdatedDate = DateTime.Now;
-                        context.StudentsCourses.AddAsync(student_course);
+                        await context.StudentsCourses.AddAsync(student_course);
                     }
                 }
                 await context.SaveChangesAsync();

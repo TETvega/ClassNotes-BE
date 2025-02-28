@@ -48,6 +48,7 @@ namespace ClassNotes.API.Database
             modelBuilder.ApplyConfiguration(new StudentActivityNoteConfiguration());
             modelBuilder.ApplyConfiguration(new StudentConfiguration());
             modelBuilder.ApplyConfiguration(new StudentCourseConfiguration());
+            modelBuilder.ApplyConfiguration(new TagActivityConfiguration());
 
 
             //(Ken)
@@ -107,6 +108,8 @@ namespace ClassNotes.API.Database
         public DbSet<StudentActivityNoteEntity> StudentsActivitiesNotes { get; set; }
         public DbSet<StudentCourseEntity> StudentsCourses { get; set; }
         public DbSet<StudentEntity> Students { get; set; }
+
+        public DbSet<TagActivityEntity> TagsActivities { get; set; }
 
     }
 }
