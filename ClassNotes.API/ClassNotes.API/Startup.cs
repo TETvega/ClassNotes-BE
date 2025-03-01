@@ -18,6 +18,9 @@ using ClassNotes.API.Services.CoursesSettings;
 using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
 using ClassNotes.API.Services.Users;
+using CloudinaryDotNet;
+using ClassNotes.API.Services.Cloudinary;
+using Microsoft.Extensions.Configuration;
 
 namespace ClassNotes.API;
 
@@ -51,6 +54,7 @@ public class Startup
 		services.AddTransient<ICoursesService, CoursesService>();
 		services.AddTransient<IStudentsService, StudentsService>();
 		services.AddTransient<IUsersService, UsersService>();
+		services.AddTransient<ICloudinaryService, CloudinaryService>();
 
 		// Servicios de seguridad
 		services.AddTransient<IAuditService, AuditService>();
@@ -66,8 +70,8 @@ public class Startup
 		// Habilitar cache en memoria
 		services.AddMemoryCache();
 
-		// Identity 
-		services.AddIdentity<UserEntity, IdentityRole>(options =>
+        // Identity 
+        services.AddIdentity<UserEntity, IdentityRole>(options =>
         {
             options.SignIn.RequireConfirmedAccount = false;
         }).AddEntityFrameworkStores<ClassNotesContext>()

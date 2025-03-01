@@ -1,0 +1,15 @@
+meta {
+  name: Delete
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{PATH}}/cloudinary/delete?publicId=Ejemplo/gato_cabro_dfcyui
+  body: json
+  auth: none
+}
+
+params:query {
+  publicId: Ejemplo/gato_cabro_dfcyui
+}
