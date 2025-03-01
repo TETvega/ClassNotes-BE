@@ -442,5 +442,85 @@ namespace ClassNotes.API.Services.Centers
                 }
             }
         }
+
+        //(Ken)
+        //Por cuestiones de seguridad y comodidad, es mejor que archivar y recuperar sean servicios separados...
+        public async Task<ResponseDto<CenterDto>> RecoverAsync(Guid id)
+        {
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+
+                    var userId = _auditService.GetUserId();
+                    var centerEntity = await _context.Centers.FindAsync(id);
+
+
+                    if (centerEntity.TeacherId != userId)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 401,
+                            Status = false,
+                            Message = "No esta autorizado para recuperar este centro."
+                        };
+                    }
+
+
+                    if (centerEntity is null)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 404,
+                            Status = false,
+                            Message = MessagesConstant.RECORD_NOT_FOUND + " " + id,
+                        };
+                    }
+
+                    if (!centerEntity.IsArchived)
+                    {
+                        return new ResponseDto<CenterDto>
+                        {
+                            StatusCode = 401,
+                            Status = false,
+                            Message = "Este centro no esta archivado."
+                        };
+                    }
+
+
+
+                    centerEntity.IsArchived = false;
+
+                    _context.Centers.Update(centerEntity);
+                    await _context.SaveChangesAsync();
+
+                    var centerDto = _mapper.Map<CenterDto>(centerEntity);
+
+                    await transaction.CommitAsync();
+                    return new ResponseDto<CenterDto>
+                    {
+                        StatusCode = 200,
+                        Status = true,
+                        Message = "Se recuperó correctamente.",
+                        Data = centerDto
+                    };
+                }
+
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, MessagesConstant.UPDATE_ERROR);
+                    return new ResponseDto<CenterDto>
+                    {
+                        StatusCode = 500,
+                        Status = false,
+                        Message = MessagesConstant.UPDATE_ERROR
+
+                    };
+                }
+            }
+        }
+
     }
 }

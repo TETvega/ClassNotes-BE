@@ -75,5 +75,13 @@ namespace ClassNotes.API.Controllers
             var response = await _centersService.ArchiveAsync( id);
             return StatusCode(response.StatusCode, response);
         }
+
+        [HttpPut("recover/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<CenterDto>>> recover(Guid id)
+        {
+            var response = await _centersService.RecoverAsync(id);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }
