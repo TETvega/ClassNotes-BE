@@ -5,36 +5,44 @@ using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
+using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassNotes.API.Services.Courses
 {
-	public class CoursesService : ICoursesService
-	{
-		private readonly ClassNotesContext _context;
+    public class CoursesService : ICoursesService
+    {
+        private readonly ClassNotesContext _context;
         private readonly IMapper _mapper;
+        private readonly IAuditService _auditService;
         private readonly int PAGE_SIZE;
 
         public CoursesService(
             ClassNotesContext context,
             IMapper mapper,
+            IAuditService auditService,
             IConfiguration configuration
         )
         {
             _context = context;
+            _auditService = auditService;
             _mapper = mapper;
             PAGE_SIZE = configuration.GetValue<int>("PageSize");
         }
 
         // EG -> Enlistar todos los cursos, paginacion
 
-        public async Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(string searchTerm = "", int page = 1) 
-        { 
-           int startIndex = (page - 1 ) * PAGE_SIZE;
+        public async Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(string searchTerm = "", int page = 1)
+        {
+            int startIndex = (page - 1) * PAGE_SIZE;
 
-            var coursesQuery = _context.Courses.AsQueryable();
+            var userId = _auditService.GetUserId();
 
-            // buscar por nombre o codgio del curso 
+            var coursesQuery = _context.Courses
+                .Where(c => c.CreatedBy == userId) // Para mostrar unicamente los cursos que pertenecen al usuario que hace la petición
+                .AsQueryable();
+
+            // buscar por nombre o codigo del curso 
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 coursesQuery = coursesQuery.Where(c =>
@@ -74,11 +82,13 @@ namespace ClassNotes.API.Services.Courses
         }
 
 
-        // CP -> Para listar un curso mediante su nombre 
-        public async Task<ResponseDto<CourseDto>> GetCourseByNameAsync(string name)
-		{
-			var courseEntity = await _context.Courses
-                .FirstOrDefaultAsync(a => a.Name == name);
+        // CP -> Para listar un curso mediante su id
+        public async Task<ResponseDto<CourseDto>> GetCourseByIdAsync(Guid id)
+        {
+            var userId = _auditService.GetUserId();
+
+            var courseEntity = await _context.Courses
+                .FirstOrDefaultAsync(a => a.Id == id && a.CreatedBy == userId); // Unicamente aprecera el curso si lo creo quien hace la petición
             if (courseEntity == null)
             {
                 return new ResponseDto<CourseDto>
@@ -96,16 +106,69 @@ namespace ClassNotes.API.Services.Courses
                 Message = MessagesConstant.RECORD_FOUND,
                 Data = courseDto
             };
-		}
+        }
+
+        // CP -> Crear un curso
+        public async Task<ResponseDto<CourseDto>> CreateAsync(CourseCreateDto dto)
+        {
+            var userId = _auditService.GetUserId();
+
+            // Validar que la hora de fin no sea menor a la de inicio
+            if (dto.FinishTime < dto.StartTime)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "La hora de finalización no puede ser menor a la hora de inicio"
+                };
+            }
+
+            // Verificar si ya existe una clase con el mismo nombre, sección, codigo y hora de inicio
+            // También se verifica si una persona ya creo la sección ya que las clases no se comparten entre docentes
+            var existingCourse = await _context.Courses
+                .FirstOrDefaultAsync(c =>
+                    c.CreatedBy == userId &&
+                    c.Name.ToLower() == dto.Name.ToLower() &&
+                    c.Section.ToLower() == dto.Section.ToLower() &&
+                    c.Code.ToLower() == dto.Code.ToLower() &&
+                    c.StartTime == dto.StartTime
+                );
+
+            if (existingCourse != null)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Ya existe la clase"
+                };
+            }
+
+            // Pasa las validaciones y se crea la clase
+            var courseEntity = _mapper.Map<CourseEntity>(dto);
+            _context.Courses.Add(courseEntity);
+            await _context.SaveChangesAsync();
+            var courseDto = _mapper.Map<CourseDto>(courseEntity);
+            return new ResponseDto<CourseDto>
+            {
+                StatusCode = 201,
+                Status = true,
+                Message = MessagesConstant.CREATE_SUCCESS,
+                Data = courseDto
+            };
+        }
 
         // EG -> Editar un curso 
 
         public async Task<ResponseDto<CourseDto>> EditAsync(CourseEditDto dto, Guid id)
         {
+            var userId = _auditService.GetUserId();
+
             // Incluir la relación con settings
             var courseEntity = await _context.Courses
                 .Include(c => c.CourseSetting)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id && x.CreatedBy == userId); // Solo el creador puede modificarlo
 
             if (courseEntity == null)
             {
@@ -145,8 +208,10 @@ namespace ClassNotes.API.Services.Courses
         // CP -> Eliminar un curso
         public async Task<ResponseDto<CourseDto>> DeleteAsync(Guid id)
         {
+            var userId = _auditService.GetUserId();
+
             var courseEntity = await _context.Courses
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .FirstOrDefaultAsync(a => a.Id == id && a.CreatedBy == userId); // Solo quien crea la clase puede borrarla
 
             if (courseEntity == null)
             {
@@ -157,6 +222,54 @@ namespace ClassNotes.API.Services.Courses
                     Message = MessagesConstant.RECORD_NOT_FOUND
                 };
             }
+
+            // Elimina los registros relacionados en course_notes
+            var courseNotes = await _context.CoursesNotes
+                .Where(cn => cn.CourseId == id)
+                .ToListAsync();
+
+            _context.CoursesNotes.RemoveRange(courseNotes);
+
+            // Elimina los registros relacionados en students_activities_notes
+            var units = await _context.Units
+                .Where(u => u.CourseId == id)
+                .ToListAsync();
+
+            foreach (var unit in units)
+            {
+                var activities = await _context.Activities
+                    .Where(a => a.UnitId == unit.Id)
+                    .ToListAsync();
+
+                foreach (var activity in activities)
+                {
+                    var notes = await _context.StudentsActivitiesNotes
+                        .Where(n => n.ActivityId == activity.Id)
+                        .ToListAsync();
+
+                    _context.StudentsActivitiesNotes.RemoveRange(notes);
+                }
+
+                _context.Activities.RemoveRange(activities);
+            }
+
+            // Elimina las unidades relacionadas
+            _context.Units.RemoveRange(units);
+
+            // Elimina los registros relacionados en attendances
+            var attendances = await _context.Attendances
+                .Where(a => a.CourseId == id)
+                .ToListAsync();
+
+            _context.Attendances.RemoveRange(attendances);
+
+            // Elimina los registros relacionados en students_courses
+            var studentCourses = await _context.StudentsCourses
+                .Where(sc => sc.CourseId == id)
+                .ToListAsync();
+
+            _context.StudentsCourses.RemoveRange(studentCourses);
+
             _context.Courses.Remove(courseEntity);
 
             await _context.SaveChangesAsync();
@@ -168,5 +281,5 @@ namespace ClassNotes.API.Services.Courses
                 Message = MessagesConstant.DELETE_SUCCESS
             };
         }
-	}
+    }
 }

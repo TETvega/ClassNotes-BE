@@ -16,6 +16,15 @@ namespace ClassNotes.API.Dtos.Courses
 		[StringLength(4, ErrorMessage = "La {0} debe tener menos de {1} caracteres.")]
 		public string Section { get; set; }
 
+		// Hora de inicio de la clase
+		[Display(Name = "hora de inicio")]
+		[Required(ErrorMessage = "La {0} es requerida.")]
+		public TimeSpan StartTime { get; set; }
+
+		// Hora de finalización de la clase
+		[Display(Name = "hora de finalización")]
+		public TimeSpan FinishTime { get; set; }
+
 		// Codigo
 		[Display(Name = "codigo")]
 		[StringLength(15, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
