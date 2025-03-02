@@ -10,15 +10,22 @@ using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Layout.Properties;
+using ClassNotes.API.Database;
+using Microsoft.EntityFrameworkCore;
+using ClassNotes.API.Dtos.Otp;
+using ClassNotes.API.Database.Entities;
+using System.Threading.Tasks;
 
 namespace ClassNotes.API.Services.Emails
 {
 	public class EmailsService : IEmailsService
 	{
+		private readonly ClassNotesContext _context;
 		private readonly IConfiguration _configuration;
 
-		public EmailsService(IConfiguration configuration)
+		public EmailsService(ClassNotesContext context, IConfiguration configuration)
         {
+			this._context = context;
 			this._configuration = configuration;
 		}
 
@@ -67,16 +74,49 @@ namespace ClassNotes.API.Services.Emails
 		}
 
 		// AM: Función para enviar un correo con un PDF adjunto con iText7
-		public async Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailDto dto)
+		public async Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailGradeDto dto)
 		{
+			// AM: Obtener y validar existencia de la clase
+			var courseEntity = await _context.Courses.FirstOrDefaultAsync(c => c.Id == dto.CourseId);
+			if (courseEntity is null)
+			{
+				return new ResponseDto<EmailDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = "El curso ingresado no está registrado.",
+				};
+			}
+
+			// AM: Obtener y validar existencia del estudiante
+			var studentEntity = await _context.Students.FirstOrDefaultAsync(s => s.Id == dto.StudentId);
+			if (studentEntity is null)
+			{
+				return new ResponseDto<EmailDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = "El estudiante ingresado no está registrado.",
+				};
+			}
+
+			// TODO: Validar que el estudiante se encuentra en la clase y que ya tiene una nota final
+
+			// AM: Obtener el centro
+			var centerEntity = await _context.Centers.FirstOrDefaultAsync(c => c.Id == courseEntity.CenterId);
+			// AM: Obtener el profesor
+			var teacherEntity = await _context.Users.FirstOrDefaultAsync(t => t.Id == centerEntity.TeacherId);
+
+			// AM: Creamos el correo que se va a enviar
 			var email = new MimeMessage();
 			email.From.Add(MailboxAddress.Parse(_configuration["Smtp:Username"]));
-			email.To.Add(MailboxAddress.Parse(dto.To));
-			email.Subject = dto.Subject;
+			// AM: Aquí asignamos la dirección de email del estudiante
+			email.To.Add(MailboxAddress.Parse(studentEntity.Email));
+			// AM: Titulo del correo
+			email.Subject = $"Tus calificaciones de {courseEntity.Name} {courseEntity.Section}";
 
-			// AM: Crear el PDF en memoria
-			// var pdfBytes = GeneratePdf();
-			var pdfBytes = GenerateGradesReport("Juan Perez", "Anthony Miranda", DateTime.Now);
+			// AM: Creamos el PDF de calificaciones con los parametros necesarios
+			var pdfBytes = await GenerateGradesReport(centerEntity, teacherEntity, courseEntity, studentEntity);
 
 			// AM: Crear el cuerpo del mensaje con el PDF adjunto
 			var body = new TextPart("plain")
@@ -90,7 +130,7 @@ namespace ClassNotes.API.Services.Emails
 				Content = new MimeContent(new MemoryStream(pdfBytes)),
 				ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
 				ContentTransferEncoding = ContentEncoding.Base64,
-				FileName = "archivo.pdf"
+				FileName = $"Calificaciones_{courseEntity.Name}_{courseEntity.Section}_{studentEntity.FirstName}{studentEntity.LastName}.pdf"
 			};
 
 			var multipart = new Multipart("mixed");
@@ -117,20 +157,21 @@ namespace ClassNotes.API.Services.Emails
 			{
 				StatusCode = 201,
 				Status = true,
-				Message = "Correo enviado con PDF adjunto",
-				Data = dto
+				Message = $"Las calificaciones del estudiante {studentEntity.FirstName} {studentEntity.LastName} en la clase de {courseEntity.Name} fueron enviadas."
 			};
 		}
 
-		// AM: Ejemplo de como se podría generar un pdf para las calificaciones de estudiantes
-		public static byte[] GenerateGradesReport(string teacher, string student, DateTime date)
+		// AM: Generar el pdf con las calificaciones del estudiante
+		public static async Task<byte[]> GenerateGradesReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student)
 		{
+			// AM: Propiedades para redactar el documento PDF
 			using var stream = new MemoryStream();
 			using var writer = new PdfWriter(stream);
 			using var pdf = new PdfDocument(writer);
 			var document = new Document(pdf);
+			var date = DateTime.Now;
 
-			// Título
+			// AM: Titulo
 			var title = new Paragraph("Boletín de Calificaciones")
 				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
 				.SetFontSize(16)
@@ -139,28 +180,33 @@ namespace ClassNotes.API.Services.Emails
 				.SetTextAlignment(TextAlignment.CENTER);
 			document.Add(title);
 
-			// Datos generales
-			document.Add(new Paragraph($"Docente: {teacher}\nEstudiante: {student}\nFecha: {date:dd 'de' MMMM 'de' yyyy}")
+			// AM: Subtitulo
+			var subtitle = new Paragraph($"{center.Name}\n{center.Abbreviation}")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
+				.SetFontSize(14)
+				.SetTextAlignment(TextAlignment.CENTER);
+			document.Add(subtitle);
+
+			// AM: Datos generales
+			document.Add(new Paragraph($"Clase: {course.Name}\nSección: {course.Section}\nDocente: {teacher.FirstName} {teacher.LastName}\nEstudiante: {student.FirstName} {student.LastName}\nFecha: {date:dd 'de' MMMM 'de' yyyy}")
 				.SetFontSize(12));
 
-			// Tabla de calificaciones
-			Table table = new Table(new float[] { 3, 1, 1, 1, 1, 1, 2 });
+			// AM: Tabla de calificaciones
+			Table table = new Table(new float[] { 1, 1, 1 });
 			table.SetWidth(UnitValue.CreatePercentValue(100));
 
-			// Encabezado
-			string[] headers = { "Clases", "U1", "U2", "U3", "U4", "Promedio", "Observación" };
+			// AM: Datos ficticios
+			// TODO: Solo falta hacer dinamica esta parte para traer las notas directamente de la DB
+			string[] headers = { "Unidades", "Nota", "Observación" };
 			foreach (var header in headers)
 			{
 				table.AddHeaderCell(new Cell().Add(new Paragraph(header)));
 			}
-
-			// Datos ficticios (esto debería ser dinámico)
 			string[,] data = {
-			{ "Matemáticas", "87", "90", "87", "--", "88", "APR" },
-			{ "Español", "88", "94", "84", "100", "91.5", "APR" },
-			{ "Biología", "70", "80", "56", "45", "62.7", "REP" },
-			{ "Música", "86", "79", "90", "75", "82.5", "APR" },
-			{ "Física", "90", "92", "85", "91", "89.5", "APR" }
+			{ "Unidad 1", "87", "APR" },
+			{ "Unidad 2", "88", "APR" },
+			{ "Unidad 3", "60", "REP" },
+			{ "Unidad 4", "86", "APR" }
 			};
 
 			int rows = data.GetLength(0);
@@ -174,39 +220,19 @@ namespace ClassNotes.API.Services.Emails
 				}
 			}
 
-
 			document.Add(table);
 
-			// Retroalimentación
-			document.Add(new Paragraph("Retroalimentación:")
-				//.SetBold()
-				.SetUnderline()
+			// AM: Datos generales
+			document.Add(new Paragraph($"Su promedio final es de 80.3\n¡Felicidades, aprobó la clase!")
 				.SetFontSize(12)
-				.SetMarginTop(10));
-			document.Add(new Paragraph("El estudiante no se presentó a los últimos dos exámenes de biología. Se espera que en el siguiente parcial asista para no volver a reprobar la clase."));
+				.SetMarginTop(20)
+				.SetTextAlignment(TextAlignment.CENTER));
 
-			// Pie de página
-			document.Add(new Paragraph("Este reporte fue brindado por la plataforma académica ClassNotes\nPara más información comunicarse a: classnotes-support@gmail.com")
+			// AM: Pie de pagina
+			document.Add(new Paragraph("Este reporte fue brindado por la plataforma académica ClassNotes\nPara más información comunicarse a: classnotes.service@gmail.com")
 				.SetFontSize(10)
-				//.SetItalic()
 				.SetTextAlignment(TextAlignment.CENTER)
 				.SetMarginTop(20));
-
-			document.Close();
-			return stream.ToArray();
-		}
-
-		// AM: Función de prueba para generar un PDF en memoria
-		private byte[] GeneratePdf()
-		{
-			using var stream = new MemoryStream();
-			using var writer = new PdfWriter(stream);
-			using var pdf = new PdfDocument(writer);
-			var document = new Document(pdf);
-
-			// AM: Agregar contenido al PDF
-			document.Add(new Paragraph("Documento PDF generado"));
-			document.Add(new Paragraph("Holaa este es el contenido del pdf generado desde el backend :)"));
 
 			document.Close();
 			return stream.ToArray();

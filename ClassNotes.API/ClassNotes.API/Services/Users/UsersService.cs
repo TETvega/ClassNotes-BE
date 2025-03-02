@@ -216,18 +216,40 @@ namespace ClassNotes.API.Services.Users
 				};
 			}
 
-			// AM: Notificar al nuevo y antiguo correo
+			// AM: Notificamos a la nueva dirección de correo sobre el cambio
 			await _emailsService.SendEmailAsync(new EmailDto
 			{
 				To = dto.NewEmail,
-				Subject = "Correo Actualizado",
-				Content = $"Hola {userEntity.FirstName}! Tu correo electrónico ha sido actualizado correctamente."
+				Subject = "Tu correo ha sido actualizado",
+				Content = $@"
+				<div style='font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;'>
+					<div style='background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);'>
+						<h2 style='color: #333;'>Correo Actualizado</h2>
+						<p style='font-size: 16px; color: #555;'>¡Hola {userEntity.FirstName}!</p>
+						<p style='font-size: 16px; color: #555;'>Tu correo electrónico ha sido actualizado correctamente.<br>Ahora utilizaremos la dirección de correo actual para los servicios que te ofrecemos en nuestra plataforma.</p>
+						<p style='font-size: 14px; color: #777;'>Si no realizaste esta acción, por favor ponte en contacto con nuestro equipo de soporte en <a href='mailto:classnotes.service@gmail.com' style='color: #007BFF;'>classnotes.service@gmail.com</a>.</p>
+						<p style='font-size: 14px; color: #777;'>Gracias por confiar en <strong>ClassNotes</strong>.</p>
+					</div>
+					<p style='font-size: 12px; color: #aaa; margin-top: 20px;'>© ClassNotes 2025 | Todos los derechos reservados</p>
+				</div>"
 			});
+
+			// AM: Y también notificamos a la dirección de correo antigua sobre el cambio
 			await _emailsService.SendEmailAsync(new EmailDto
 			{
 				To = userEntity.Email,
-				Subject = "Correo Actualizado",
-				Content = $"Tu dirección de correo electrónico fue actualizada a {dto.NewEmail} Si tu no realizaste este cambio, contacta a soporte."
+				Subject = "Tu correo ha sido actualizado",
+				Content = $@"
+				<div style='font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;'>
+					<div style='background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);'>
+						<h2 style='color: #333;'>Correo Actualizado</h2>
+						<p style='font-size: 16px; color: #555;'>¡Hola {userEntity.FirstName}!</p>
+						<p style='font-size: 16px; color: #555;'>Tu dirección de correo electrónico ha sido actualizada a <strong>{dto.NewEmail}</strong>.<br>Por lo tanto la dirección <strong>{userEntity.Email}</strong> dejará de ser utilizada en nuestra plataforma.</p>
+						<p style='font-size: 14px; color: #777;'>Si no realizaste esta acción, por favor ponte en contacto con nuestro equipo de soporte en <a href='mailto:classnotes.service@gmail.com' style='color: #007BFF;'>classnotes.service@gmail.com</a> lo antes posible.</p>
+						<p style='font-size: 14px; color: #777;'>Gracias por confiar en <strong>ClassNotes</strong>.</p>
+					</div>
+					<p style='font-size: 12px; color: #aaa; margin-top: 20px;'>© ClassNotes 2025 | Todos los derechos reservados</p>
+				</div>"
 			});
 
 			// AM: Actualizar el nuevo correo
@@ -260,7 +282,7 @@ namespace ClassNotes.API.Services.Users
 			};
 		}
 
-		// AM: Función para borrar el usuario
+		// AM: Función para eliminar el usuario
 		public async Task<ResponseDto<UserDto>> DeleteAsync(string id)
 		{
 			using (var transaction = await _context.Database.BeginTransactionAsync())
@@ -300,12 +322,19 @@ namespace ClassNotes.API.Services.Users
 					await _emailsService.SendEmailAsync(new EmailDto
 					{
 						To = userEntity.Email,
-						Subject = "Cuenta Eliminada",
-						Content = $"Hola {userEntity.FirstName}!\n" +
-						$"Tu cuenta de ClassNotes ha sido eliminada correctamente.\n" +
-						$"Si en algún momento decides volver, estaremos encantados de recibirte nuevamente. " +
-						$"Mientras tanto, si necesitas asistencia o tienes alguna pregunta, no dudes en ponerte en contacto con nuestro equipo de soporte en classnotes.service@gmail.com." +
-						$"\r\n\r\nGracias por haber sido parte de nuestra comunidad 😄"
+						Subject = "Tu cuenta ha sido eliminada",
+						Content = $@"
+						<div style='font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;'>
+							<div style='background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);'>
+								<h2 style='color: #333;'>Cuenta Eliminada</h2>
+								<p style='font-size: 16px; color: #555;'>¡Hola {userEntity.FirstName}!</p>
+								<p style='font-size: 16px; color: #555;'>Tu cuenta de <strong>ClassNotes</strong> ha sido eliminada correctamente.</p>
+								<p style='font-size: 14px; color: #777;'>Si en algún momento decides volver, estaremos encantados de recibirte nuevamente.</p>
+								<p style='font-size: 14px; color: #777;'>Mientras tanto, si necesitas asistencia o tienes alguna pregunta, no dudes en ponerte en contacto con nuestro equipo de soporte en <a href='mailto:classnotes.service@gmail.com' style='color: #007BFF;'>classnotes.service@gmail.com</a>.</p>
+								<p style='font-size: 14px; color: #777;'>¡Gracias por haber sido parte de nuestra comunidad!</p>
+							</div>
+							<p style='font-size: 12px; color: #aaa; margin-top: 20px;'>© ClassNotes 2025 | Todos los derechos reservados</p>
+						</div>"
 					});
 
 					// AM: Remover los roles del usuario
