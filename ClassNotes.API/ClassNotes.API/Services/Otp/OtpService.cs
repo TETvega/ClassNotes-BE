@@ -93,13 +93,7 @@ namespace ClassNotes.API.Services.Otp
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = "Código OTP generado y enviado correctamente.",
-				Data = new OtpDto
-				{
-					Email = dto.Email,
-					OtpCode = otpCode,
-					ExpirationSeconds = _otpExpirationSeconds
-				}
+				Message = "Código OTP generado y enviado correctamente."
 			};
 		}
 
