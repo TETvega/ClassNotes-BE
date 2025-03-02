@@ -1,0 +1,19 @@
+meta {
+  name: Va lidationEmail
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{PATH}}/EmailAttendance/validate-attendance
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "otp": "82749D",
+   "latitude":   14.590145,
+    "longitude":  -88.580145
+  }
+}

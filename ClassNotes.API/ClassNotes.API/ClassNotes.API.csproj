@@ -24,16 +24,10 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Otp.NET" Version="1.4.0" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.2" />
   </ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Controllers\" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="appsettings.Template.json" />
-	</ItemGroup>
 	
   <ProjectExtensions><VisualStudio><UserProperties seeddata_4activities_1json__JsonSchema="https://bitbucket.org/atlassianlabs/intellij-bitbucket-references-plugin/raw/master/src/main/resources/schemas/bitbucket-pipelines.schema.json" /></VisualStudio></ProjectExtensions>
 	

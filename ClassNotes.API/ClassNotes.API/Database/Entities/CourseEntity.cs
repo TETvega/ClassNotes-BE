@@ -38,6 +38,11 @@ namespace ClassNotes.API.Database.Entities
 
         public virtual CourseSettingEntity CourseSetting { get; set;}
 
+        [Required]
+        [Column("teacher_id")]
+        public string TeacherId { get; set; }
+        [ForeignKey(nameof(TeacherId))]
+        public virtual UserEntity Teacher { get; set; }
 
         public virtual ICollection<ActivityEntity> Activities { get; set; }
         public virtual ICollection<AttendanceEntity> Attendances { get; set; }

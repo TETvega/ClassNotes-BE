@@ -18,6 +18,7 @@ using ClassNotes.API.Services.CoursesSettings;
 using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
 using ClassNotes.API.Services.Users;
+using ClassNotes.API.Services.Distance;
 
 namespace ClassNotes.API;
 
@@ -51,6 +52,7 @@ public class Startup
 		services.AddTransient<ICoursesService, CoursesService>();
 		services.AddTransient<IStudentsService, StudentsService>();
 		services.AddTransient<IUsersService, UsersService>();
+		services.AddScoped<DistanceService>();
 
 		// Servicios de seguridad
 		services.AddTransient<IAuditService, AuditService>();
