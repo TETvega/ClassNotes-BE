@@ -6,22 +6,25 @@ using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
+using ClassNotes.API.Services.Audit;
 using iText.Commons.Actions.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace ClassNotes.API.Services.Students
 {
-    public class StudentsService : IStudentsService  
+    public class StudentsService : IStudentsService
     {
         private readonly ClassNotesContext classNotesContext_;
         private readonly IMapper mapper_;
+        private readonly IAuditService _auditService;
         private readonly int PAGE_SIZE;
 
-        public StudentsService(ClassNotesContext classNotesContext, IMapper mapper, IConfiguration configuration)
+        public StudentsService(ClassNotesContext classNotesContext, IAuditService auditService, IMapper mapper, IConfiguration configuration)
         {
             classNotesContext_ = classNotesContext;
             mapper_ = mapper;
+            _auditService = auditService;
             PAGE_SIZE = configuration.GetValue<int>("PageSize");
         }
 
@@ -30,9 +33,12 @@ namespace ClassNotes.API.Services.Students
             // Calculamos el Indice de inicio para la paginaciOn
             int startIndex = (page - 1) * PAGE_SIZE;
 
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();
+
             // Obtenemos la consulta base de los estudiantes registrados en la base de datos
             var studentEntityQuery = classNotesContext_.Students
-                .Where(x => x.CreatedDate <= DateTime.Now); // Solo incluimos estudiantes creados hasta la fecha actual
+                .Where(x => x.TeacherId == userId).AsQueryable(); // Solo incluimos estudiantes creados por quien hace la petición
 
             // Si se proporciona un termino de busqueda, filtramos los estudiantes por nombre
             if (!string.IsNullOrEmpty(searchTerm))
@@ -60,7 +66,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Lista de estudiantes obtenida correctamente.",
+                Message = MessagesConstant.RECORDS_FOUND,
                 Data = new PaginationDto<List<StudentDto>>
                 {
                     CurrentPage = page,
@@ -78,7 +84,10 @@ namespace ClassNotes.API.Services.Students
 
         public async Task<ResponseDto<StudentDto>> GetStudentByIdAsync(Guid id)
         {
-            var studentEntity = await classNotesContext_.Students.FirstOrDefaultAsync(c => c.Id == id);
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();
+
+            var studentEntity = await classNotesContext_.Students.FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == userId);
 
             if (studentEntity == null)
             {
@@ -155,16 +164,20 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 201,
                 Status = true,
-                Message = "Estudiante creado correctamente.",
+                Message = MessagesConstant.CREATE_SUCCESS,
                 Data = studentDto
             };
         }
-      
+
         public async Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto)
         {
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();          
+
             // Buscar el estudiante por su ID
             var studentEntity = await classNotesContext_.Students
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id && s.TeacherId == userId); // Solo quien lo crea lo puede editar
+
 
             // Si el estudiante no existe, retornamos el mensaje que no existe
             if (studentEntity == null)
@@ -173,7 +186,7 @@ namespace ClassNotes.API.Services.Students
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = "Estudiante no encontrado.",
+                    Message = MessagesConstant.RECORD_NOT_FOUND,
                     Data = null
                 };
             }
@@ -210,15 +223,18 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Estudiante actualizado correctamente.",
+                Message = MessagesConstant.UPDATE_SUCCESS,
                 Data = studentDto
             };
         }
         public async Task<ResponseDto<StudentDto>> DeleteStudentAsync(Guid id)
         {
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();
+
             // Buscar el estudiante por su ID
             var studentEntity = await classNotesContext_.Students
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id && s.TeacherId == userId); // Solo quien lo crea puede borrarlo
 
             // Si el estudiante no existe, retornar un error
             if (studentEntity == null)
@@ -227,9 +243,15 @@ namespace ClassNotes.API.Services.Students
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = "El estudiante no existe.",
+                    Message = MessagesConstant.RECORD_NOT_FOUND,
                 };
             }
+
+            // Eliminar registros relacionados en students_courses
+            var relatedRecords = await classNotesContext_.StudentsCourses
+                .Where(sc => sc.StudentId == id)
+                .ToListAsync();
+            classNotesContext_.StudentsCourses.RemoveRange(relatedRecords);
 
             // Eliminar el estudiante
             classNotesContext_.Students.Remove(studentEntity);
@@ -240,7 +262,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Estudiante Borrado correctamente"
+                Message = MessagesConstant.DELETE_SUCCESS
             };
         }
     }
