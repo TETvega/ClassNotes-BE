@@ -1,86 +1,79 @@
 [
   {
-    "id": "d2c5a8b0-5069-4b77-b31c-255db4b0f832",
-    "Name": "Matem�ticas",
+    "id": "0d288091-3d68-40b3-ad09-ee22bb055cc3",
+    "Name": "Prueba",
     "ColorHex": "#FF573",
     "icon": "math",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "d2c5a8b0-5069-4b77-b31c-255db4b0f833",
-    "Name": "Matem�ticas",
-    "ColorHex": "#FF573",
-    "icon": "math",
+    "id": "0dd7204f-fe90-491c-ba8e-e775d8db7f4a",
+    "Name": "Examen",
+    "ColorHex": "#FF0000",
+    "icon": "exam",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "a1b2c3d4-5069-4b77-b31c-255db4b0f834",
-    "Name": "F�sica",
-    "ColorHex": "#33A8F",
-    "icon": "sci",
+    "id": "29fd2297-8e3b-4783-8496-1e7ef8317954",
+    "Name": "Foro",
+    "ColorHex": "#00FF00",
+    "icon": "chat",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "b2c3d4e5-5069-4b77-b31c-255db4b0f835",
-    "Name": "Qu�mica",
-    "ColorHex": "#33FF5",
-    "icon": "flask",
+    "id": "9967535c-9bfa-4956-bfdb-f1d42c624c22",
+    "Name": "Tarea",
+    "ColorHex": "#0000FF",
+    "icon": "task",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "c3d4e5f6-5069-4b77-b31c-255db4b0f836",
-    "Name": "Biolog�a",
-    "ColorHex": "#FFC30",
-    "icon": "leaf",
+    "id": "25bb94dc-b13b-4649-b562-f1af741aeaf3",
+    "Name": "Proyecto",
+    "ColorHex": "#FFA500",
+    "icon": "proj",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "d4e5f6a7-5069-4b77-b31c-255db4b0f837",
-    "Name": "Programaci�n",
-    "ColorHex": "#8E44A",
-    "icon": "code",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "e5f6a7b8-5069-4b77-b31c-255db4b0f838",
-    "Name": "Historia",
-    "ColorHex": "#C7003",
-    "icon": "hist",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "f6a7b8c9-5069-4b77-b31c-255db4b0f839",
-    "Name": "Literatura",
-    "ColorHex": "#FF573",
+    "id": "f45989e7-0ad8-451c-bbb1-00be292c370f",
+    "Name": "Lectura",
+    "ColorHex": "#800080",
     "icon": "book",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "a7b8c9d0-5069-4b77-b31c-255db4b0f840",
-    "Name": "Geograf�a",
-    "ColorHex": "#33A8F",
-    "icon": "glob",
+    "id": "f2ca8802-94a5-4179-86b4-40a6cb64a6c5",
+    "Name": "Exposición",
+    "ColorHex": "#FFFF00",
+    "icon": "pres",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "b8c9d0e1-5069-4b77-b31c-255db4b0f841",
-    "Name": "Arte",
-    "ColorHex": "#FFC30",
-    "icon": "art",
+    "id": "ab1e1391-b4df-4b5f-8e17-c89e5d72f7b4",
+    "Name": "Laboratorio",
+    "ColorHex": "#00FFFF",
+    "icon": "lab",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "c9d0e1f2-5069-4b77-b31c-255db4b0f842",
-    "Name": "M�sica",
-    "ColorHex": "#8E44A",
-    "icon": "mus",
+    "id": "eff35feb-fac1-4597-a5ef-241ee454a51d",
+    "Name": "Quiz",
+    "ColorHex": "#FFC0CB",
+    "icon": "quiz",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
-    "id": "d0e1f2a3-5069-4b77-b31c-255db4b0f843",
-    "Name": "Educaci�n F�sica",
-    "ColorHex": "#C7003",
-    "icon": "sport",
+    "id": "1ede90cb-d5e1-457d-8279-f45da35afecb",
+    "Name": "Debate",
+    "ColorHex": "#A52A2A",
+    "icon": "deb",
+    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+  },
+  {
+    "id": "6d4b3e97-09e6-4a95-a813-fee0d6bc2daf",
+    "Name": "Revisión",
+    "ColorHex": "#808080",
+    "icon": "rev",
     "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   }
 ]
