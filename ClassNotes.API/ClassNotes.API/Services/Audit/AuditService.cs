@@ -19,10 +19,10 @@ namespace ClassNotes.API.Services.Audit
 
         public string GetUserId()
         {
-            var idClaim = _httpContextAccessor.HttpContext
-                .User.Claims.Where(x => x.Type == "UserId").FirstOrDefault();
+            //var idClaim = _httpContextAccessor.HttpContext
+            //    .User.Claims.Where(x => x.Type == "UserId").FirstOrDefault();
 
-            return idClaim.Value;
+            return "41e958ea-a9e3-4deb-bccb-e17a987164c7";
         }
 
         // --------------------- CP --------------------- //

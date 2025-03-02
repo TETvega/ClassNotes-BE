@@ -1,30 +1,145 @@
 [
-
-    {
-        "id": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "name": "Dibujo",
-        "section": "1600",
-        "code": "DQ-101",
-        "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-        "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
-        "is_active": false
-    },
-    {
-        "id": "caab5305-52d2-463d-bc77-c579b41167fa",
-        "name": "Fisica",
-        "section": "1000",
-        "code": "FS-100",
-        "CenterId": "e29b8400-e29b-41d4-a716-446655440001",
-        "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
-        "is_active": true
-    },
-    {
-        "id": "b941094a-2646-470f-a18b-5bd75f9b067c",
-        "name": "Matematicas",
-        "section": "1100",
-        "code": "MM-110",
-        "CenterId": "e29b8400-e29b-41d4-a716-446655440003",
-        "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
-        "is_active": true
-    },
+  {
+    "id": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+    "name": "Dibujo",
+    "section": "1600",
+    "code": "DQ-101",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "is_active": false,
+    "start_time": "08:00:00",
+    "finish_time": "09:00:00"
+  },
+  {
+    "id": "caab5305-52d2-463d-bc77-c579b41167fa",
+    "name": "Fisica",
+    "section": "1000",
+    "code": "FS-100",
+    "CenterId": "72ed66eb-6396-4788-a337-eb40174dd756",
+    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "is_active": true,
+    "start_time": "09:00:00",
+    "finish_time": "10:00:00"
+  },
+  {
+    "id": "b941094a-2646-470f-a18b-5bd75f9b067c",
+    "name": "Matematicas",
+    "section": "1100",
+    "code": "MM-110",
+    "CenterId": "3f471eaa-2cb9-404b-bbc7-5173c45d2083",
+    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "is_active": true,
+    "start_time": "10:00:00",
+    "finish_time": "11:00:00"
+  },
+  {
+    "id": "d3e4f5a6-7b8c-4d9e-8f1a-2b3c4d5e6f7a",
+    "name": "Química General",
+    "section": "1200",
+    "code": "QG-120",
+    "CenterId": "9106f197-3996-4213-95fe-db492c10c1f3",
+    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "is_active": true,
+    "start_time": "11:00:00",
+    "finish_time": "12:00:00"
+  },
+  {
+    "id": "e4f5a6b7-8c9d-5e0f-9a1b-3c4d5e6f7a8b",
+    "name": "Biología",
+    "section": "1300",
+    "code": "BG-130",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "is_active": true,
+    "start_time": "12:00:00",
+    "finish_time": "13:00:00"
+  },
+  {
+    "id": "f5a6b7c8-9d0e-6f1a-2b3c-4d5e6f7a8b9c",
+    "name": "Programación I",
+    "section": "1400",
+    "code": "PI-140",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "is_active": true,
+    "start_time": "13:00:00",
+    "finish_time": "14:00:00"
+  },
+  {
+    "id": "a6b7c8d9-0e1f-7a2b-3c4d-5e6f7a8b9c0d",
+    "name": "Inglés Técnico",
+    "section": "1500",
+    "code": "IT-150",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "is_active": false,
+    "start_time": "14:00:00",
+    "finish_time": "15:00:00"
+  },
+  {
+    "id": "b7c8d9e0-1f2a-8b3c-4d5e-6f7a8b9c0d1e",
+    "name": "Estadística",
+    "section": "1700",
+    "code": "ES-170",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "is_active": true,
+    "start_time": "15:00:00",
+    "finish_time": "16:00:00"
+  },
+  {
+    "id": "c8d9e0f1-2a3b-9c4d-5e6f-7a8b9c0d1e2f",
+    "name": "Cálculo I",
+    "section": "1800",
+    "code": "CI-180",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "is_active": true,
+    "start_time": "16:00:00",
+    "finish_time": "17:00:00"
+  },
+  {
+    "id": "d9e0f1a2-3b4c-0d5e-6f7a-8b9c0d1e2f3a",
+    "name": "Historia de Honduras",
+    "section": "1900",
+    "code": "HH-190",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "is_active": false,
+    "start_time": "17:00:00",
+    "finish_time": "18:00:00"
+  },
+  {
+    "id": "e0f1a2b3-4c5d-1e6f-7a8b-9c0d1e2f3a4b",
+    "name": "Filosofía",
+    "section": "2000",
+    "code": "FL-200",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "is_active": true,
+    "start_time": "08:00:00",
+    "finish_time": "09:00:00"
+  },
+  {
+    "id": "f1a2b3c4-5d6e-2f7a-8b9c-0d1e2f3a4b5c",
+    "name": "Economía",
+    "section": "2100",
+    "code": "EC-210",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "is_active": true,
+    "start_time": "09:00:00",
+    "finish_time": "10:00:00"
+  },
+  {
+    "id": "a2b3c4d5-6e7f-3a8b-9c0d-1e2f3a4b5c6d",
+    "name": "Derecho Civil",
+    "section": "2200",
+    "code": "DC-220",
+    "CenterId": "550e8400-e29b-41d4-a716-446655440000",
+    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "is_active": false,
+    "start_time": "10:00:00",
+    "finish_time": "11:00:00"
+  }
 ]
