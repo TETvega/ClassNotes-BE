@@ -17,16 +17,17 @@ namespace ClassNotes.API.Database
             try
             {
                 await LoadUsersAndRolesAsync(userManager, roleManager, loggerFactory);
-                //await LoadCourseSenttingsAsync(loggerFactory, context);
-                //await LoadCenterAsync(loggerFactory, context);
-                //await LoadCourseAsync(loggerFactory, context);
-                //await LoadCourseNotesAsync(loggerFactory, context);
-                //await LoadActivitiesAsync(loggerFactory, context);
-                //await LoadStudentsAsync(loggerFactory, context);
-                //await LoadAttendanceAsync(loggerFactory, context);
-                //await LoadStudentCourseAsync(loggerFactory, context);
-                //await LoadStudentsActivitesNotesAsync(loggerFactory, context);
-
+                await LoadCourseSenttingsAsync(loggerFactory, context);
+                await LoadCenterAsync(loggerFactory, context);
+                await LoadCourseAsync(loggerFactory, context);
+                await LoadCourseNotesAsync(loggerFactory, context);
+                await LoadTagActivityAsync(loggerFactory, context);
+                await LoadUnitAsync(loggerFactory, context);
+                await LoadActivitiesAsync(loggerFactory, context);
+                await LoadStudentsAsync(loggerFactory, context);
+                await LoadAttendanceAsync(loggerFactory, context);
+                await LoadStudentCourseAsync(loggerFactory, context);
+                await LoadStudentsActivitesNotesAsync(loggerFactory, context);
 
             }
             catch (Exception ex)
@@ -49,28 +50,40 @@ namespace ClassNotes.API.Database
 					await roleManager.CreateAsync(new IdentityRole(RolesConstant.USER));
 				}
 
-				if (!await userManager.Users.AnyAsync())
-				{
-					// AM: Creación del usuario de prueba
-					var normalUser = new UserEntity
-					{
-						Id = "41e958ea-a9e3-4deb-bccb-e17a987164c7",
-						Email = "jperez@me.com",
-						UserName = "jperez@me.com",
-						FirstName = "Juan",
-						LastName = "Perez",
-						//DefaultCourseSettingId = Guid.NewGuid(),
-					};
+                // JA: Cargar los usuarios desde el archivo JSON
+                var jsonFilePath = "SeedData/users.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var usersFromFile = JsonConvert.DeserializeObject<List<UserEntity>>(jsonContent);
 
+                if (usersFromFile != null && usersFromFile.Any())
+                {
+                    // JA: Iteramos sobre cada usuario del archivo JSON
+                    foreach (var user in usersFromFile)
+                    {
+                        // JA: Verificar si el usuario ya existe en la base de datos
+                        var existingUser = await userManager.FindByIdAsync(user.Id);
+                        if (existingUser == null)
+                        {
+                            // JA: Si el usuario no existe, crear uno nuevo con la contraseña
+                            var createUserResult = await userManager.CreateAsync(user, "Temporal01*");
 
-
-                    // AM: Aquí se asigna la contraseña "Temporal01*"
-                    await userManager.CreateAsync(normalUser, "Temporal01*");
-
-					// AM: Aquí se aigna el rol al usuario
-					await userManager.AddToRoleAsync(normalUser, RolesConstant.USER);
-				}
-			}
+                            if (createUserResult.Succeeded)
+                            {
+                                // JA: Asignar el rol USER al usuario recién creado
+                                await userManager.AddToRoleAsync(user, RolesConstant.USER);
+                            }
+                            else
+                            {
+                                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                                foreach (var error in createUserResult.Errors)
+                                {
+                                    logger.LogError($"Error al crear usuario {user.UserName}: {error.Description}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 			catch (Exception e)
 			{
 				var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
@@ -78,7 +91,7 @@ namespace ClassNotes.API.Database
 			}
 		}
 	
-        // AM: Aqui se llama el json de Estudiantes 
+        // AM: Aqui se llama el json para cargar los Estudiantes 
         public static async Task LoadStudentsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -110,6 +123,75 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Estudiantes");
             }
         }
+
+        // JA: Cargamos las TagasActivity
+        public static async Task LoadTagActivityAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/tag_activity.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var tags = JsonConvert.DeserializeObject<List<TagActivityEntity>>(jsonContent);
+                
+                    foreach (var tag in tags)
+                    {
+                        // JA: Asignamos el usuario creador, en este caso el primero en la lista
+                        var user = await context.Users.FirstOrDefaultAsync();
+                            // JA: Verificar si la TagActivity ya existe
+                            bool exists = await context.TagsActivities.AnyAsync(t => t.Id == tag.Id);
+                            if (!exists)
+                            {
+                                tag.CreatedDate = DateTime.Now;
+                                tag.UpdatedDate = DateTime.Now;
+                                tag.CreatedBy = user.Id;
+                                tag.UpdatedBy = user.Id;
+                                await context.TagsActivities.AddAsync(tag);
+                        }
+                   
+                    await context.SaveChangesAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                logger.LogError(e, "Error al ejecutar el Seed de Tag Activity");
+            }
+        }
+
+        // JA: Cargamos la unidad
+        public static async Task LoadUnitAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+        {
+            try
+            {
+                var jsonFilePath = "SeedData/unit.json";
+                var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+                var units = JsonConvert.DeserializeObject<List<UnitEntity>>(jsonContent);
+
+                    foreach (var unit in units)
+                    {
+                        // JA: Asignamos el usuario creador, en este caso el primero en la lista
+                        var user = await context.Users.FirstOrDefaultAsync();
+                            // JA: Verificar si la unidad ya existe
+                            bool exists = await context.Units.AnyAsync(t => t.Id == unit.Id);
+                            if (!exists)
+                            {
+                                unit.CreatedDate = DateTime.Now;
+                                unit.UpdatedDate = DateTime.Now;
+                                unit.CreatedBy = user.Id;
+                                unit.UpdatedBy = user.Id;
+                                await context.Units.AddAsync(unit);
+                            }
+
+                    await context.SaveChangesAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                logger.LogError(e, "Error al ejecutar el Seed de Unidades");
+            }
+        }
+
 
         // DD : Aqui se llama el json de Actividades 
         public static async Task LoadActivitiesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
@@ -328,7 +410,6 @@ namespace ClassNotes.API.Database
             }
         }
         //DD: Aqui se llama el json de Curso de Estudiantes 
-
         public static async Task LoadStudentCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -336,26 +417,38 @@ namespace ClassNotes.API.Database
                 var jsonFilePath = "SeedData/students_courses.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var student_courses = JsonConvert.DeserializeObject<List<StudentCourseEntity>>(jsonContent);
-                foreach ( var student_course in student_courses) 
+
+                foreach (var student_course in student_courses)
                 {
                     var user = await context.Users.FirstOrDefaultAsync();
                     bool exists = await context.StudentsCourses.AnyAsync(s => s.Id == student_course.Id);
-                    if (!exists) 
+
+                    if (!exists)
                     {
                         student_course.CreatedBy = user.Id;
                         student_course.CreatedDate = DateTime.Now;
                         student_course.UpdatedBy = user.Id;
                         student_course.UpdatedDate = DateTime.Now;
-                        await context.StudentsCourses.AddAsync(student_course);
+
+                        // JA: Realizamos este try para ver que campo no esta generando error y solucionarlo
+                        try
+                        {
+                            await context.StudentsCourses.AddAsync(student_course);
+                            await context.SaveChangesAsync();  // JA: Guardar cada registro individualmente
+                        }
+                        catch (Exception dbEx)
+                        {
+                            // JA: Aqui mostramos el error
+                            var logger = loggerFactory.CreateLogger<ClassNotesContext>();
+                            logger.LogError(dbEx, $"Error al insertar StudentCourse ID: {student_course.Id}, StudentID: {student_course.StudentId}, CourseID: {student_course.CourseId}");
+                        }
                     }
                 }
-                await context.SaveChangesAsync();
-
             }
             catch (Exception e)
             {
                 var logger = loggerFactory.CreateLogger<ClassNotesContext>();
-                logger.LogError(e, "Error al ejecutar el Seeder de Curos de Estudiantes");
+                logger.LogError(e, "Error al ejecutar el Seeder de Cursos de Estudiantes");
             }
         }
 
