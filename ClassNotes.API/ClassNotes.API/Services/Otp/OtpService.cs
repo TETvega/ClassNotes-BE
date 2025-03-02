@@ -19,8 +19,8 @@ namespace ClassNotes.API.Services.Otp
 		private readonly IConfiguration _configuration;
         private readonly IMemoryCache _memoryCache;
 
-        // AM: Tiempo de expiración del codigo otp
-        private readonly int _otpExpirationSeconds = 120; 
+        // AM: Tiempo de expiración del codigo otp (3 minutos)
+        private readonly int _otpExpirationSeconds = 180; 
 
 		public OtpService(ClassNotesContext context, IConfiguration configuration, IMemoryCache memoryCache)
         {
@@ -68,7 +68,7 @@ namespace ClassNotes.API.Services.Otp
 						<div style='display: inline-block; padding: 10px 20px; font-size: 24px; color: #ffffff; background-color: #198F3D; border-radius: 5px; margin: 20px 0;'>
 							<strong>{otpCode}</strong>
 						</div>
-						<p style='font-size: 14px; color: #777;'>Este código expirará en <strong>2 minutos</strong>.</p>
+						<p style='font-size: 14px; color: #777;'>Este código expirará en <strong>{_otpExpirationSeconds/60} minutos</strong>.</p>
 						<p style='font-size: 12px; color: #999;'>Es importante que no compartas este código con nadie más.<br>Si no lo solicitaste, por favor ignora este mensaje.</p>
 					</div>
 					<p style='font-size: 12px; color: #aaa; margin-top: 20px;'>© ClassNotes 2025 | Todos los derechos reservados</p>
@@ -93,7 +93,13 @@ namespace ClassNotes.API.Services.Otp
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = "Código OTP generado y enviado correctamente."
+				Message = "Código OTP generado y enviado correctamente.",
+				Data = new OtpDto
+				{
+					Email = dto.Email,
+					ExpirationSeconds = _otpExpirationSeconds
+					//OtpCode = otpCode,
+				}
 			};
 		}
 
@@ -126,11 +132,19 @@ namespace ClassNotes.API.Services.Otp
             // CG: Eliminar OTP después de validarlo
             _memoryCache.Remove(cacheKey);
 
+			// AM: Obtener el usuario a partir del email para retornar el ID en la respuesta
+			var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+
             return new ResponseDto<OtpDto>
 			{
 				StatusCode = 200,
 				Status = true,
 				Message = "Código OTP validado correctamente.",
+				Data = new OtpDto
+				{
+					UserId = user.Id,
+					Email = dto.Email,
+				}
 			};
 		}
 
@@ -163,13 +177,7 @@ namespace ClassNotes.API.Services.Otp
 				return new ResponseDto<OtpDto>
 				{
 					Message = "OTP encontrando en caché",
-					Data = new OtpDto 
-					{ 
-						Email = email, 
-						OtpCode = otpData.Code,
-                        // ExpirationSeconds = otpData.Expiration
-                        // ExpirationSeconds es entero y Expiration es DateTime
-                    },
+					Data = null,
 					Status = true,
 					StatusCode = 200,
 				};

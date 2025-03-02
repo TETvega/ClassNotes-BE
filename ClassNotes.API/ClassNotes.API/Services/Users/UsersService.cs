@@ -138,28 +138,40 @@ namespace ClassNotes.API.Services.Users
 		// AM: Función para cambiar la contraseña mediante validación OTP
 		public async Task<ResponseDto<UserDto>> ChangePasswordWithOtpAsync(UserEditPasswordOtpDto dto)
 		{
-			// AM: Validar el OTP ingresado
-			var otpValidationResult = await _otpService.ValidateOtpAsync(new OtpValidateDto { Email = dto.Email, OtpCode = dto.OtpCode });
+			/****** AM: Validar el OTP ingresado (OBSOLETO POR CAMBIO DE LÓGICA A PETICIÓN DE FRONTEND) ******/
 
-			if (!otpValidationResult.Status)
-			{
-				return new ResponseDto<UserDto>
-				{
-					StatusCode = 400,
-					Status = false,
-					Message = otpValidationResult.Message
-				};
-			}
+			//var otpValidationResult = await _otpService.ValidateOtpAsync(new OtpValidateDto { Email = dto.Email, OtpCode = dto.OtpCode });
+			//if (!otpValidationResult.Status)
+			//{
+			//	return new ResponseDto<UserDto>
+			//	{
+			//		StatusCode = 400,
+			//		Status = false,
+			//		Message = otpValidationResult.Message
+			//	};
+			//}
 
 			// AM: Buscar al usuario por email
-			var user = await _userManager.FindByEmailAsync(dto.Email);
+			//var user = await _userManager.FindByEmailAsync(dto.Email);
+			//if (user is null)
+			//{
+			//	return new ResponseDto<UserDto>
+			//	{
+			//		StatusCode = 404,
+			//		Status = false,
+			//		Message = "El correo ingresado no está registrado."
+			//	};
+			//}
+
+			// AM: Buscar al usuario por id
+			var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.UserId);
 			if (user is null)
 			{
 				return new ResponseDto<UserDto>
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = "El correo ingresado no está registrado."
+					Message = "El usuario ingresado no está registrado."
 				};
 			}
 

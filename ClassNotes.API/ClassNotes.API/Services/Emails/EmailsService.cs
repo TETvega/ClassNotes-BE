@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Dtos.Otp;
 using ClassNotes.API.Database.Entities;
 using System.Threading.Tasks;
+using iText.Kernel.Pdf.Canvas.Draw;
 
 namespace ClassNotes.API.Services.Emails
 {
@@ -100,12 +101,24 @@ namespace ClassNotes.API.Services.Emails
 				};
 			}
 
-			// TODO: Validar que el estudiante se encuentra en la clase y que ya tiene una nota final
+			// AM: Validar el registro del estudiante en la clase
+			var studentCourseEntity = await _context.StudentsCourses.FirstOrDefaultAsync(sc => sc.CourseId == dto.CourseId && sc.StudentId == dto.StudentId);
+			if (studentCourseEntity is null)
+			{
+				return new ResponseDto<EmailDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = "El estudiante ingresado no está registrado en la clase ingresada.",
+				};
+			}
 
 			// AM: Obtener el centro
 			var centerEntity = await _context.Centers.FirstOrDefaultAsync(c => c.Id == courseEntity.CenterId);
 			// AM: Obtener el profesor
 			var teacherEntity = await _context.Users.FirstOrDefaultAsync(t => t.Id == centerEntity.TeacherId);
+			// AM: Obtener el CourseSetting del curso (para saber cual es el minimo para reprobar o aprobar en la clase)
+			var courseSettingEntity = await _context.CoursesSettings.FirstOrDefaultAsync(cs => cs.Id == courseEntity.SettingId);
 
 			// AM: Creamos el correo que se va a enviar
 			var email = new MimeMessage();
@@ -116,7 +129,7 @@ namespace ClassNotes.API.Services.Emails
 			email.Subject = $"Tus calificaciones de {courseEntity.Name} {courseEntity.Section}";
 
 			// AM: Creamos el PDF de calificaciones con los parametros necesarios
-			var pdfBytes = await GenerateGradesReport(centerEntity, teacherEntity, courseEntity, studentEntity);
+			var pdfBytes = await GenerateGradeReport(centerEntity, teacherEntity, courseEntity, studentEntity, studentCourseEntity, courseSettingEntity);
 
 			// AM: Crear el cuerpo del mensaje con el PDF adjunto
 			var body = new TextPart("plain")
@@ -157,12 +170,12 @@ namespace ClassNotes.API.Services.Emails
 			{
 				StatusCode = 201,
 				Status = true,
-				Message = $"Las calificaciones del estudiante {studentEntity.FirstName} {studentEntity.LastName} en la clase de {courseEntity.Name} fueron enviadas."
+				Message = $"Las calificaciones del estudiante {studentEntity.FirstName} {studentEntity.LastName} en la clase de {courseEntity.Name} fueron enviadas correctamente."
 			};
 		}
 
 		// AM: Generar el pdf con las calificaciones del estudiante
-		public static async Task<byte[]> GenerateGradesReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student)
+		public static async Task<byte[]> GenerateGradeReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student, StudentCourseEntity studentCourse, CourseSettingEntity courseSetting)
 		{
 			// AM: Propiedades para redactar el documento PDF
 			using var stream = new MemoryStream();
@@ -176,7 +189,6 @@ namespace ClassNotes.API.Services.Emails
 				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
 				.SetFontSize(16)
 				.SetUnderline()
-				//.SetFontColor(ColorConstants.BLUE)
 				.SetTextAlignment(TextAlignment.CENTER);
 			document.Add(title);
 
@@ -187,26 +199,63 @@ namespace ClassNotes.API.Services.Emails
 				.SetTextAlignment(TextAlignment.CENTER);
 			document.Add(subtitle);
 
-			// AM: Datos generales
-			document.Add(new Paragraph($"Clase: {course.Name}\nSección: {course.Section}\nDocente: {teacher.FirstName} {teacher.LastName}\nEstudiante: {student.FirstName} {student.LastName}\nFecha: {date:dd 'de' MMMM 'de' yyyy}")
+			// AM: Linea horizontal
+			document.Add(new LineSeparator(new SolidLine(2f))
+				.SetWidth(UnitValue.CreatePercentValue(100))
+				.SetMarginTop(5)
+				.SetMarginBottom(5));
+
+			/****** AM: Datos generales ******/
+			// AM: Nombre de la clase
+			document.Add(new Paragraph()
+				.Add(new Text("Clase: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text(course.Name))
+				.SetFontSize(12));
+			// AM: Sección de la clase
+			document.Add(new Paragraph()
+				.Add(new Text("Sección: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text(course.Section))
+				.SetFontSize(12));
+			// AM: Docente
+			document.Add(new Paragraph()
+				.Add(new Text("Docente: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text($"{teacher.FirstName} {teacher.LastName}"))
+				.SetFontSize(12));
+			// AM: Estudiante
+			document.Add(new Paragraph()
+				.Add(new Text("Estudiante: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text($"{student.FirstName} {student.LastName}"))
+				.SetFontSize(12));
+			// AM: Fecha actual
+			document.Add(new Paragraph()
+				.Add(new Text("Fecha: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text($"{date:dd 'de' MMMM 'de' yyyy}"))
 				.SetFontSize(12));
 
 			// AM: Tabla de calificaciones
 			Table table = new Table(new float[] { 1, 1, 1 });
-			table.SetWidth(UnitValue.CreatePercentValue(100));
+			table.SetWidth(UnitValue.CreatePercentValue(100)).SetMarginTop(5);
 
-			// AM: Datos ficticios
-			// TODO: Solo falta hacer dinamica esta parte para traer las notas directamente de la DB
-			string[] headers = { "Unidades", "Nota", "Observación" };
+			// ****** TODO: Solo falta hacer dinamica esta parte para mostrar las calificaciones por unidad del estudiante en la clase ******
+
+			string[] headers = { "Parcial", "Nota", "Observación" };
 			foreach (var header in headers)
 			{
-				table.AddHeaderCell(new Cell().Add(new Paragraph(header)));
+				table.AddHeaderCell(new Cell().Add(new Paragraph(header)
+					.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))));
 			}
+
+			// AM: Datos de las notas por parcial
 			string[,] data = {
-			{ "Unidad 1", "87", "APR" },
-			{ "Unidad 2", "88", "APR" },
-			{ "Unidad 3", "60", "REP" },
-			{ "Unidad 4", "86", "APR" }
+				{ "Unidad 1", "87" },
+				{ "Unidad 2", "88" },
+				{ "Unidad 3", "60" },
+				{ "Unidad 4", "86" }
 			};
 
 			int rows = data.GetLength(0);
@@ -214,25 +263,63 @@ namespace ClassNotes.API.Services.Emails
 
 			for (int i = 0; i < rows; i++)
 			{
-				for (int j = 0; j < cols; j++)
+				// AM: Agregar el nombre del parcial
+				table.AddCell(new Cell().Add(new Paragraph(data[i, 0])));
+
+				// AM: Agregar la nota del parcial
+				table.AddCell(new Cell().Add(new Paragraph(data[i, 1])));
+
+				// AM: Calcular si aprobó o reprobó
+				double note = double.Parse(data[i, 1]);
+				string observation = note >= courseSetting.MinimumGrade ? "APR" : "REP";
+
+				// AM: Crear el parrafo con el color correspondiente
+				var observationParagraph = new Paragraph(observation);
+				if (observation == "APR")
 				{
-					table.AddCell(new Cell().Add(new Paragraph(data[i, j])));
+					observationParagraph.SetFontColor(ColorConstants.GREEN); // Verde para "APR"
 				}
+				else
+				{
+					observationParagraph.SetFontColor(ColorConstants.RED); // Rojo para "REP"
+				}
+
+				table.AddCell(new Cell().Add(observationParagraph));
 			}
 
 			document.Add(table);
 
-			// AM: Datos generales
-			document.Add(new Paragraph($"Su promedio final es de 80.3\n¡Felicidades, aprobó la clase!")
-				.SetFontSize(12)
-				.SetMarginTop(20)
-				.SetTextAlignment(TextAlignment.CENTER));
+			// *********************************************************************
+
+			// AM: Promedio final
+			if (studentCourse.FinalNote >= courseSetting.MinimumGrade) 
+			{
+				document.Add(new Paragraph($"Su promedio final es de {studentCourse.FinalNote}\n¡Felicidades, aprobó la clase!")
+					.SetFontSize(12)
+					.SetMarginTop(20)
+					.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
+					.SetTextAlignment(TextAlignment.CENTER));
+			}
+			else
+			{
+				document.Add(new Paragraph($"Su promedio final es de {studentCourse.FinalNote}\nUsted ha reprobado la clase, la nota minima para pasar era de {courseSetting.MinimumGrade}")
+					.SetFontSize(12)
+					.SetMarginTop(20)
+					.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
+					.SetTextAlignment(TextAlignment.CENTER));
+			}
+
+			// AM: Linea horizontal
+			document.Add(new LineSeparator(new SolidLine(2f))
+				.SetWidth(UnitValue.CreatePercentValue(100))
+				.SetMarginTop(10)
+				.SetMarginBottom(5));
 
 			// AM: Pie de pagina
 			document.Add(new Paragraph("Este reporte fue brindado por la plataforma académica ClassNotes\nPara más información comunicarse a: classnotes.service@gmail.com")
 				.SetFontSize(10)
 				.SetTextAlignment(TextAlignment.CENTER)
-				.SetMarginTop(20));
+				.SetMarginTop(15));
 
 			document.Close();
 			return stream.ToArray();
