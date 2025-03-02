@@ -6,7 +6,7 @@ meta {
 
 post {
   url: {{PATH}}/centers
-  body: json
+  body: multipartForm
   auth: bearer
 }
 
@@ -19,4 +19,10 @@ body:json {
     "name": "Jeronimo J Reina",
     "abbreviation": "JJR"
   }
+}
+
+body:multipart-form {
+  image: @file()
+  Name: Universidad Catolica de honduras
+  Abbreviation: CATO
 }
