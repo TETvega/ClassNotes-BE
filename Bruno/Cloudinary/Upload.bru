@@ -1,0 +1,19 @@
+meta {
+  name: Upload
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/cloudinary/upload
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  image: @file(C:\Users\crist\Pictures\images.jpg)
+}
+
+body:file {
+  file: @file(C:\Users\crist\Pictures\images.jpg) @contentType(image/jpeg)
+}

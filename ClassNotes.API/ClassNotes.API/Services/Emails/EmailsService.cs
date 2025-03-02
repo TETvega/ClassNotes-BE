@@ -10,15 +10,23 @@ using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Layout.Properties;
+using ClassNotes.API.Database;
+using Microsoft.EntityFrameworkCore;
+using ClassNotes.API.Dtos.Otp;
+using ClassNotes.API.Database.Entities;
+using System.Threading.Tasks;
+using iText.Kernel.Pdf.Canvas.Draw;
 
 namespace ClassNotes.API.Services.Emails
 {
 	public class EmailsService : IEmailsService
 	{
+		private readonly ClassNotesContext _context;
 		private readonly IConfiguration _configuration;
 
-		public EmailsService(IConfiguration configuration)
+		public EmailsService(ClassNotesContext context, IConfiguration configuration)
         {
+			this._context = context;
 			this._configuration = configuration;
 		}
 
@@ -67,16 +75,61 @@ namespace ClassNotes.API.Services.Emails
 		}
 
 		// AM: Función para enviar un correo con un PDF adjunto con iText7
-		public async Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailDto dto)
+		public async Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailGradeDto dto)
 		{
+			// AM: Obtener y validar existencia de la clase
+			var courseEntity = await _context.Courses.FirstOrDefaultAsync(c => c.Id == dto.CourseId);
+			if (courseEntity is null)
+			{
+				return new ResponseDto<EmailDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = "El curso ingresado no está registrado.",
+				};
+			}
+
+			// AM: Obtener y validar existencia del estudiante
+			var studentEntity = await _context.Students.FirstOrDefaultAsync(s => s.Id == dto.StudentId);
+			if (studentEntity is null)
+			{
+				return new ResponseDto<EmailDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = "El estudiante ingresado no está registrado.",
+				};
+			}
+
+			// AM: Validar el registro del estudiante en la clase
+			var studentCourseEntity = await _context.StudentsCourses.FirstOrDefaultAsync(sc => sc.CourseId == dto.CourseId && sc.StudentId == dto.StudentId);
+			if (studentCourseEntity is null)
+			{
+				return new ResponseDto<EmailDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = "El estudiante ingresado no está registrado en la clase ingresada.",
+				};
+			}
+
+			// AM: Obtener el centro
+			var centerEntity = await _context.Centers.FirstOrDefaultAsync(c => c.Id == courseEntity.CenterId);
+			// AM: Obtener el profesor
+			var teacherEntity = await _context.Users.FirstOrDefaultAsync(t => t.Id == centerEntity.TeacherId);
+			// AM: Obtener el CourseSetting del curso (para saber cual es el minimo para reprobar o aprobar en la clase)
+			var courseSettingEntity = await _context.CoursesSettings.FirstOrDefaultAsync(cs => cs.Id == courseEntity.SettingId);
+
+			// AM: Creamos el correo que se va a enviar
 			var email = new MimeMessage();
 			email.From.Add(MailboxAddress.Parse(_configuration["Smtp:Username"]));
-			email.To.Add(MailboxAddress.Parse(dto.To));
-			email.Subject = dto.Subject;
+			// AM: Aquí asignamos la dirección de email del estudiante
+			email.To.Add(MailboxAddress.Parse(studentEntity.Email));
+			// AM: Titulo del correo
+			email.Subject = $"Tus calificaciones de {courseEntity.Name} {courseEntity.Section}";
 
-			// AM: Crear el PDF en memoria
-			// var pdfBytes = GeneratePdf();
-			var pdfBytes = GenerateGradesReport("Juan Perez", "Anthony Miranda", DateTime.Now);
+			// AM: Creamos el PDF de calificaciones con los parametros necesarios
+			var pdfBytes = await GenerateGradeReport(centerEntity, teacherEntity, courseEntity, studentEntity, studentCourseEntity, courseSettingEntity);
 
 			// AM: Crear el cuerpo del mensaje con el PDF adjunto
 			var body = new TextPart("plain")
@@ -90,7 +143,7 @@ namespace ClassNotes.API.Services.Emails
 				Content = new MimeContent(new MemoryStream(pdfBytes)),
 				ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
 				ContentTransferEncoding = ContentEncoding.Base64,
-				FileName = "archivo.pdf"
+				FileName = $"Calificaciones_{courseEntity.Name}_{courseEntity.Section}_{studentEntity.FirstName}{studentEntity.LastName}.pdf"
 			};
 
 			var multipart = new Multipart("mixed");
@@ -117,50 +170,92 @@ namespace ClassNotes.API.Services.Emails
 			{
 				StatusCode = 201,
 				Status = true,
-				Message = "Correo enviado con PDF adjunto",
-				Data = dto
+				Message = $"Las calificaciones del estudiante {studentEntity.FirstName} {studentEntity.LastName} en la clase de {courseEntity.Name} fueron enviadas correctamente."
 			};
 		}
 
-		// AM: Ejemplo de como se podría generar un pdf para las calificaciones de estudiantes
-		public static byte[] GenerateGradesReport(string teacher, string student, DateTime date)
+		// AM: Generar el pdf con las calificaciones del estudiante
+		public static async Task<byte[]> GenerateGradeReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student, StudentCourseEntity studentCourse, CourseSettingEntity courseSetting)
 		{
+			// AM: Propiedades para redactar el documento PDF
 			using var stream = new MemoryStream();
 			using var writer = new PdfWriter(stream);
 			using var pdf = new PdfDocument(writer);
 			var document = new Document(pdf);
+			var date = DateTime.Now;
 
-			// Título
+			// AM: Titulo
 			var title = new Paragraph("Boletín de Calificaciones")
 				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
 				.SetFontSize(16)
 				.SetUnderline()
-				//.SetFontColor(ColorConstants.BLUE)
 				.SetTextAlignment(TextAlignment.CENTER);
 			document.Add(title);
 
-			// Datos generales
-			document.Add(new Paragraph($"Docente: {teacher}\nEstudiante: {student}\nFecha: {date:dd 'de' MMMM 'de' yyyy}")
+			// AM: Subtitulo
+			var subtitle = new Paragraph($"{center.Name}\n{center.Abbreviation}")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
+				.SetFontSize(14)
+				.SetTextAlignment(TextAlignment.CENTER);
+			document.Add(subtitle);
+
+			// AM: Linea horizontal
+			document.Add(new LineSeparator(new SolidLine(2f))
+				.SetWidth(UnitValue.CreatePercentValue(100))
+				.SetMarginTop(5)
+				.SetMarginBottom(5));
+
+			/****** AM: Datos generales ******/
+			// AM: Nombre de la clase
+			document.Add(new Paragraph()
+				.Add(new Text("Clase: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text(course.Name))
+				.SetFontSize(12));
+			// AM: Sección de la clase
+			document.Add(new Paragraph()
+				.Add(new Text("Sección: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text(course.Section))
+				.SetFontSize(12));
+			// AM: Docente
+			document.Add(new Paragraph()
+				.Add(new Text("Docente: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text($"{teacher.FirstName} {teacher.LastName}"))
+				.SetFontSize(12));
+			// AM: Estudiante
+			document.Add(new Paragraph()
+				.Add(new Text("Estudiante: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text($"{student.FirstName} {student.LastName}"))
+				.SetFontSize(12));
+			// AM: Fecha actual
+			document.Add(new Paragraph()
+				.Add(new Text("Fecha: ")
+				.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+				.Add(new Text($"{date:dd 'de' MMMM 'de' yyyy}"))
 				.SetFontSize(12));
 
-			// Tabla de calificaciones
-			Table table = new Table(new float[] { 3, 1, 1, 1, 1, 1, 2 });
-			table.SetWidth(UnitValue.CreatePercentValue(100));
+			// AM: Tabla de calificaciones
+			Table table = new Table(new float[] { 1, 1, 1 });
+			table.SetWidth(UnitValue.CreatePercentValue(100)).SetMarginTop(5);
 
-			// Encabezado
-			string[] headers = { "Clases", "U1", "U2", "U3", "U4", "Promedio", "Observación" };
+			// ****** TODO: Solo falta hacer dinamica esta parte para mostrar las calificaciones por unidad del estudiante en la clase ******
+
+			string[] headers = { "Parcial", "Nota", "Observación" };
 			foreach (var header in headers)
 			{
-				table.AddHeaderCell(new Cell().Add(new Paragraph(header)));
+				table.AddHeaderCell(new Cell().Add(new Paragraph(header)
+					.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))));
 			}
 
-			// Datos ficticios (esto debería ser dinámico)
+			// AM: Datos de las notas por parcial
 			string[,] data = {
-			{ "Matemáticas", "87", "90", "87", "--", "88", "APR" },
-			{ "Español", "88", "94", "84", "100", "91.5", "APR" },
-			{ "Biología", "70", "80", "56", "45", "62.7", "REP" },
-			{ "Música", "86", "79", "90", "75", "82.5", "APR" },
-			{ "Física", "90", "92", "85", "91", "89.5", "APR" }
+				{ "Unidad 1", "87" },
+				{ "Unidad 2", "88" },
+				{ "Unidad 3", "60" },
+				{ "Unidad 4", "86" }
 			};
 
 			int rows = data.GetLength(0);
@@ -168,45 +263,63 @@ namespace ClassNotes.API.Services.Emails
 
 			for (int i = 0; i < rows; i++)
 			{
-				for (int j = 0; j < cols; j++)
-				{
-					table.AddCell(new Cell().Add(new Paragraph(data[i, j])));
-				}
-			}
+				// AM: Agregar el nombre del parcial
+				table.AddCell(new Cell().Add(new Paragraph(data[i, 0])));
 
+				// AM: Agregar la nota del parcial
+				table.AddCell(new Cell().Add(new Paragraph(data[i, 1])));
+
+				// AM: Calcular si aprobó o reprobó
+				double note = double.Parse(data[i, 1]);
+				string observation = note >= courseSetting.MinimumGrade ? "APR" : "REP";
+
+				// AM: Crear el parrafo con el color correspondiente
+				var observationParagraph = new Paragraph(observation);
+				if (observation == "APR")
+				{
+					observationParagraph.SetFontColor(ColorConstants.GREEN); // Verde para "APR"
+				}
+				else
+				{
+					observationParagraph.SetFontColor(ColorConstants.RED); // Rojo para "REP"
+				}
+
+				table.AddCell(new Cell().Add(observationParagraph));
+			}
 
 			document.Add(table);
 
-			// Retroalimentación
-			document.Add(new Paragraph("Retroalimentación:")
-				//.SetBold()
-				.SetUnderline()
-				.SetFontSize(12)
-				.SetMarginTop(10));
-			document.Add(new Paragraph("El estudiante no se presentó a los últimos dos exámenes de biología. Se espera que en el siguiente parcial asista para no volver a reprobar la clase."));
+			// *********************************************************************
 
-			// Pie de página
-			document.Add(new Paragraph("Este reporte fue brindado por la plataforma académica ClassNotes\nPara más información comunicarse a: classnotes-support@gmail.com")
+			// AM: Promedio final
+			if (studentCourse.FinalNote >= courseSetting.MinimumGrade) 
+			{
+				document.Add(new Paragraph($"Su promedio final es de {studentCourse.FinalNote}\n¡Felicidades, aprobó la clase!")
+					.SetFontSize(12)
+					.SetMarginTop(20)
+					.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
+					.SetTextAlignment(TextAlignment.CENTER));
+			}
+			else
+			{
+				document.Add(new Paragraph($"Su promedio final es de {studentCourse.FinalNote}\nUsted ha reprobado la clase, la nota minima para pasar era de {courseSetting.MinimumGrade}")
+					.SetFontSize(12)
+					.SetMarginTop(20)
+					.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
+					.SetTextAlignment(TextAlignment.CENTER));
+			}
+
+			// AM: Linea horizontal
+			document.Add(new LineSeparator(new SolidLine(2f))
+				.SetWidth(UnitValue.CreatePercentValue(100))
+				.SetMarginTop(10)
+				.SetMarginBottom(5));
+
+			// AM: Pie de pagina
+			document.Add(new Paragraph("Este reporte fue brindado por la plataforma académica ClassNotes\nPara más información comunicarse a: classnotes.service@gmail.com")
 				.SetFontSize(10)
-				//.SetItalic()
 				.SetTextAlignment(TextAlignment.CENTER)
-				.SetMarginTop(20));
-
-			document.Close();
-			return stream.ToArray();
-		}
-
-		// AM: Función de prueba para generar un PDF en memoria
-		private byte[] GeneratePdf()
-		{
-			using var stream = new MemoryStream();
-			using var writer = new PdfWriter(stream);
-			using var pdf = new PdfDocument(writer);
-			var document = new Document(pdf);
-
-			// AM: Agregar contenido al PDF
-			document.Add(new Paragraph("Documento PDF generado"));
-			document.Add(new Paragraph("Holaa este es el contenido del pdf generado desde el backend :)"));
+				.SetMarginTop(15));
 
 			document.Close();
 			return stream.ToArray();
