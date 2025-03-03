@@ -1,0 +1,26 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/courses_settings/aa48af7c-783d-496c-a16c-59be000b2774
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "scoreType": "Ponderado",
+    "startDate": "2025-03-03T03:01:08.320Z",
+    "endDate": "2025-10-03T03:01:08.320Z",
+    "minimumGrade": 50,
+    "maximumGrade": 100,
+    "minimumAttendanceTime": 10
+  }
+}

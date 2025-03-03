@@ -750,8 +750,7 @@ namespace ClassNotes.API.Services.Centers
                     }
 
 
-                    centerEntity.IsArchived = false;
-
+                   centerEntity.IsArchived = false;
 
                     _context.Centers.Update(centerEntity);
                     await _context.SaveChangesAsync();

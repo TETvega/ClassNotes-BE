@@ -13,21 +13,15 @@ namespace ClassNotes.API.Database.Entities
         [Column("score_type")]
         public string ScoreType { get; set; }
 
-
-        //(Ken) 
-        //Limito las unidades de uno a 7 para que tenga sentido por los dias a la semana.
-        [Range(1, 7)]
-        [Column("unit")]
-        public int Unit { get; set; }
-
+        // Se elimino la parte de unidades debido a refactorización
 
         [Required]
         [Column("start_date")]
-        public DateTime StartDate { get; set; }
+        public DateTime StartDate { get; set; } // Fecha de inicio del periodo
 
 
         [Column("end_date")]
-        public DateTime EndDate { get; set; }
+        public DateTime EndDate { get; set; } // Fecha de fin de periodo
 
 
         // Kenn
