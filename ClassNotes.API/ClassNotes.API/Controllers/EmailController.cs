@@ -24,9 +24,9 @@ namespace ClassNotes.API.Controllers
 		}
 
 		[HttpPost("send-pdf")]
-		public async Task<IActionResult> SendEmailWithPdf([FromBody] EmailPdfDto dto)
+		public async Task<IActionResult> SendEmailWithPdf([FromBody] EmailGradeDto dto)
 		{
-			var response = await _emailsService.SendEmailWithPdfAsync(dto.Email);
+			var response = await _emailsService.SendEmailWithPdfAsync(dto);
 			return StatusCode(response.StatusCode, response);
 		}
 	}

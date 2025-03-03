@@ -17,10 +17,10 @@ namespace ClassNotes.API.Database.Entities
 
         [Required]
         [Column("start_time")]
-		public TimeOnly StartTime { get; set; }
+		public TimeSpan StartTime { get; set; } // Se cambio a TimeSpan para poder enviar la hora en formato hora:minutos
 
         [Column("finish_time")]
-		public TimeOnly FinishTime { get; set; }
+		public TimeSpan FinishTime { get; set; }
 
 		[StringLength(15)]
         [Column("code")]
