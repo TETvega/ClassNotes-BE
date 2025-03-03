@@ -1,0 +1,26 @@
+meta {
+  name: Create
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{PATH}}/courses_settings/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "scoreType": "Prueba",
+    "startDate": "2025-03-03T03:03:27.528Z",
+    "endDate": "2025-03-03T03:03:27.528Z",
+    "minimumGrade": 0,
+    "maximumGrade": 0,
+    "minimumAttendanceTime": 59
+  }
+}
