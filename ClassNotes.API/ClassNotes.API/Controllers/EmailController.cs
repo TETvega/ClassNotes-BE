@@ -1,12 +1,15 @@
-﻿using ClassNotes.API.Dtos.Common;
+﻿using ClassNotes.API.Constants;
+using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Services.Emails;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClassNotes.API.Controllers
 {
-	[Route("api/emails")]
 	[ApiController]
+	[Route("api/emails")]
+	[Authorize(AuthenticationSchemes = "Bearer")]
 	public class EmailController : ControllerBase
 	{
 		private readonly IEmailsService _emailsService;
@@ -17,6 +20,7 @@ namespace ClassNotes.API.Controllers
 		}
 
         [HttpPost]
+		[Authorize(Roles = $"{RolesConstant.USER}")]
 		public async Task<ActionResult<ResponseDto<EmailDto>>> Send(EmailDto dto)
 		{
 			var response = await _emailsService.SendEmailAsync(dto);
@@ -24,6 +28,7 @@ namespace ClassNotes.API.Controllers
 		}
 
 		[HttpPost("send-pdf")]
+		[Authorize(Roles = $"{RolesConstant.USER}")]
 		public async Task<IActionResult> SendEmailWithPdf([FromBody] EmailGradeDto dto)
 		{
 			var response = await _emailsService.SendEmailWithPdfAsync(dto);

@@ -17,7 +17,7 @@ namespace ClassNotes.API.Controllers
 		}
 
 		[HttpPost("generate")]
-		public async Task<ActionResult<ResponseDto<OtpDto>>> GenerateOtp(OtpCreateDto dto)
+		public async Task<ActionResult<ResponseDto<OtpGenerateResponseDto>>> GenerateOtp(OtpCreateDto dto)
 		{
 			var response = await _otpService.CreateAndSendOtpAsync(dto);
 			return StatusCode(response.StatusCode, response);
