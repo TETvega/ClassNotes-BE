@@ -1,9 +1,13 @@
 ﻿using AutoMapper;
 using Azure;
+using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
+using ClassNotes.API.Services.Audit;
+using iText.Commons.Actions.Contexts;
 using iText.Layout.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,13 +18,98 @@ namespace ClassNotes.API.Services.Students
     {
         private readonly ClassNotesContext classNotesContext_;
         private readonly IMapper mapper_;
+        private readonly IAuditService _auditService;
         private readonly int PAGE_SIZE;
 
-        public StudentsService(ClassNotesContext classNotesContext, IMapper mapper, IConfiguration configuration)
+        public StudentsService(ClassNotesContext classNotesContext, IAuditService auditService, IMapper mapper, IConfiguration configuration)
         {
             classNotesContext_ = classNotesContext;
             mapper_ = mapper;
+            _auditService = auditService;
             PAGE_SIZE = configuration.GetValue<int>("PageSize");
+        }
+
+        public async Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int page = 1)
+        {
+            // Calculamos el Indice de inicio para la paginaciOn
+            int startIndex = (page - 1) * PAGE_SIZE;
+
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();
+
+            // Obtenemos la consulta base de los estudiantes registrados en la base de datos
+            var studentEntityQuery = classNotesContext_.Students
+                .Where(x => x.TeacherId == userId).AsQueryable(); // Solo incluimos estudiantes creados por quien hace la petición
+
+            // Si se proporciona un termino de busqueda, filtramos los estudiantes por nombre
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower(); // Convertimos a minusculas
+                studentEntityQuery = studentEntityQuery.Where(x =>
+                    (x.FirstName + " " + x.LastName).ToLower().Contains(searchTerm) // podemos buscar por nombre completo
+                );
+            }
+
+            // Obtenemos el total de estudiantes despues de filtrar
+            int totalStudents = await studentEntityQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalStudents / PAGE_SIZE);
+            var studentEntity = await studentEntityQuery
+                .OrderByDescending(x => x.CreatedDate) // Ordenamos por fecha de creación en orden descendente
+                .Skip(startIndex) // Omitimos los registros de páginas anteriores
+                .Take(PAGE_SIZE) // Tomamos solo la cantidad definida por PAGE_SIZE
+                .ToListAsync();
+
+            // Mapeamos las entidades obtenidas a DTOs
+            var studentsDtos = mapper_.Map<List<StudentDto>>(studentEntity);
+
+            // Retornamos la respuesta con los datos paginados
+            return new ResponseDto<PaginationDto<List<StudentDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = new PaginationDto<List<StudentDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = PAGE_SIZE,
+                    TotalItems = totalStudents,
+                    TotalPages = totalPages,
+                    Items = studentsDtos,
+                    HasPreviousPage = page > 1, // Indica si hay una página anterior disponible
+                    HasNextPage = page < totalPages, // Indica si hay una página siguiente disponible
+                }
+            };
+        }
+
+        // EG -> Obtener estudiante por Id
+
+        public async Task<ResponseDto<StudentDto>> GetStudentByIdAsync(Guid id)
+        {
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();
+
+            var studentEntity = await classNotesContext_.Students.FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == userId);
+
+            if (studentEntity == null)
+            {
+                return new ResponseDto<StudentDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+            var studentDto = mapper_.Map<StudentDto>(studentEntity);
+
+            return new ResponseDto<StudentDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = studentDto
+            };
+
         }
 
         public async Task<ResponseDto<StudentDto>> CreateStudentAsync(StudentCreateDto studentCreateDto)
@@ -76,63 +165,20 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 201,
                 Status = true,
-                Message = "Estudiante creado correctamente.",
+                Message = MessagesConstant.CREATE_SUCCESS,
                 Data = studentDto
             };
         }
-        public async Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int page = 1)
-        {
-            // Calculamos el Indice de inicio para la paginaciOn
-            int startIndex = (page - 1) * PAGE_SIZE;
 
-            // Obtenemos la consulta base de los estudiantes registrados en la base de datos
-            var studentEntityQuery = classNotesContext_.Students
-                .Where(x => x.CreatedDate <= DateTime.Now); // Solo incluimos estudiantes creados hasta la fecha actual
-
-            // Si se proporciona un termino de busqueda, filtramos los estudiantes por nombre
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                searchTerm = searchTerm.ToLower(); // Convertimos a minusculas
-                studentEntityQuery = studentEntityQuery.Where(x =>
-                    (x.FirstName + " " + x.LastName).ToLower().Contains(searchTerm) // podemos buscar por nombre completo
-                );
-            }
-
-            // Obtenemos el total de estudiantes despues de filtrar
-            int totalStudents = await studentEntityQuery.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalStudents / PAGE_SIZE);
-            var studentEntity = await studentEntityQuery
-                .OrderByDescending(x => x.CreatedDate) // Ordenamos por fecha de creación en orden descendente
-                .Skip(startIndex) // Omitimos los registros de páginas anteriores
-                .Take(PAGE_SIZE) // Tomamos solo la cantidad definida por PAGE_SIZE
-                .ToListAsync();
-
-            // Mapeamos las entidades obtenidas a DTOs
-            var studentsDtos = mapper_.Map<List<StudentDto>>(studentEntity);
-
-            // Retornamos la respuesta con los datos paginados
-            return new ResponseDto<PaginationDto<List<StudentDto>>>
-            {
-                StatusCode = 200,
-                Status = true,
-                Message = "Lista de estudiantes obtenida correctamente.",
-                Data = new PaginationDto<List<StudentDto>>
-                {
-                    CurrentPage = page,
-                    PageSize = PAGE_SIZE,
-                    TotalItems = totalStudents,
-                    TotalPages = totalPages,
-                    Items = studentsDtos,
-                    HasPreviousPage = page > 1, // Indica si hay una página anterior disponible
-                    HasNextPage = page < totalPages, // Indica si hay una página siguiente disponible
-                }
-            };
-        }
         public async Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto)
         {
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();          
+
             // Buscar el estudiante por su ID
             var studentEntity = await classNotesContext_.Students
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id && s.TeacherId == userId); // Solo quien lo crea lo puede editar
+
 
             // Si el estudiante no existe, retornamos el mensaje que no existe
             if (studentEntity == null)
@@ -141,7 +187,7 @@ namespace ClassNotes.API.Services.Students
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = "Estudiante no encontrado.",
+                    Message = MessagesConstant.RECORD_NOT_FOUND,
                     Data = null
                 };
             }
@@ -178,15 +224,18 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Estudiante actualizado correctamente.",
+                Message = MessagesConstant.UPDATE_SUCCESS,
                 Data = studentDto
             };
         }
         public async Task<ResponseDto<StudentDto>> DeleteStudentAsync(Guid id)
         {
+            // Necesitamos obtener el i de quien hace la petición
+            var userId = _auditService.GetUserId();
+
             // Buscar el estudiante por su ID
             var studentEntity = await classNotesContext_.Students
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id && s.TeacherId == userId); // Solo quien lo crea puede borrarlo
 
             // Si el estudiante no existe, retornar un error
             if (studentEntity == null)
@@ -195,9 +244,15 @@ namespace ClassNotes.API.Services.Students
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = "El estudiante no existe.",
+                    Message = MessagesConstant.RECORD_NOT_FOUND,
                 };
             }
+
+            // Eliminar registros relacionados en students_courses
+            var relatedRecords = await classNotesContext_.StudentsCourses
+                .Where(sc => sc.StudentId == id)
+                .ToListAsync();
+            classNotesContext_.StudentsCourses.RemoveRange(relatedRecords);
 
             // Eliminar el estudiante
             classNotesContext_.Students.Remove(studentEntity);
@@ -208,7 +263,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = "Estudiante Borrado correctamente"
+                Message = MessagesConstant.DELETE_SUCCESS
             };
         }
     }
