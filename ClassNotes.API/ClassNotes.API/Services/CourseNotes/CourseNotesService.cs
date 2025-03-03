@@ -18,7 +18,7 @@ namespace ClassNotes.API.Services.CourseNotes
 
         public CourseNotesService(
             ClassNotesContext context,
-            IAuditService auditService, 
+            IAuditService auditService,
             IConfiguration configuration,
             IMapper mapper)
         {
@@ -30,15 +30,19 @@ namespace ClassNotes.API.Services.CourseNotes
 
         public async Task<ResponseDto<PaginationDto<List<CourseNoteDto>>>> GetAllCourseNotesAsync(string searchTerm = "",
             int page = 1)
-          
+
         {
+            var userId = _auditService.GetUserId(); // Id de quien hace la petición
+
             int startIndex = (page - 1) * PAGE_SIZE;
-            var courseNoteQuery = _context.CoursesNotes.AsQueryable();
+            var courseNoteQuery = _context.CoursesNotes
+                .Where(c => c.CreatedBy == userId) // El docente solo puede ver las notas de su curso
+                .AsQueryable();
 
             // aplicar filto de busqueda en el titulo y contenido 
-            if (searchTerm != null) 
+            if (searchTerm != null)
             {
-                courseNoteQuery = courseNoteQuery.Where(c => 
+                courseNoteQuery = courseNoteQuery.Where(c =>
                 c.Title.ToLower().Contains(searchTerm.ToLower()) ||
                 c.Content.ToLower().Contains(searchTerm.ToLower()));
             }
@@ -49,7 +53,7 @@ namespace ClassNotes.API.Services.CourseNotes
             // aplicar paginacion 
 
             var courseNoteEntities = await courseNoteQuery
-                .OrderByDescending(n => n.RegistrationDate )  // esto lo ordenara por fecha 
+                .OrderByDescending(n => n.RegistrationDate)  // esto lo ordenara por fecha 
                 .Skip(startIndex)
                 .Take(PAGE_SIZE)
                 .ToListAsync();
@@ -77,15 +81,17 @@ namespace ClassNotes.API.Services.CourseNotes
 
         public async Task<ResponseDto<CourseNoteDto>> GetCourseNoteByIdAsync(Guid id)
         {
-            var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(c => c.Id == id);
+            var userId = _auditService.GetUserId(); // Id de quien hace la petición
 
-            if (courseNoteEntity == null) 
+            var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(c => c.Id == id && c.CreatedBy == userId);
+
+            if (courseNoteEntity == null)
             {
                 return new ResponseDto<CourseNoteDto>
-                { 
-                  StatusCode = 404,
-                  Status = false,
-                  Message = MessagesConstant.RECORD_NOT_FOUND
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
                 };
             }
 
@@ -111,25 +117,27 @@ namespace ClassNotes.API.Services.CourseNotes
             var courseNoteDto = _mapper.Map<CourseNoteDto>(courseNoteEntity);
 
             return new ResponseDto<CourseNoteDto>
-            { 
-               StatusCode = 201,
-               Status = true,
-               Message = MessagesConstant.CREATE_SUCCESS,
-               Data = courseNoteDto
+            {
+                StatusCode = 201,
+                Status = true,
+                Message = MessagesConstant.CREATE_SUCCESS,
+                Data = courseNoteDto
             };
         }
 
         public async Task<ResponseDto<CourseNoteDto>> EditAsync(CourseNoteEditDto dto, Guid id)
         {
-             var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(x => x.Id == id);
+            var userId = _auditService.GetUserId(); // Id de quien hace la petición
 
-            if (courseNoteEntity == null) 
+            var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(x => x.Id == id && x.CreatedBy == userId); // El docente solo puede editar sus notas
+
+            if (courseNoteEntity == null)
             {
                 return new ResponseDto<CourseNoteDto>
-                { 
-                   StatusCode = 404,
-                   Status = false,
-                   Message = MessagesConstant.RECORD_NOT_FOUND
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
                 };
             }
 
@@ -152,13 +160,15 @@ namespace ClassNotes.API.Services.CourseNotes
 
         public async Task<ResponseDto<CourseNoteDto>> DeleteAsync(Guid id)
         {
-            var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(c => c.Id == id);
+            var userId = _auditService.GetUserId(); // Id de quien hace la petición
+
+            var courseNoteEntity = await _context.CoursesNotes.FirstOrDefaultAsync(c => c.Id == id && c.CreatedBy == userId); // El docente solo puede borrar sus notas
 
             if (courseNoteEntity == null)
             {
                 return new ResponseDto<CourseNoteDto>
                 {
-                    StatusCode  = 404,
+                    StatusCode = 404,
                     Status = false,
                     Message = MessagesConstant.RECORD_NOT_FOUND
                 };
@@ -169,10 +179,10 @@ namespace ClassNotes.API.Services.CourseNotes
             await _context.SaveChangesAsync();
 
             return new ResponseDto<CourseNoteDto>
-            { 
-               StatusCode = 200,
-               Status = true,
-               Message = MessagesConstant.DELETE_SUCCESS,
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.DELETE_SUCCESS,
             };
 
         }
