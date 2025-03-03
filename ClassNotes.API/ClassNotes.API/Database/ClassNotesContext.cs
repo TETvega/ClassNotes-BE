@@ -48,6 +48,7 @@ namespace ClassNotes.API.Database
             modelBuilder.ApplyConfiguration(new StudentActivityNoteConfiguration());
             modelBuilder.ApplyConfiguration(new StudentConfiguration());
             modelBuilder.ApplyConfiguration(new StudentCourseConfiguration());
+            modelBuilder.ApplyConfiguration(new StudentUnitConfiguration());
             modelBuilder.ApplyConfiguration(new TagActivityConfiguration());
             modelBuilder.ApplyConfiguration(new UnitConfiguration());
 
@@ -106,6 +107,7 @@ namespace ClassNotes.API.Database
         public DbSet<CourseSettingEntity> CoursesSettings { get; set; }
         public DbSet<StudentActivityNoteEntity> StudentsActivitiesNotes { get; set; }
         public DbSet<StudentCourseEntity> StudentsCourses { get; set; }
+        public DbSet<StudentCourseEntity> StudentsUnits { get; set; }
         public DbSet<StudentEntity> Students { get; set; }
 		public DbSet<UnitEntity> Units { get; set; }
 		public DbSet<TagActivityEntity> TagsActivities { get; set; }
