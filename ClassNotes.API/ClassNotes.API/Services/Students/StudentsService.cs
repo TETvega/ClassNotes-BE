@@ -8,6 +8,7 @@ using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
 using iText.Commons.Actions.Contexts;
+using iText.Layout.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 

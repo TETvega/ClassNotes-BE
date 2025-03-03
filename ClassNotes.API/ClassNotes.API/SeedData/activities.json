@@ -4,53 +4,53 @@
     "Name": "Examen Final de Programación",
     "IsExtra": false,
     "MaxScore": 100.0,
-    "TagActivityId": "d4e5f6a7-5069-4b77-b31c-255db4b0f837",
+    "TagActivityId": "0dd7204f-fe90-491c-ba8e-e775d8db7f4a",
     "QualificationDate": "2025-06-15T00:00:00",
-    "UnitId": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c5"
+    "UnitId": "01dd6027-2e73-4a83-9b43-5e752727e93c"
   },
   {
     "id": "a1b2c3d4-9e2d-4c63-b56f-219803a9d0c1",
     "Name": "Examen Parcial de Matemáticas",
     "IsExtra": false,
     "MaxScore": 100.0,
-    "TagActivityId": "d2c5a8b0-5069-4b77-b31c-255db4b0f832",
+    "TagActivityId": "0dd7204f-fe90-491c-ba8e-e775d8db7f4a",
     "QualificationDate": "2025-03-10T00:00:00",
-    "UnitId": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c5"
+    "UnitId": "01dd6027-2e73-4a83-9b43-5e752727e93c"
   },
   {
     "id": "b2c3d4e5-9e2d-4c63-b56f-219803a9d0c2",
     "Name": "Práctica de Laboratorio de Química",
     "IsExtra": true,
     "MaxScore": 50.0,
-    "TagActivityId": "b2c3d4e5-5069-4b77-b31c-255db4b0f835",
+    "TagActivityId": "ab1e1391-b4df-4b5f-8e17-c89e5d72f7b4",
     "QualificationDate": "2025-04-20T00:00:00",
-    "UnitId": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c5"
+    "UnitId": "01dd6027-2e73-4a83-9b43-5e752727e93c"
   },
   {
     "id": "c3d4e5f6-9e2d-4c63-b56f-219803a9d0c3",
     "Name": "Exposición de Historia",
     "IsExtra": false,
     "MaxScore": 80.0,
-    "TagActivityId": "e5f6a7b8-5069-4b77-b31c-255db4b0f838",
+    "TagActivityId": "f2ca8802-94a5-4179-86b4-40a6cb64a6c5",
     "QualificationDate": "2025-05-05T00:00:00",
-    "UnitId": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c5"
+    "UnitId": "01dd6027-2e73-4a83-9b43-5e752727e93c"
   },
   {
     "id": "d4e5f6a7-9e2d-4c63-b56f-219803a9d0c4",
     "Name": "Ensayo de Literatura",
     "IsExtra": true,
     "MaxScore": 70.0,
-    "TagActivityId": "f6a7b8c9-5069-4b77-b31c-255db4b0f839",
+    "TagActivityId": "1ede90cb-d5e1-457d-8279-f45da35afecb",
     "QualificationDate": "2025-05-25T00:00:00",
-    "UnitId": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c5"
+    "UnitId": "01dd6027-2e73-4a83-9b43-5e752727e93c"
   },
   {
     "id": "e5f6a7b8-9e2d-4c63-b56f-219803a9d0c5",
     "Name": "Proyecto de Geografía",
     "IsExtra": false,
     "MaxScore": 90.0,
-    "TagActivityId": "a7b8c9d0-5069-4b77-b31c-255db4b0f840",
+    "TagActivityId": "25bb94dc-b13b-4649-b562-f1af741aeaf3",
     "QualificationDate": "2025-06-01T00:00:00",
-    "UnitId": "d7a0f3b8-9e2d-4c63-b56f-219803a9d0c5"
+    "UnitId": "01dd6027-2e73-4a83-9b43-5e752727e93c"
   }
 ]

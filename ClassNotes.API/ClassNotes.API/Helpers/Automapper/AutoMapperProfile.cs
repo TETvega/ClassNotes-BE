@@ -49,11 +49,11 @@ namespace ClassNotes.API.Helpers.Automapper
 			CreateMap<CenterCreateDto, CenterEntity>()
 				.ForMember(dest => dest.IsArchived, opt => opt.MapFrom(src => false))
 				.ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
-				.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
+				//.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
                 .ForMember(dest => dest.Abbreviation, opt => opt.MapFrom(src => src.Abbreviation.Trim()));
             CreateMap<CenterEditDto, CenterEntity>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
-                .ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
+                //.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
                 .ForMember(dest => dest.Abbreviation, opt => opt.MapFrom(src => src.Abbreviation.Trim()));
         }
 

@@ -29,7 +29,6 @@ namespace ClassNotes.API.Database
                 await LoadStudentCourseAsync(loggerFactory, context);
                 await LoadStudentsActivitesNotesAsync(loggerFactory, context);
 
-
             }
             catch (Exception ex)
             {
