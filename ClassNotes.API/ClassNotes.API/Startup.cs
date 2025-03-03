@@ -21,6 +21,7 @@ using ClassNotes.API.Services.Users;
 using CloudinaryDotNet;
 using ClassNotes.API.Services.Cloudinary;
 using Microsoft.Extensions.Configuration;
+using ClassNotes.API.Services.DashboardHome;
 
 namespace ClassNotes.API;
 
@@ -54,6 +55,7 @@ public class Startup
 		services.AddTransient<ICoursesService, CoursesService>();
 		services.AddTransient<IStudentsService, StudentsService>();
 		services.AddTransient<IUsersService, UsersService>();
+		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
 
 		// Servicios de seguridad
