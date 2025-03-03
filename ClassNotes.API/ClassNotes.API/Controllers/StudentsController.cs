@@ -1,10 +1,12 @@
 ﻿using ClassNotes.API.Constants;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Students;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Client;
 
 namespace ClassNotes.API.Controllers
 {
@@ -29,7 +31,20 @@ namespace ClassNotes.API.Controllers
                 response.Message,
                 response.Data,
             });
+
         }
+
+
+        // EG -> Controller de obtener estudiante por id
+        [HttpGet("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<StudentDto>>> GetById(Guid id) 
+        { 
+            var response = await _studentsService.GetStudentByIdAsync(id);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
         [HttpPost]
         public async Task<ActionResult<ResponseDto<StudentDto>>> Create(StudentCreateDto studentCreateDto)
         {
