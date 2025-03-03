@@ -120,15 +120,11 @@ namespace ClassNotes.API.Services.Emails
 			// AM: Obtener el CourseSetting del curso (para saber cual es el minimo para reprobar o aprobar en la clase)
 			var courseSettingEntity = await _context.CoursesSettings.FirstOrDefaultAsync(cs => cs.Id == courseEntity.SettingId);
 
-
-
 			// AM: Obtener las calificaciones por unidad del estudiante (TEMPORAL PARA PRUEBAS MIENTRAS KEN LO IMPLEMENTA)
-			var unitsNotes = await _context.Units // Cambiar por StudentsUnits
-				.Where(u => u.CourseId == courseEntity.Id) // Modificar para que compare con StudentCourseId
-				.OrderBy(u => u.UnitNumber)
+			var studentUnits = await _context.StudentsUnits 
+				.Where(su => su.StudentCourseId == studentCourseEntity.Id)
+				.OrderBy(su => su.UnitNumber)
 				.ToListAsync();
-
-
 
 			// AM: Creamos el correo que se va a enviar
 			var email = new MimeMessage();
@@ -139,7 +135,7 @@ namespace ClassNotes.API.Services.Emails
 			email.Subject = $"Tus calificaciones de {courseEntity.Name} {courseEntity.Section}";
 
 			// AM: Creamos el PDF de calificaciones con los parametros necesarios
-			var pdfBytes = await GenerateGradeReport(centerEntity, teacherEntity, courseEntity, studentEntity, studentCourseEntity, courseSettingEntity, unitsNotes);
+			var pdfBytes = await GenerateGradeReport(centerEntity, teacherEntity, courseEntity, studentEntity, studentCourseEntity, courseSettingEntity, studentUnits);
 
 			// AM: Crear el cuerpo del mensaje con el PDF adjunto
 			var body = new TextPart("plain")
@@ -185,7 +181,7 @@ namespace ClassNotes.API.Services.Emails
 		}
 
 		// AM: Generar el pdf con las calificaciones del estudiante
-		public static async Task<byte[]> GenerateGradeReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student, StudentCourseEntity studentCourse, CourseSettingEntity courseSetting, List<UnitEntity> unitsNotes)
+		public static async Task<byte[]> GenerateGradeReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student, StudentCourseEntity studentCourse, CourseSettingEntity courseSetting, List<StudentUnitEntity> studentUnits)
 		{
 			// AM: Propiedades para redactar el documento PDF
 			using var stream = new MemoryStream();
@@ -268,18 +264,18 @@ namespace ClassNotes.API.Services.Emails
 			}
 
 			// Datos dinámicos
-			foreach (var unit in unitsNotes)
+			foreach (var unit in studentUnits)
 			{
 				// AM: Agregar el número del parcial
 				table.AddCell(new Cell().Add(new Paragraph(unit.UnitNumber.ToString())
 					.SetTextAlignment(TextAlignment.CENTER)));
 
 				// AM: Agregar la nota del parcial
-				table.AddCell(new Cell().Add(new Paragraph(unit.MaxScore.ToString())
+				table.AddCell(new Cell().Add(new Paragraph(unit.UnitNote.ToString())
 					.SetTextAlignment(TextAlignment.CENTER)));
 
 				// AM: Calcular si aprobó o reprobó
-				string observation = unit.MaxScore >= courseSetting.MinimumGrade ? "APR" : "REP";
+				string observation = unit.UnitNote >= courseSetting.MinimumGrade ? "APR" : "REP";
 				var observationParagraph = new Paragraph(observation);
 				observationParagraph.SetFontColor(observation == "APR" ? ColorConstants.GREEN : ColorConstants.RED);
 

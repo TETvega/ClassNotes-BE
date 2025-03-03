@@ -28,6 +28,7 @@ namespace ClassNotes.API.Database
                 await LoadAttendanceAsync(loggerFactory, context);
                 await LoadStudentCourseAsync(loggerFactory, context);
                 await LoadStudentsActivitesNotesAsync(loggerFactory, context);
+                await LoadStudentUnitAsync(loggerFactory, context);
 
             }
             catch (Exception ex)
@@ -124,8 +125,40 @@ namespace ClassNotes.API.Database
             }
         }
 
-        // JA: Cargamos las TagasActivity
-        public static async Task LoadTagActivityAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// AM: Cargar las notas de unidades de estudiantes (StudentsUnits)
+		public static async Task LoadStudentUnitAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		{
+			try
+			{
+				var jsonFilePath = "SeedData/students_units.json";
+				var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+				var studentsUnits = JsonConvert.DeserializeObject<List<StudentUnitEntity>>(jsonContent);
+
+				foreach (var studentUnit in studentsUnits)
+				{
+					var user = await context.Users.FirstOrDefaultAsync();
+					bool exists = await context.StudentsUnits.AnyAsync(t => t.Id == studentUnit.Id);
+					if (!exists)
+					{
+						studentUnit.CreatedDate = DateTime.Now;
+						studentUnit.UpdatedDate = DateTime.Now;
+						studentUnit.CreatedBy = user.Id;
+						studentUnit.UpdatedBy = user.Id;
+						await context.StudentsUnits.AddAsync(studentUnit);
+					}
+
+					await context.SaveChangesAsync();
+				}
+			}
+			catch (Exception e)
+			{
+				var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+				logger.LogError(e, "Error al ejecutar el Seed de Unidades de Estudiantes");
+			}
+		}
+
+		// JA: Cargamos las TagasActivity
+		public static async Task LoadTagActivityAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
