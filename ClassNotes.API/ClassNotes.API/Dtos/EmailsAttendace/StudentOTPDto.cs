@@ -6,6 +6,9 @@
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public Guid StudentId { get; set; }
+
+        public Guid CourseId { get; set; }
         public DateTime ExpirationDate { get; set; }
+        public int RangoValidacionMetros { get; set; }
     }
 }

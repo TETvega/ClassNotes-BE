@@ -8,7 +8,7 @@ namespace ClassNotes.API.Database.Entities
     {
         [Required]
         [Column("attended")]
-        public bool Attended { get; set; }
+        public string Attended { get; set; }
 
 
         [Required]

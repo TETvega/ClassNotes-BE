@@ -1,28 +1,28 @@
 [
     {
         "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "attended": true,
+        "attended": "Asistio",
         "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
         "StudentId": "f2d2b29f-eed2-40cd-b1c1-82a7f9282c2b",
         "RegistrationDate": "2025-01-25"
     },
     {
         "id": "88f0be96-0e5f-41a6-a7c3-b8d6d57d65f2",
-        "attended": false,
+        "attended": "No Asistio",
         "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
         "StudentId": "27672c7d-b39e-4c80-a78f-e95749bbd98a",
         "RegistrationDate": "2025-01-24"
     },
     {
         "id": "6c5d82f7-6802-4f39-9f35-309c5b5e03d0",
-        "attended": true,
+        "attended": "Asistio",
         "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
         "StudentId": "e2c32a95-3c6a-4743-8bba-87d1d3452320",
         "RegistrationDate": "2025-01-23"
     },
     {
         "id": "b15f8e61-0ea1-4747-9f8b-57f46d87f8a9",
-        "attended": false,
+        "attended": "No Asistio",
         "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
         "StudentId": "4ac2b211-3b3f-4c8b-9cdb-197b6182b746",
         "RegistrationDate": "2025-01-22"

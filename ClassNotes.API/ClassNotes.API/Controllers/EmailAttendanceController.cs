@@ -12,6 +12,8 @@ using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Services.Emails;
 using Microsoft.Extensions.Logging;
 using ClassNotes.API.Services.Distance;
+using ClassNotes.API.Dtos.Attendances;
+using ClassNotes.API.Services.Attendances;
 
 namespace ClassNotes.API.Controllers
 {
@@ -23,18 +25,23 @@ namespace ClassNotes.API.Controllers
         private readonly IEmailsService _emailsService;
         private readonly ILogger<EmailAttendanceController> _logger;
         private readonly DistanceService _distanceService;
-        private static List<StudentOTPDto> _otpList = new List<StudentOTPDto>(); // Lista en memoria para almacenar OTPs
+        private readonly IAttendancesService _attendanceService;
+
+        // Lista estática para almacenar los OTPs
+        public static List<StudentOTPDto> OTPList = new List<StudentOTPDto>();
 
         public EmailAttendanceController(
             ClassNotesContext context,
             IEmailsService emailsService,
             ILogger<EmailAttendanceController> logger,
-            DistanceService distanceService)
+            DistanceService distanceService,
+            IAttendancesService attendanceService)
         {
             _context = context;
             _emailsService = emailsService;
             _logger = logger;
             _distanceService = distanceService;
+            _attendanceService = attendanceService;
         }
 
         [HttpPost("send-emails")]
@@ -42,6 +49,18 @@ namespace ClassNotes.API.Controllers
         {
             try
             {
+                // Validar el rango de validación
+                if (request.RangoValidacionMetros < 15 || request.RangoValidacionMetros > 100)
+                {
+                    return BadRequest("El rango de validación debe estar entre 15 y 100 metros.");
+                }
+
+                // Validar el tiempo de expiración del OTP
+                if (request.TiempoExpiracionOTPMinutos < 3)
+                {
+                    return BadRequest("El tiempo de expiración del OTP debe ser de al menos 3 minutos.");
+                }
+
                 // Obtener la clase con los estudiantes asociados
                 var clase = await _context.Courses
                     .Include(c => c.Students)
@@ -86,11 +105,13 @@ namespace ClassNotes.API.Controllers
                         Latitude = request.Latitude,
                         Longitude = request.Longitude,
                         StudentId = estudiante.Id,
-                        ExpirationDate = DateTime.UtcNow.AddMinutes(15) // El OTP expira en 15 minutos
+                        CourseId = clase.Id,
+                        ExpirationDate = DateTime.UtcNow.AddMinutes(request.TiempoExpiracionOTPMinutos), // Usar el tiempo configurado por el maestro
+                        RangoValidacionMetros = request.RangoValidacionMetros // Incluir el rango de validación
                     };
 
-                    // Almacenar el OTP en la lista en memoria
-                    _otpList.Add(studentOTP);
+                    // Almacenar el OTP en la lista estática
+                    EmailAttendanceController.OTPList.Add(studentOTP);
 
                     // Crear el objeto EmailDto con el enlace de validación y el OTP
                     var emailDto = new EmailDto
@@ -124,7 +145,9 @@ namespace ClassNotes.API.Controllers
                 return Ok(new
                 {
                     Message = "Correos enviados correctamente.",
-                    Destinatarios = destinatarios
+                    Destinatarios = destinatarios,
+                    RangoValidacionMetros = request.RangoValidacionMetros,
+                    TiempoExpiracionOTPMinutos = request.TiempoExpiracionOTPMinutos
                 });
             }
             catch (Exception ex)
@@ -139,8 +162,8 @@ namespace ClassNotes.API.Controllers
         {
             try
             {
-                // Buscar el OTP en la lista en memoria
-                var studentOTP = _otpList.FirstOrDefault(sotp => sotp.OTP == request.OTP);
+                // Buscar el OTP en la lista estática
+                var studentOTP = OTPList.FirstOrDefault(sotp => sotp.OTP == request.OTP);
 
                 if (studentOTP == null || studentOTP.ExpirationDate < DateTime.UtcNow)
                 {
@@ -152,16 +175,52 @@ namespace ClassNotes.API.Controllers
                     request.Latitude, request.Longitude,
                     studentOTP.Latitude, studentOTP.Longitude);
 
-                if (distance > 15) // 15 metros
+                // Validar si el estudiante está dentro del rango permitido
+                if (distance > studentOTP.RangoValidacionMetros)
                 {
-                    return BadRequest("Debes estar dentro de un radio de 15 metros para validar tu asistencia.");
+                    return BadRequest($"Debes estar dentro de un radio de {studentOTP.RangoValidacionMetros} metros para validar tu asistencia.");
                 }
-                // Aquí puedes agregar la lógica para marcar la asistencia en la base de datos
 
-                // Eliminar el OTP de la lista en memoria después de usarlo
-                _otpList.Remove(studentOTP);
+                // Obtener el estudiante por su ID
+                var estudiante = await _context.Students
+                    .FirstOrDefaultAsync(s => s.Id == studentOTP.StudentId);
 
-                return Ok(new { Message = "Asistencia validada correctamente." });
+                if (estudiante == null)
+                {
+                    return BadRequest("Estudiante no encontrado.");
+                }
+
+                // Crear el DTO para la asistencia
+                var attendanceCreateDto = new AttendanceCreateDto
+                {
+                    Attended = "Presente", // Marcar como "Presente"
+                    CourseId = studentOTP.CourseId, // Tomar el CourseId del OTP
+                    StudentId = studentOTP.StudentId
+                };
+
+                // Crear la asistencia utilizando el servicio
+                var attendanceDto = await _attendanceService.CreateAttendanceAsync(attendanceCreateDto);
+
+                // Eliminar el OTP de la lista estática después de usarlo
+                OTPList.Remove(studentOTP);
+
+                // Retornar la respuesta con los datos del estudiante y la asistencia
+                return Ok(new
+                {
+                    Message = "Asistencia validada correctamente.",
+                    Estudiante = new
+                    {
+                        Id = estudiante.Id,
+                        Nombre = estudiante.FirstName,
+                        Correo = estudiante.Email
+                    },
+                    Asistencia = new
+                    {
+                        Id = attendanceDto.Id,
+                        Estado = attendanceDto.Attended,
+                        Fecha = attendanceDto.RegistrationDate
+                    }
+                });
             }
             catch (Exception ex)
             {

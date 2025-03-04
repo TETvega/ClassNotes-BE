@@ -1,66 +1,31 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QRCoder;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using ClassNotes.API.Database;
+﻿using ClassNotes.API.Database;
+using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Dtos.QR;
-using ClassNotes.API.Services;
-using ClassNotes.API.Services.Distance; 
+using ClassNotes.API.Services.Attendances;
+using ClassNotes.API.Services.Distance;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-//DD: Controlador para la generacion del codigo Qr
 [ApiController]
 [Route("api/[controller]")]
 public class QRController : ControllerBase
 {
     private readonly ClassNotesContext _context;
-    private readonly DistanceService _distanceService; 
+    private readonly DistanceService _distanceService;
+    private readonly IAttendancesService _attendanceService;
 
-    public QRController(ClassNotesContext context, DistanceService distanceService)
+    public QRController(
+        ClassNotesContext context,
+        DistanceService distanceService,
+        IAttendancesService attendanceService)
     {
         _context = context;
         _distanceService = distanceService;
-    }
-
-    [HttpPost("generate")]
-    public async Task<IActionResult> GenerateQR([FromBody] QRGenerationRequestDto request)
-    {
-        // Validar si el profesor existe
-        var profesor = await _context.Users.FindAsync(request.ProfesorId);
-        if (profesor == null) return BadRequest("El profesor no existe.");
-
-        // Validar si el centro existe
-        var centro = await _context.Centers.FindAsync(request.CentroId);
-        if (centro == null) return BadRequest("El centro no existe.");
-
-        // Validar si la clase existe y está asociada con el profesor y el centro
-        var clase = await _context.Courses
-            .Where(c => c.Id == request.ClaseId && c.TeacherId == request.ProfesorId && c.CenterId == request.CentroId)
-            .FirstOrDefaultAsync();
-        if (clase == null) return BadRequest("La clase no está asociada con el profesor o el centro.");
-
-        // Generar la URL de validación con datos embebidos en el QR
-        var timestamp = DateTime.UtcNow.ToString("o");
-        var qrContent = $"{request.ProfesorId}|{request.CentroId}|{request.ClaseId}|{request.Latitud}|{request.Longitud}|{timestamp}";
-
-        string validationUrl = $"https://localhost:7047/api/QR/validate?qrContent={Uri.EscapeDataString(qrContent)}";
-
-        // Generar código QR con la URL
-        using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
-        {
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(validationUrl, QRCodeGenerator.ECCLevel.Q);
-            using (PngByteQRCode qrCode = new PngByteQRCode(qrCodeData))
-            {
-                byte[] qrCodeImage = qrCode.GetGraphic(20);
-                var qrCodeBase64 = Convert.ToBase64String(qrCodeImage);
-                return Ok(new { QRCode = qrCodeBase64, ValidationUrl = validationUrl });
-            }
-        }
+        _attendanceService = attendanceService;
     }
 
     [HttpPost("validate")]
-    public IActionResult ValidateQR([FromBody] QRValidationRequestDto request)
+    public async Task<IActionResult> ValidateQR([FromBody] QRValidationRequestDto request)
     {
         var qrParts = request.QRContent.Split('|');
         if (qrParts.Length < 6) return BadRequest("Código QR inválido.");
@@ -85,6 +50,37 @@ public class QRController : ControllerBase
             return BadRequest("Estás fuera del rango permitido para confirmar la asistencia.");
         }
 
-        return Ok(new { Message = "Asistencia confirmada.", Estudiante = request.EstudianteNombre, Correo = request.EstudianteCorreo });
+        // Buscar al estudiante por su correo electrónico
+        var estudiante = await _context.Students
+            .FirstOrDefaultAsync(s => s.Email == request.EstudianteCorreo);
+        if (estudiante == null)
+        {
+            return BadRequest("El estudiante no está registrado.");
+        }
+
+        // Crear el DTO para la asistencia
+        var attendanceCreateDto = new AttendanceCreateDto
+        {
+            Attended = "Presente", // O cualquier otro valor que indique asistencia
+            CourseId = claseId,
+            StudentId = estudiante.Id
+        };
+
+        // Crear la asistencia utilizando el servicio
+        try
+        {
+            var attendanceDto = await _attendanceService.CreateAttendanceAsync(attendanceCreateDto);
+            return Ok(new
+            {
+                Message = "Asistencia confirmada y registrada.",
+                Estudiante = request.EstudianteNombre,
+                Correo = request.EstudianteCorreo,
+                Attendance = attendanceDto
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

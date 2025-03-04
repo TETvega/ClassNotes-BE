@@ -9,7 +9,7 @@
     {
         "id": "3a6f0e56-357f-406d-8a2e-7be1f3219a48",
         "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "StudentId": "75ab0090-8dd8-41d2-8195-67e380c56d7a",
+        "StudentId": "78f358e5-2d4e-43bd-8741-d6217b8289f8",
         "FinalNote": 80,
         "IsActive": true
     },
@@ -18,6 +18,13 @@
         "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
         "StudentId": "fe57ad80-dea2-4f3c-b89f-9fc78767a376",
         "FinalNote": 90,
+        "IsActive": true
+    },
+    {
+        "id": "f1fc3b27-5449-49bf-bf3d-ead09dc61597",
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "78f358e5-2d4e-43bd-8741-d6217b8289f8",
+        "FinalNote": 100,
         "IsActive": true
     },
     {

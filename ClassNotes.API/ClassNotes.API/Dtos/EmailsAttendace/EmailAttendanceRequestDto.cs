@@ -8,5 +8,7 @@
         public Guid ClaseId { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public int RangoValidacionMetros { get; set; }
+        public int TiempoExpiracionOTPMinutos { get; set; }
     }
 }

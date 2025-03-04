@@ -2,8 +2,15 @@
     {
         "id": "f2d2b29f-eed2-40cd-b1c1-82a7f9282c2b",
         "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7",
-        "FirstName": "Juan",
-        "LastName": "Perez",
+        "FirstName": "David",
+        "LastName": "Diaz",
+        "email": "musiconline2023@gmail.com"
+    },
+    {
+        "id": "78f358e5-2d4e-43bd-8741-d6217b8289f8",
+        "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7",
+        "FirstName": "Anner",
+        "LastName": "Henriquez",
         "email": "annerh3@gmail.com"
     },
     {
@@ -11,21 +18,21 @@
         "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7",
         "FirstName": "Cristian",
         "LastName": "Gomez",
-        "email": "cristiangomez.cagg78@gmail.com"
+        "email": "cristiangomez.cagg78@me.com"
     },
     {
         "id": "fe57ad80-dea2-4f3c-b89f-9fc78767a376",
         "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7",
         "FirstName": "Carlos",
         "LastName": "Pineda",
-        "email": "carlosovidiopineda8@gmail.com"
+        "email": "carlosovidiopineda8@me.com"
     },
     {
         "id": "16b7405f-5088-4e54-afcb-7a0660ac5384",
         "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7",
         "FirstName": "Jeison",
         "LastName": "Arita",
-        "email": "jomaarita@gmail.com"
+        "email": "jomaarita@me.com"
     },
     {
         "id": "27672c7d-b39e-4c80-a78f-e95749bbd98a",

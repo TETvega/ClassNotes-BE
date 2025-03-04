@@ -2,5 +2,6 @@
 {
 	public class AttendanceEditDto
 	{
-	}
+        public string Attended { get; set; }
+    }
 }
