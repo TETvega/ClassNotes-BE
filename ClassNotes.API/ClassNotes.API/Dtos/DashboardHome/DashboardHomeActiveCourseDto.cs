@@ -7,7 +7,7 @@ public class DashboardHomeActiveCourseDto
     public string Code { get; set; }
     public string CenterAbbreviation { get; set; }
     public int StudentsCount { get; set; }
-    public float Average { get; set; }
+    //public float Average { get; set; }
     public int CompletedActivitiesCount { get; set; }
     public int ActivitiesCount { get; set; }
 }

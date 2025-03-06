@@ -11,5 +11,5 @@ public class DashboardHomeDto
     public List<DashboardHomeUpcomingActivityDto> UpcomingActivities { get; set; }
     public List<DashboardHomeCenterDto> Centers { get; set; }
     public List<DashboardHomeActiveCourseDto> ActiveCourses { get; set; }
-    public List<DashboardHomeRecentStudentDto> RecentStudents { get; set; }
+    public List<DashboardHomeStudentDto> Students { get; set; }
 }
