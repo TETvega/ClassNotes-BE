@@ -14,11 +14,14 @@ namespace ClassNotes.API.Database.Entities
 
 
         [Required]
-        [Column("student_id")]
-        public Guid StudentId { get; set; }
-        [ForeignKey(nameof(StudentId))]
-        public virtual StudentEntity Student { get; set; }
+        [Column("student_course_id")]
+        public Guid StudentCourseId { get; set; }
+        [ForeignKey(nameof(StudentCourseId))]
+        public virtual StudentCourseEntity StudentCourse { get; set; }
 
+        [Required]
+        [Column("unit_number")]
+        public int UnitNumber { get; set; }
 
         [Required]
         [Column("unit_note")]

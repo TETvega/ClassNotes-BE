@@ -1,0 +1,30 @@
+[
+    {
+      "id": "c0426ed7-5f1a-4493-8d62-d8d5e0380107",
+      "UnitId": "01DD6027-2E73-4A83-9B43-5E752727E93C",
+      "StudentCourseId": "4773F39C-9CE6-4C75-94D4-0A445446600C",
+      "UnitNumber": 1,
+      "UnitNote": 35
+    },
+    {
+      "id": "902b32e5-ce70-4d52-9dc0-7854b961078c",
+      "UnitId": "6356E519-BBCD-4229-BF41-8A3DD37B4219",
+      "StudentCourseId": "4773F39C-9CE6-4C75-94D4-0A445446600C",
+      "UnitNumber": 2,
+      "UnitNote": 75
+    },
+    {
+      "id": "4cf4e72c-73d7-4dfa-8a34-3c7850e8a040",
+      "UnitId": "9336348D-E972-4A7C-BF7C-7B1DDCE7DCE6",
+      "StudentCourseId": "4773F39C-9CE6-4C75-94D4-0A445446600C",
+      "UnitNumber": 3,
+      "UnitNote": 44
+    },
+    {
+      "id": "3c3a3f66-937f-4bcc-9a6c-31c1d31c2ad6",
+      "UnitId": "31BCAA62-03B6-4DAB-873A-3F84B49B0828",
+      "StudentCourseId": "4773F39C-9CE6-4C75-94D4-0A445446600C",
+      "UnitNumber": 4,
+      "UnitNote": 70
+    }
+  ]

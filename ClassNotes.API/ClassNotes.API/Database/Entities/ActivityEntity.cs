@@ -21,7 +21,6 @@ namespace ClassNotes.API.Database.Entities
         public float MaxScore { get; set; }
 
         [Required]
-        [StringLength(450)]
         [Column("tag_activity_id")]
         public Guid TagActivityId { get; set; }
         [ForeignKey(nameof(TagActivityId))]
@@ -32,7 +31,6 @@ namespace ClassNotes.API.Database.Entities
         public DateTime QualificationDate { get; set; }
 
 		[Required]
-		[StringLength(450)]
 		[Column("unit_id")]
 		public Guid UnitId { get; set; }
 		[ForeignKey(nameof(UnitId))]

@@ -31,7 +31,7 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
             }
 
-        // Traer un curso mediante su nombre
+        // Traer un curso mediante su id
         [HttpGet("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<CourseDto>>> Get(Guid id)

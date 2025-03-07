@@ -30,12 +30,12 @@ namespace ClassNotes.API.Services.Otp
         }
 
 		// AM: Función para generar y enviar el codigo otp por correo
-		public async Task<ResponseDto<OtpDto>> CreateAndSendOtpAsync(OtpCreateDto dto)
+		public async Task<ResponseDto<OtpGenerateResponseDto>> CreateAndSendOtpAsync(OtpCreateDto dto)
 		{
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
 			if (user == null)
 			{
-				return new ResponseDto<OtpDto>
+				return new ResponseDto<OtpGenerateResponseDto>
 				{
 					StatusCode = 404,
 					Status = false,
@@ -89,16 +89,14 @@ namespace ClassNotes.API.Services.Otp
 			smtp.Send(email);
 			smtp.Disconnect(true);
 
-			return new ResponseDto<OtpDto>
+			return new ResponseDto<OtpGenerateResponseDto>
 			{
 				StatusCode = 200,
 				Status = true,
 				Message = "Código OTP generado y enviado correctamente.",
-				Data = new OtpDto
+				Data = new OtpGenerateResponseDto
 				{
-					Email = dto.Email,
 					ExpirationSeconds = _otpExpirationSeconds
-					//OtpCode = otpCode,
 				}
 			};
 		}
@@ -143,7 +141,6 @@ namespace ClassNotes.API.Services.Otp
 				Data = new OtpDto
 				{
 					UserId = user.Id,
-					Email = dto.Email,
 				}
 			};
 		}
