@@ -64,7 +64,7 @@ namespace ClassNotes.API.Services.CourseNotes
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORDS_FOUND,
+                Message = MessagesConstant.CNS_RECORDS_FOUND,
                 Data = new PaginationDto<List<CourseNoteDto>>
                 {
                     CurrentPage = page,
@@ -91,7 +91,7 @@ namespace ClassNotes.API.Services.CourseNotes
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
 
@@ -101,7 +101,7 @@ namespace ClassNotes.API.Services.CourseNotes
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORDS_FOUND,
+                Message = MessagesConstant.CNS_RECORDS_FOUND,
                 Data = courseNoteDto
             };
 
@@ -120,7 +120,7 @@ namespace ClassNotes.API.Services.CourseNotes
             {
                 StatusCode = 201,
                 Status = true,
-                Message = MessagesConstant.CREATE_SUCCESS,
+                Message = MessagesConstant.CNS_CREATE_SUCCESS,
                 Data = courseNoteDto
             };
         }
@@ -137,7 +137,7 @@ namespace ClassNotes.API.Services.CourseNotes
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
 
@@ -152,7 +152,7 @@ namespace ClassNotes.API.Services.CourseNotes
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.UPDATE_SUCCESS,
+                Message = MessagesConstant.CNS_UPDATE_SUCCESS,
                 Data = courseNoteDto
             };
 
@@ -170,7 +170,7 @@ namespace ClassNotes.API.Services.CourseNotes
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
 
             }
@@ -182,7 +182,7 @@ namespace ClassNotes.API.Services.CourseNotes
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.DELETE_SUCCESS,
+                Message = MessagesConstant.CNS_DELETE_SUCCESS,
             };
 
         }

@@ -68,7 +68,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = MessagesConstant.RECORDS_FOUND,
+				Message = MessagesConstant.CP_RECORD_FOUND,
 				Data = new PaginationDto<List<CourseSettingDto>>
 				{
 					CurrentPage = page,
@@ -96,7 +96,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = MessagesConstant.RECORD_NOT_FOUND
+					Message = MessagesConstant.CP_RECORD_NOT_FOUND
 				};
 			}
 			var settingDto = _mapper.Map<CourseSettingDto>(settingEntity);
@@ -104,7 +104,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = MessagesConstant.RECORD_FOUND,
+				Message = MessagesConstant.CP_RECORD_FOUND,
 				Data = settingDto
 			};
 		}
@@ -121,8 +121,8 @@ namespace ClassNotes.API.Services.CoursesSettings
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "La fecha de finalización del periodo no puede ser menor a la fecha de inicio"
-				};
+					Message = MessagesConstant.CP_INVALID_DATES
+                };
 			}
 
 			// Validar que las puntuaciones sean mayores a 0
@@ -132,8 +132,8 @@ namespace ClassNotes.API.Services.CoursesSettings
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "Las puntuaciones mínima y máxima deben ser mayores a 0"
-				};
+					Message = MessagesConstant.CP_INVALID_GRADES
+                };
 			}
 
 			// Validar que puntuación maxima no sea menor a la minima
@@ -143,8 +143,8 @@ namespace ClassNotes.API.Services.CoursesSettings
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "La puntuación maxima no puede ser menor a la puntuación minima"
-				};
+					Message = MessagesConstant.CP_INVALID_GRADES
+                };
 			}
 
 			// Verificar si ya existe una configuración igual
@@ -164,8 +164,8 @@ namespace ClassNotes.API.Services.CoursesSettings
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "Ya existe la configuración"
-				};
+					Message = MessagesConstant.CONFIGURATION_ALREADY_EXISTS
+                };
 			}
 
 			// Pasa las validaciones y se crea la configuración
@@ -177,7 +177,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			{
 				StatusCode = 201,
 				Status = true,
-				Message = MessagesConstant.CREATE_SUCCESS,
+				Message = MessagesConstant.CP_CREATE_SUCCESS,
 				Data = settingDto
 			};
 		}
@@ -197,7 +197,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = MessagesConstant.RECORD_NOT_FOUND
+					Message = MessagesConstant.CP_RECORD_NOT_FOUND
 				};
 			}
 
@@ -212,7 +212,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = MessagesConstant.UPDATE_SUCCESS,
+				Message = MessagesConstant.CP_UPDATE_SUCCESS,
 				Data = settingDto
 			};
 		}
@@ -234,7 +234,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = MessagesConstant.RECORD_NOT_FOUND,
+					Message = MessagesConstant.CP_RECORD_NOT_FOUND,
 				};
 			}
 
@@ -253,7 +253,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = MessagesConstant.DELETE_SUCCESS
+				Message = MessagesConstant.CP_DELETE_SUCCESS
 			};
 		}
 	}

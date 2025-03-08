@@ -1,8 +1,11 @@
-﻿using ClassNotes.API.Database;
+﻿using Azure.Messaging;
+using ClassNotes.API.Constants;
+using ClassNotes.API.Database;
 using ClassNotes.API.Dtos.Cloudinary;
 using ClassNotes.API.Dtos.Common;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using iText.Barcodes.Exceptions;
 using CloudinaryInstance = CloudinaryDotNet.Cloudinary;
 //se creo instancia debido a incompatibilidad entre los nombres de Cloudinary libreria y el folder del Servicio
 
@@ -40,7 +43,7 @@ public class CloudinaryService : ICloudinaryService
                     {
                         StatusCode = 400,
                         Status = false,
-                        Message = "El archivo no es una imagen válida. Formatos permitidos: .png, .jpg, .jpeg, .gif, .bmp, .tiff, .webp"
+                        Message = MessagesConstant.CD_INVALID_IMAGE_FORMAT
                     };
                 }
 
@@ -113,7 +116,7 @@ public class CloudinaryService : ICloudinaryService
                 {
                     StatusCode = 201,
                     Status = true,
-                    Message = "Imagen subida correctamente",
+                    Message = MessagesConstant.IMAGE_UPLOAD_SUCCESS,
                     Data = new CloudinaryDto
                     {
                         URL = uploadResult.Url.ToString(),
@@ -183,7 +186,7 @@ public class CloudinaryService : ICloudinaryService
                 {
                     StatusCode = 200,
                     Status = true,
-                    Message = "Imagen eliminada correctamente",
+                    Message = MessagesConstant.IMAGE_DELETE_SUCCESS,
                 };
             }
             catch(Exception e)

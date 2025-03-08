@@ -37,7 +37,7 @@ namespace ClassNotes.API.Services.Auth
 			_userManager = userManager;
 			_configuration = configuration;
 			_logger = logger;
-      _context = context;
+            _context = context;
 
 		}
 
@@ -82,7 +82,7 @@ namespace ClassNotes.API.Services.Auth
 				{
 					StatusCode = 200,
 					Status = true,
-					Message = "Inicio de sesion satisfactorio",
+					Message = MessagesConstant.LOGIN_SUCCESS,
 					Data = new LoginResponseDto
 					{
 						FullName = $"{userEntity.FirstName} {userEntity.LastName}",
@@ -102,7 +102,7 @@ namespace ClassNotes.API.Services.Auth
 			{
 				Status = false,
 				StatusCode = 401,
-				Message = "Fallo el inicio de sesión"
+				Message = MessagesConstant.LOGIN_ERROR
 			};
 		}
 
@@ -147,7 +147,7 @@ namespace ClassNotes.API.Services.Auth
                     {
                         StatusCode = 401,
                         Status = false,
-                        Message = "Acceso no autorizado: No se encontro un correo valido."
+                        Message = MessagesConstant.INCORRECT_EMAIL
                     };
                 }
 
@@ -162,7 +162,7 @@ namespace ClassNotes.API.Services.Auth
                     {
                         StatusCode = 401,
                         Status = false,
-                        Message = "Acceso no autorizado: El usuario no existe."
+                        Message = MessagesConstant.USER_RECORD_NOT_FOUND
                     };
                 }
 
@@ -173,7 +173,7 @@ namespace ClassNotes.API.Services.Auth
                     {
                         StatusCode = 401,
                         Status = false,
-                        Message = "Acceso no autorizado: La sesión no es valida."
+                        Message = MessagesConstant.LOGIN_ERROR
                     };
                 }
                 //Email es Nulo, [Acceso no Autorizado][1004]
@@ -183,7 +183,7 @@ namespace ClassNotes.API.Services.Auth
                     {
                         StatusCode = 401,
                         Status = false,
-                        Message = "Acceso no autorizado: La sesión ha expirado."
+                        Message = MessagesConstant.TOKEN_EXPIRED
                     };
                 }
 
@@ -213,7 +213,7 @@ namespace ClassNotes.API.Services.Auth
                 {
                     StatusCode = 200,
                     Status = true,
-                    Message = "Token renovado satisfactoriamente",
+                    Message = MessagesConstant.USER_REGISTERED_SUCCESS,
                     Data = loginResponseDto
                 };
             } 
@@ -227,7 +227,7 @@ namespace ClassNotes.API.Services.Auth
                 {
                     StatusCode = 500,
                     Status = false,
-                    Message = "Ocurrio un error al renovar el token"
+                    Message = MessagesConstant.USER_REGISTRATION_FAILED
                 };
             }
         }
@@ -280,7 +280,7 @@ namespace ClassNotes.API.Services.Auth
                 {
                     StatusCode = 200,
                     Status = true,
-                    Message = "Registro de usuario realizado satisfactoriamente.",
+                    Message = MessagesConstant.USER_REGISTERED_SUCCESS,
                     Data = new LoginResponseDto 
                     {
 						FullName = $"{userEntity.FirstName} {userEntity.LastName}",
@@ -296,7 +296,7 @@ namespace ClassNotes.API.Services.Auth
             {
                 StatusCode = 400,
                 Status = false,
-                Message = "Error al registrar el usuario"
+                Message = MessagesConstant.USER_REGISTRATION_FAILED
             };
 		}
 

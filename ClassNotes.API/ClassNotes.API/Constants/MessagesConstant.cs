@@ -29,6 +29,8 @@ namespace ClassNotes.API.Constants
         public const string REFRESH_TOKEN_EXPIRED = "A-2038: La sesión ha expirado.";
         public const string INVALID_REFRESH_TOKEN = "A-2039: La sesión no es válida.";
         public const string INCORRECT_PASSWORD = "A-2045: Contraseña incorrecta.";
+        public const string INCORRECT_EMAIL = "A-2046: Correo electronico incorrecta.";
+        public const string USER_RECORD_NOT_FOUND = "A-2047: El usuario no existe.";
 
         //  Manejo de Registro de Usuarios (RU-5XXX)
         public const string REGISTER_SUCCESS = "RU-3001: Registro de usuario creado correctamente.";
@@ -40,6 +42,12 @@ namespace ClassNotes.API.Constants
         public const string USER_UPDATE_SUCCESS = "U-4023: Usuario actualizado con éxito.";
         public const string USER_DELETE_SUCCESS = "U-4034: Usuario eliminado con éxito.";
         public const string USER_OPERATION_FAILED = "U-4045: No se pudo completar la operación con el usuario.";
+        public const string USER_Email_FAILED = "U-4045: No se pudo cambiar el correo del usuario.";
+        public const string USER_PASSWORD_CHANGE_FAILED = "U-4046: No se pudo cambiar la contraseña.";
+        public const string PASSWORD_UPDATED_SUCCESSFULLY = "U-4047: La contraseña fue actualizada satisfactoriamente.";
+        public const string USER_EMAIL_ALREADY_REGISTERED = "U-4058: El correo electrónico ingresado ya está registrado.";
+        public const string EMAIL_UPDATED_SUCCESSFULLY = "U-4059: El correo electrónico fue actualizado satisfactoriamente.";
+
 
         // Mensajes Generales (G-3XXX)
         public const string OPERATION_SUCCESS = "G-5011: Operación realizada con éxito.";
@@ -53,9 +61,19 @@ namespace ClassNotes.API.Constants
         public const string DELETE_CONFIRMATION_REQUIRED = "CEN-6014: No se confirmó la eliminación del centro.";
         public const string UNAUTHORIZED_DELETE = "CEN-6015: No está autorizado para borrar este registro.";
         public const string CENTER_HAS_COURSES = "CEN-6016: No se puede eliminar un centro si aún contiene clases asignadas.";
+        public const string ERROR_DELETE_IMAGE = "CEN-6017: Error al tratar de eliminar la imagen, ponerse en contacto con soporte";
+        public const string ERROR_CLOUDINARY_DELETE = "CEN-6028: Error al eliminar la imagen en Cloudinary";
+        public const string ERROR_NOT_AUTHORIZED = "CEN-6129: No está autorizado para editar este registro.";
+        public const string UNAUTHORIZED_ARCHIVE_CENTER = "CEN-6130: No está autorizado para archivar este centro.";
+        public const string CENTER_ALREADY_ARCHIVED = "CEN-6131: Ya archivó este centro.";
+        public const string CENTER_ARCHIVED_SUCCESS = "CEN-6132: Se archivó correctamente.";
+        public const string CENTER_RECOVERY_UNAUTHORIZED = "CEN-6133: No está autorizado para recuperar este centro.";
+        public const string CENTER_NOT_ARCHIVED = "CEN-6134: Este centro no está archivado.";
+        public const string CENTER_RECOVERED_SUCCESS = "CEN-6135: Se recuperó correctamente.";
 
         // Manejo Estudiantes (STU-XXX)
         public const string STU_RECORD_NOT_FOUND = "STU-7001: El registro no fue encontrado.";
+        public const string STU_RECORD_FOUND = "STU-7001: El registro fue encontrado.";
         public const string STU_CREATE_SUCCESS = "STU-7002: Estudiante creado exitosamente.";
         public const string STU_UPDATE_SUCCESS = "STU-7013: Estudiante actualizado exitosamente.";
         public const string STU_DELETE_SUCCESS = "STU-7014: Estudiante eliminado exitosamente.";
@@ -69,6 +87,7 @@ namespace ClassNotes.API.Constants
         public const string ACT_UPDATE_SUCCESS = "ACT-8073: Actividad actualizada exitosamente.";
         public const string ACT_DELETE_SUCCESS = "ACT-8074: Actividad eliminada exitosamente.";
         public const string ACT_QUALIFICATION_DATE_INVALID = "ACT-8075: La fecha de calificación no puede ser menor a la fecha actual.";
+        public const string ACT_RECORDS_FOUND = "ACT-8085: Actividad encontrada correctamente.";
 
         // Manejo Cursos (CRS-XXX)
         public const string CRS_RECORD_NOT_FOUND = "CRS-9051: El curso no fue encontrado.";
@@ -90,14 +109,18 @@ namespace ClassNotes.API.Constants
         public const string CNS_RECORDS_FOUND = "CNS-125: Se encontraron las notas de curso.";
         public const string CNS_EDIT_PERMISSION_DENIED = "CNS-126: No puede editar una nota que no le pertenece.";
         public const string CNS_DELETE_PERMISSION_DENIED = "CNS-127: No puede eliminar una nota que no le pertenece.";
+        public const string CNS_END_TIME_BEFORE_START_TIME = "CNS-128 :La hora de finalización no puede ser menor a la hora de inicio.";
+        public const string CNS_CLASS_ALREADY_EXISTS = "CNS-129: Ya existe la clase.";
 
         // Manejo Configuracion Curso (CP-XXX)
         public const string CP_CREATE_SUCCESS = "CP-231: Configuración de curso creada exitosamente.";
         public const string CP_UPDATE_SUCCESS = "CP-232: Configuración de curso actualizada exitosamente.";
         public const string CP_DELETE_SUCCESS = "CP-233: Configuración de curso eliminada exitosamente.";
         public const string CP_RECORD_NOT_FOUND = "CP-244: La configuración de curso no fue encontrada.";
+        public const string CP_RECORD_FOUND = "CP-244: La configuración de curso fue encontrada.";
         public const string CP_INVALID_DATES = "CP-245: La fecha de finalización no puede ser menor a la de inicio.";
         public const string CP_INVALID_GRADES = "CP-246: Las puntuaciones mínima y máxima deben ser mayores a 0, y la máxima no puede ser menor a la mínima.";
+        public const string CONFIGURATION_ALREADY_EXISTS = "CP-247: Ya existe la configuración";
 
         // Manewjo Emails (EM-XXX)
         public const string EMAIL_CREATE_SUCCESS = "EM-311: Correo electrónico creado exitosamente.";
@@ -107,6 +130,10 @@ namespace ClassNotes.API.Constants
         public const string EMAIL_INVALID_RECIPIENT = "EM-355: El destinatario no puede estar vacío o ser inválido.";
         public const string EMAIL_INVALID_SUBJECT = "EM-356: El asunto no puede estar vacío.";
         public const string EMAIL_INVALID_BODY = "EM-357: El cuerpo del correo no puede estar vacío.";
+        public const string EMAIL_SENT_SUCCESSFULLY = "EM-358: El correo fue enviado correctamente";
+        public const string EMAIL_COURSE_NOT_REGISTERED = "EM-359: El curso ingresado no está registrado.";
+        public const string EMAIL_STUDENT_NOT_REGISTERED = "EM-360: El estudiante ingresado no está registrado.";
+        public const string EMAIL_STUDENT_NOT_REGISTERED_IN_CLASS = "EM-361: El estudiante ingresado no está registrado en la clase ingresada.";
 
         // Manejo OTP (OTP-XXX)
         public const string OTP_CREATE_SUCCESS = "OTP-403: Código OTP generado y enviado correctamente.";
@@ -129,6 +156,7 @@ namespace ClassNotes.API.Constants
         public const string IMAGE_DELETE_FAILED = "CD-525: Error al eliminar la imagen en Cloudinary.";
         public const string IMAGE_UPLOAD_CLOUDINARY_ERROR = "CD-529: Error al subir la imagen a Cloudinary";
         public const string IMAGE_UPLOAD_STATUS_ERROR = "CD-510: Error en la respuesta de Cloudinary";
+        public const string CD_INVALID_IMAGE_FORMAT = "CD-511: El archivo no es una imagen válida. Formatos permitidos: .png, .jpg, .jpeg, .gif, .bmp, .tiff, .webp";
 
 
 
