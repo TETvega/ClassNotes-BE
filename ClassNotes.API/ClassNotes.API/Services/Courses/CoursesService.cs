@@ -67,7 +67,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORDS_FOUND,
+                Message = MessagesConstant.CNS_RECORDS_FOUND,
                 Data = new PaginationDto<List<CourseDto>>
                 {
                     CurrentPage = page,
@@ -95,7 +95,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
             var courseDto = _mapper.Map<CourseDto>(courseEntity);
@@ -103,7 +103,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORD_FOUND,
+                Message = MessagesConstant.CNS_RECORDS_FOUND,
                 Data = courseDto
             };
         }
@@ -120,7 +120,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "La hora de finalización no puede ser menor a la hora de inicio"
+                    Message = MessagesConstant.CNS_END_TIME_BEFORE_START_TIME
                 };
             }
 
@@ -141,7 +141,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "Ya existe la clase"
+                    Message = MessagesConstant.CNS_CLASS_ALREADY_EXISTS
                 };
             }
 
@@ -154,7 +154,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 201,
                 Status = true,
-                Message = MessagesConstant.CREATE_SUCCESS,
+                Message = MessagesConstant.CNS_CREATE_SUCCESS,
                 Data = courseDto
             };
         }
@@ -176,7 +176,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
 
@@ -199,7 +199,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.UPDATE_SUCCESS,
+                Message = MessagesConstant.CNS_UPDATE_SUCCESS,
                 Data = courseDto
             };
         }
@@ -219,7 +219,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
 
@@ -278,7 +278,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.DELETE_SUCCESS
+                Message = MessagesConstant.CNS_DELETE_SUCCESS
             };
         }
     }

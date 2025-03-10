@@ -67,7 +67,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORDS_FOUND,
+                Message = MessagesConstant.STU_RECORD_FOUND,
                 Data = new PaginationDto<List<StudentDto>>
                 {
                     CurrentPage = page,
@@ -96,7 +96,7 @@ namespace ClassNotes.API.Services.Students
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.STU_RECORD_NOT_FOUND
                 };
             }
 
@@ -106,7 +106,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORDS_FOUND,
+                Message = MessagesConstant.STU_RECORD_FOUND,
                 Data = studentDto
             };
 
@@ -131,7 +131,7 @@ namespace ClassNotes.API.Services.Students
                     {
                         StatusCode = 200,
                         Status = true,
-                        Message = "El estudiante ya existe y se ha referenciado correctamente.",
+                        Message = MessagesConstant.STUDENT_EXISTS,
                         Data = studentDtos
                     };
                 }
@@ -142,7 +142,7 @@ namespace ClassNotes.API.Services.Students
                     {
                         StatusCode = 400,
                         Status = false,
-                        Message = "El correo electrónico ya está registrado con nombres diferentes.",
+                        Message = MessagesConstant.EMAIL_ALREADY_REGISTERED,
                         Data = null
                     };
                 }
@@ -165,7 +165,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 201,
                 Status = true,
-                Message = MessagesConstant.CREATE_SUCCESS,
+                Message = MessagesConstant.STU_CREATE_SUCCESS,
                 Data = studentDto
             };
         }
@@ -187,7 +187,7 @@ namespace ClassNotes.API.Services.Students
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND,
+                    Message = MessagesConstant.STU_RECORD_NOT_FOUND,
                     Data = null
                 };
             }
@@ -204,7 +204,7 @@ namespace ClassNotes.API.Services.Students
                     {
                         StatusCode = 400,
                         Status = false,
-                        Message = "El correo electrónico ya está registrado.",
+                        Message = MessagesConstant.EMAIL_ALREADY_REGISTERED,
                         Data = null
                     };
                 }
@@ -224,7 +224,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.UPDATE_SUCCESS,
+                Message = MessagesConstant.STU_UPDATE_SUCCESS,
                 Data = studentDto
             };
         }
@@ -244,7 +244,7 @@ namespace ClassNotes.API.Services.Students
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND,
+                    Message = MessagesConstant.STU_RECORD_NOT_FOUND,
                 };
             }
 
@@ -263,7 +263,7 @@ namespace ClassNotes.API.Services.Students
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.DELETE_SUCCESS
+                Message = MessagesConstant.STU_DELETE_SUCCESS
             };
         }
     }

@@ -58,7 +58,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORDS_FOUND,
+                Message = MessagesConstant.ACT_RECORDS_FOUND,
                 Data = new PaginationDto<List<ActivityDto>>
                 {
                     CurrentPage = page,
@@ -83,7 +83,7 @@ namespace ClassNotes.API.Services.Activities
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
             var activityDto = _mapper.Map<ActivityDto>(activityEntity);
@@ -91,7 +91,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORD_FOUND,
+                Message = MessagesConstant.ACT_RECORDS_FOUND,
                 Data = activityDto
             };
         }
@@ -106,7 +106,7 @@ namespace ClassNotes.API.Services.Activities
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "La fecha de calificación no puede ser menor a la fecha actual."
+                    Message = MessagesConstant.ACT_QUALIFICATION_DATE_INVALID
                 };
             }
 
@@ -118,7 +118,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 StatusCode = 201,
                 Status = true,
-                Message = MessagesConstant.CREATE_SUCCESS,
+                Message = MessagesConstant.ACT_CREATE_SUCCESS,
                 Data = activityDto
             };
         }
@@ -133,7 +133,7 @@ namespace ClassNotes.API.Services.Activities
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "La fecha de calificación no puede ser menor a la fecha actual."
+                    Message = MessagesConstant.ACT_QUALIFICATION_DATE_INVALID
                 };
             }
 
@@ -145,7 +145,7 @@ namespace ClassNotes.API.Services.Activities
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
             _mapper.Map(dto, activityEntity);
@@ -156,7 +156,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.UPDATE_SUCCESS,
+                Message = MessagesConstant.ACT_UPDATE_SUCCESS,
                 Data = activityDto
             };
         }
@@ -172,7 +172,7 @@ namespace ClassNotes.API.Services.Activities
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
             _context.Activities.Remove(activityEntity);
@@ -181,7 +181,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.DELETE_SUCCESS
+                Message = MessagesConstant.ACT_DELETE_SUCCESS
             };
         }
     }

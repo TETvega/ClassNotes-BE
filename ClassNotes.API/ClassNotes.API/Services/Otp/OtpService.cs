@@ -10,6 +10,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ClassNotes.API.Database.Entities;
 using System.Security.Cryptography;
 using System.Text;
+using ClassNotes.API.Constants;
 
 namespace ClassNotes.API.Services.Otp
 {
@@ -39,8 +40,8 @@ namespace ClassNotes.API.Services.Otp
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = "El correo ingresado no está registrado.",
-				};
+					Message = MessagesConstant.OTP_CREATE_USER_NOT_FOUND
+                };
 			}
 
 			// CG: Si existe usuario, crear su secreto de Otp en base a su id y contraseña en base32
@@ -93,8 +94,8 @@ namespace ClassNotes.API.Services.Otp
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = "Código OTP generado y enviado correctamente.",
-				Data = new OtpGenerateResponseDto
+				Message = MessagesConstant.OTP_CREATE_SUCCESS,
+                Data = new OtpGenerateResponseDto
 				{
 					ExpirationSeconds = _otpExpirationSeconds
 				}
@@ -113,7 +114,7 @@ namespace ClassNotes.API.Services.Otp
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "El código OTP ingresado no es válido o ha expirado."
+                    Message = MessagesConstant.OTP_EXPIRED_OR_INVALID
                 };
             }
 
@@ -123,7 +124,7 @@ namespace ClassNotes.API.Services.Otp
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "El código OTP ingresado no es válido."
+                    Message = MessagesConstant.OTP_INVALID_CODE
                 };
             }
 
@@ -137,8 +138,8 @@ namespace ClassNotes.API.Services.Otp
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = "Código OTP validado correctamente.",
-				Data = new OtpDto
+				Message = MessagesConstant.OTP_VALIDATION_SUCCESS,
+                Data = new OtpDto
 				{
 					UserId = user.Id,
 				}
@@ -173,8 +174,9 @@ namespace ClassNotes.API.Services.Otp
 			{
 				return new ResponseDto<OtpDto>
 				{
-					Message = "OTP encontrando en caché",
-					Data = null,
+					Message = MessagesConstant.OTP_CACHE_FOUND,
+
+                    Data = null,
 					Status = true,
 					StatusCode = 200,
 				};
@@ -184,7 +186,7 @@ namespace ClassNotes.API.Services.Otp
             {
                 StatusCode = 404,
                 Status = false,
-                Message = "OTP no encontrado o expirado",
+                Message = MessagesConstant.OTP_CACHE_NOT_FOUND
             };
         }
 
