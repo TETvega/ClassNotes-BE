@@ -8,5 +8,6 @@
         public string EstudianteCorreo { get; set; }
         public double EstudianteLatitud { get; set; }
         public double EstudianteLongitud { get; set; }
+        public string MacAddress { get; set; }
     }
 }

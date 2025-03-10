@@ -1,47 +1,41 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ClassNotes.API.Database;
 using ClassNotes.API.Dtos;
-using ClassNotes.API.Services;
-using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Services.Emails;
 using Microsoft.Extensions.Logging;
 using ClassNotes.API.Services.Distance;
 using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Services.Attendances;
-using Microsoft.AspNetCore.SignalR;
-using ClassNotes.API.Hubs;
+using ClassNotes.API.Dtos.Emails;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace ClassNotes.API.Controllers
+namespace ClassNotes.API.Services
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class EmailAttendanceController : ControllerBase
+    public class EmailAttendanceService
     {
         private readonly ClassNotesContext _context;
         private readonly IEmailsService _emailsService;
-        private readonly ILogger<EmailAttendanceController> _logger;
+        private readonly ILogger<EmailAttendanceService> _logger;
         private readonly DistanceService _distanceService;
         private readonly IAttendancesService _attendanceService;
         private readonly OTPCleanupService _otpCleanupService;
-        private readonly IHubContext<AttendanceHub> _hubContext; // Inyectar el Hub de SignalR
 
         // Lista estática para almacenar los OTPs
-        public static List<StudentOTPDto> OTPList = new List<StudentOTPDto>();
+        public List<StudentOTPDto> OTPList { get; } = new List<StudentOTPDto>();
 
-        public EmailAttendanceController(
+
+        public EmailAttendanceService(
             ClassNotesContext context,
             IEmailsService emailsService,
-            ILogger<EmailAttendanceController> logger,
+            ILogger<EmailAttendanceService> logger,
             DistanceService distanceService,
             IAttendancesService attendanceService,
-            OTPCleanupService otpCleanupService,
-            IHubContext<AttendanceHub> hubContext) // Inyectar el Hub de SignalR
+            OTPCleanupService otpCleanupService)
         {
             _context = context;
             _emailsService = emailsService;
@@ -49,24 +43,22 @@ namespace ClassNotes.API.Controllers
             _distanceService = distanceService;
             _attendanceService = attendanceService;
             _otpCleanupService = otpCleanupService;
-            _hubContext = hubContext; // Asignar el Hub inyectado
         }
 
-        [HttpPost("send-emails")]
-        public async Task<IActionResult> SendEmails([FromBody] EmailAttendanceRequestDto request)
+        public async Task<IActionResult> SendEmails(EmailAttendanceRequestDto request)
         {
             try
             {
                 // Validar el rango de validación
                 if (request.RangoValidacionMetros < 15 || request.RangoValidacionMetros > 100)
                 {
-                    return BadRequest("El rango de validación debe estar entre 15 y 100 metros.");
+                    return new BadRequestObjectResult("El rango de validación debe estar entre 15 y 100 metros.");
                 }
 
                 // Validar el tiempo de expiración del OTP
                 if (request.TiempoExpiracionOTPMinutos < 3)
                 {
-                    return BadRequest("El tiempo de expiración del OTP debe ser de al menos 3 minutos.");
+                    return new BadRequestObjectResult("El tiempo de expiración del OTP debe ser de al menos 3 minutos.");
                 }
 
                 // Obtener la clase con los estudiantes asociados
@@ -78,7 +70,7 @@ namespace ClassNotes.API.Controllers
 
                 if (clase == null)
                 {
-                    return BadRequest("La clase no está asociada con el profesor o el centro.");
+                    return new BadRequestObjectResult("La clase no está asociada con el profesor o el centro.");
                 }
 
                 // Obtener la lista de estudiantes asociados a la clase
@@ -88,7 +80,7 @@ namespace ClassNotes.API.Controllers
 
                 if (!estudiantes.Any())
                 {
-                    return BadRequest("No hay estudiantes asociados a esta clase.");
+                    return new BadRequestObjectResult("No hay estudiantes asociados a esta clase.");
                 }
 
                 // Lista para almacenar los destinatarios y los correos enviados
@@ -146,14 +138,6 @@ namespace ClassNotes.API.Controllers
                             Nombre = estudiante.FirstName,
                             Correo = estudiante.Email
                         });
-
-                        // Notificar a los clientes en tiempo real
-                        await _hubContext.Clients.All.SendAsync("ReceiveEmailSent", new
-                        {
-                            StudentName = estudiante.FirstName,
-                            Email = estudiante.Email,
-                            OTP = otp
-                        });
                     }
                 }
 
@@ -161,7 +145,7 @@ namespace ClassNotes.API.Controllers
                 _otpCleanupService.ReactivateService();
 
                 // Retornar la lista de destinatarios y un mensaje de éxito
-                return Ok(new
+                return new OkObjectResult(new
                 {
                     Message = "Correos enviados correctamente.",
                     Destinatarios = destinatarios,
@@ -172,12 +156,11 @@ namespace ClassNotes.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al enviar correos electrónicos");
-                return StatusCode(500, new { Message = "Ocurrió un error inesperado al enviar los correos." });
+                return new StatusCodeResult(500);
             }
         }
 
-        [HttpPost("validate-attendance")]
-        public async Task<IActionResult> ValidateAttendance([FromBody] ValidateAttendanceRequestDto request)
+        public async Task<IActionResult> ValidateAttendance(ValidateAttendanceRequestDto request)
         {
             try
             {
@@ -186,7 +169,7 @@ namespace ClassNotes.API.Controllers
 
                 if (studentOTP == null || studentOTP.ExpirationDate < DateTime.UtcNow)
                 {
-                    return BadRequest("OTP inválido o expirado.");
+                    return new BadRequestObjectResult("OTP inválido o expirado.");
                 }
 
                 // Calcular la distancia entre la ubicación proporcionada y la almacenada
@@ -197,7 +180,7 @@ namespace ClassNotes.API.Controllers
                 // Validar si el estudiante está dentro del rango permitido
                 if (distance > studentOTP.RangoValidacionMetros)
                 {
-                    return BadRequest($"Debes estar dentro de un radio de {studentOTP.RangoValidacionMetros} metros para validar tu asistencia.");
+                    return new BadRequestObjectResult($"Debes estar dentro de un radio de {studentOTP.RangoValidacionMetros} metros para validar tu asistencia.");
                 }
 
                 // Obtener el estudiante por su ID
@@ -206,7 +189,7 @@ namespace ClassNotes.API.Controllers
 
                 if (estudiante == null)
                 {
-                    return BadRequest("Estudiante no encontrado.");
+                    return new BadRequestObjectResult("Estudiante no encontrado.");
                 }
 
                 // Crear el DTO para la asistencia
@@ -223,18 +206,8 @@ namespace ClassNotes.API.Controllers
                 // Eliminar el OTP de la lista estática después de usarlo
                 OTPList.Remove(studentOTP);
 
-                // Notificar a los clientes en tiempo real
-                await _hubContext.Clients.All.SendAsync("ReceiveAttendanceValidation", new
-                {
-                    StudentName = estudiante.FirstName,
-                    Email = estudiante.Email,
-                    AttendanceStatus = "Presente",
-                    ValidationTime = DateTime.UtcNow
-                });
-
-
                 // Retornar la respuesta con los datos del estudiante y la asistencia
-                return Ok(new
+                return new OkObjectResult(new
                 {
                     Message = "Asistencia validada correctamente.",
                     Estudiante = new
@@ -254,7 +227,7 @@ namespace ClassNotes.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al validar la asistencia");
-                return StatusCode(500, new { Message = "Ocurrió un error inesperado al validar la asistencia." });
+                return new StatusCodeResult(500);
             }
         }
 

@@ -7,6 +7,13 @@
         "IsActive": true
     },
     {
+        "id": "e384df62-ac89-44d8-ab56-c11aa4b7b2c7",
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "12745c10-2710-4271-926b-e24ccffca8db",
+        "FinalNote": 80,
+        "IsActive": true
+    },
+    {
         "id": "3a6f0e56-357f-406d-8a2e-7be1f3219a48",
         "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
         "StudentId": "78f358e5-2d4e-43bd-8741-d6217b8289f8",

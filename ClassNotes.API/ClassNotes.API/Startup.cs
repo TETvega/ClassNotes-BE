@@ -20,6 +20,7 @@ using ClassNotes.API.Services.Otp;
 using ClassNotes.API.Services.Users;
 using ClassNotes.API.Services.Distance;
 using ClassNotes.API.Services;
+using ClassNotes.API.Hubs;
 
 namespace ClassNotes.API;
 
@@ -38,6 +39,7 @@ public class Startup
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
+		services.AddSignalR();
 
         // ----------------- CG -----------------
         // Contexto de la base de datos
@@ -54,9 +56,12 @@ public class Startup
 		services.AddTransient<IStudentsService, StudentsService>();
 		services.AddTransient<IUsersService, UsersService>();
 		services.AddScoped<DistanceService>();
-		services.AddHostedService<OTPCleanupService>();
-		// Servicios de seguridad
-		services.AddTransient<IAuditService, AuditService>();
+        services.AddScoped<EmailAttendanceService>();
+        services.AddScoped<QRService>();
+        services.AddSingleton<OTPCleanupService>();
+        services.AddHostedService(provider =>provider.GetRequiredService<OTPCleanupService>());
+        // Servicios de seguridad
+        services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();
 
 		// Servicio para el envio de correos (SMTP)
@@ -132,6 +137,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHub<AttendanceHub>("/attendanceHub");
         });
     }
 }
