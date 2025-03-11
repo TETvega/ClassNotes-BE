@@ -6,7 +6,6 @@ using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.TagsActivities;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace ClassNotes.API.Services.TagsActivities
 {
@@ -30,7 +29,7 @@ namespace ClassNotes.API.Services.TagsActivities
 			PAGE_SIZE = configuration.GetValue<int>("PageSize");
 		}
 
-		// AM: Obtener todas las tags en forma de paginación
+		// AM: Metodo para obtener todas las tags en forma de paginación
 		public async Task<ResponseDto<PaginationDto<List<TagActivityDto>>>> GetTagsListAsync(string searchTerm = "", int page = 1)
 		{
 			int startIndex = (page - 1) * PAGE_SIZE;
@@ -57,6 +56,7 @@ namespace ClassNotes.API.Services.TagsActivities
 				.Take(PAGE_SIZE)
 				.ToListAsync();
 
+			// AM: Mapear a DTO para la respuesta
 			var tagsDto = _mapper.Map<List<TagActivityDto>>(tagsEntities);
 
 			return new ResponseDto<PaginationDto<List<TagActivityDto>>>
@@ -77,9 +77,34 @@ namespace ClassNotes.API.Services.TagsActivities
 			};
 		}
 
-		public Task<ResponseDto<TagActivityDto>> GetTagByIdAsync(Guid id)
+		// AM: Metodo para obtener información de una Tag por su id
+		public async Task<ResponseDto<TagActivityDto>> GetTagByIdAsync(Guid id)
 		{
-			throw new NotImplementedException();
+			// AM: Id del usuario en sesión
+			var userId = _auditService.GetUserId();
+
+			// AM: Validar existencia y filtrar por CreatedBy
+			var tagEntity = await _context.TagsActivities.FirstOrDefaultAsync(t => t.Id == id && t.CreatedBy == userId); 
+			if (tagEntity == null)
+			{
+				return new ResponseDto<TagActivityDto>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = MessagesConstant.TA_RECORD_NOT_FOUND
+				};
+			}
+
+			// AM: Mapear a DTO para la respuesta
+			var tagDto = _mapper.Map<TagActivityDto>(tagEntity);
+
+			return new ResponseDto<TagActivityDto>
+			{
+				StatusCode = 200,
+				Status = true,
+				Message = MessagesConstant.TA_RECORD_FOUND,
+				Data = tagDto
+			};
 		}
 
 		public Task<ResponseDto<TagActivityDto>> CreateTagAsync(TagActivityCreateDto dto)
