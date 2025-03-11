@@ -22,6 +22,7 @@ using CloudinaryDotNet;
 using ClassNotes.API.Services.Cloudinary;
 using Microsoft.Extensions.Configuration;
 using ClassNotes.API.Services.DashboardHome;
+using ClassNotes.API.Services.TagsActivities;
 
 namespace ClassNotes.API;
 
@@ -41,10 +42,9 @@ public class Startup
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
 
-        // ----------------- CG -----------------
         // Contexto de la base de datos
         services.AddDbContext<ClassNotesContext>(options =>
-        options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+			options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
 		// Servicios personalizados
 		services.AddTransient<IActivitiesService, ActivitiesService>();
@@ -56,23 +56,26 @@ public class Startup
 		services.AddTransient<IStudentsService, StudentsService>();
 		services.AddTransient<IUsersService, UsersService>();
 		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
-		services.AddTransient<ICloudinaryService, CloudinaryService>();
+		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
 
 		// Servicios de seguridad
-		services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();
+		services.AddTransient<IAuditService, AuditService>();
+		services.AddTransient<IOtpService, OtpService>();
 
 		// Servicio para el envio de correos (SMTP)
 		services.AddTransient<IEmailsService, EmailsService>();
-		services.AddTransient<IOtpService, OtpService>();
 
-		// Servicio de AutoMapper
+		// Servicio para la subida de archivos de imagenes en la nube (Cloudinary)
+		services.AddTransient<ICloudinaryService, CloudinaryService>();
+
+		// Servicio para el mapeo automático de Entities y DTOs (AutoMapper)
 		services.AddAutoMapper(typeof(AutoMapperProfile));
 
 		// Habilitar cache en memoria
 		services.AddMemoryCache();
 
-        // Identity 
+        // Configuración del IdentityUser
         services.AddIdentity<UserEntity, IdentityRole>(options =>
         {
             options.SignIn.RequireConfirmedAccount = false;
@@ -110,8 +113,6 @@ public class Startup
 			.AllowAnyHeader()
 			.AllowCredentials());
 		});
-
-		// ----------------- CG  -----------------
 	}
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

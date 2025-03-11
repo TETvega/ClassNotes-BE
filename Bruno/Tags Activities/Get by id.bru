@@ -1,0 +1,15 @@
+meta {
+  name: Get by id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{PATH}}/tags_activities/[id]
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

@@ -17,10 +17,9 @@ namespace ClassNotes.API.Database.Entities
         public string ColorHex { get; set; }
 
         [Required]
-        [StringLength(5)]
+        [StringLength(50)]
         [Column ("icon")]
         public string Icon { get; set; }
-
 
         [Required]
         [StringLength(450)]

@@ -1,0 +1,15 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/tags_activities/[id]
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

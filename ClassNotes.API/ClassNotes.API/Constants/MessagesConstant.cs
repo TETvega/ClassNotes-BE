@@ -158,9 +158,18 @@ namespace ClassNotes.API.Constants
         public const string IMAGE_UPLOAD_STATUS_ERROR = "CD-510: Error en la respuesta de Cloudinary";
         public const string CD_INVALID_IMAGE_FORMAT = "CD-511: El archivo no es una imagen válida. Formatos permitidos: .png, .jpg, .jpeg, .gif, .bmp, .tiff, .webp";
 
+		// Manejo de Etiquetas de Actividades (TA-XXX)
+		public const string TA_RECORDS_FOUND = "TA-601: Etiquetas de actividad encontradas correctamente.";
+		public const string TA_RECORDS_NOT_FOUND = "TA-602: No se encontraron etiquetas de actividad.";
+		public const string TA_RECORD_FOUND = "TA-603: Etiqueta de actividad encontrada correctamente.";
+		public const string TA_RECORD_NOT_FOUND = "TA-604: La etiqueta de actividad no fue encontrada.";
+		public const string TA_CREATE_SUCCESS = "TA-605: Etiqueta de actividad creada exitosamente.";
+		public const string TA_CREATE_ERROR = "TA-606: No se pudo crear la etiqueta de actividad.";
+		public const string TA_UPDATE_SUCCESS = "TA-607: Etiqueta de actividad actualizada exitosamente.";
+		public const string TA_UPDATE_ERROR = "TA-608: No se pudo actualizar la etiqueta de actividad.";
+		public const string TA_DELETE_SUCCESS = "TA-609: Etiqueta de actividad eliminada exitosamente.";
+		public const string TA_DELETE_ERROR = "TA-610: No se pudo eliminar la etiqueta de actividad.";
 
 
-
-
-    }
+	}
 }
