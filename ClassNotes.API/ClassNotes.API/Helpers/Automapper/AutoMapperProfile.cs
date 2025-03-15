@@ -28,10 +28,30 @@ namespace ClassNotes.API.Helpers.Automapper
             MapsForDashboardCourses();
         }
 
-        // Si escala a mas de 3 y son complejos se escalara a archvivos individuales  TIPO [Carpeta] Maps/[Entidad].cs
         private void MapsForActivities()
         {
-            CreateMap<ActivityEntity, ActivityDto>();
+            // Mapeo para el get all (ActivitySummaryDto)
+            CreateMap<ActivityEntity, ActivitySummaryDto>()
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => new ActivitySummaryDto.CourseInfo
+                {
+                    Id = src.Unit.Course.Id, // Se le pasan el id del curso al que pertenece la actividad
+                    Name = src.Unit.Course.Name // Se pasa el nombre del curso al que pertenece la actividad
+                }))
+                .ForMember(dest => dest.CenterId, opt => opt.MapFrom(src => src.Unit.Course.CenterId)); // Se pasa el id del centro al que pertenece
+
+            // Mapeo para el get by id (ActivityDto)
+            CreateMap<ActivityEntity, ActivityDto>()
+                .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => new ActivityDto.UnitInfo
+                {
+                    Id = src.Unit.Id, // El id de la unidad a la que pertenece
+                    Number = src.Unit.UnitNumber // El numero de esa unidad
+                }))
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => new ActivityDto.CourseInfo
+                {
+                    Id = src.Unit.Course.Id, // El id del curso al que pertenece
+                    Name = src.Unit.Course.Name // El nombre del curso
+                }));
+
             CreateMap<ActivityCreateDto, ActivityEntity>();
             CreateMap<ActivityEditDto, ActivityEntity>();
         }
