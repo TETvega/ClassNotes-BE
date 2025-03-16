@@ -22,6 +22,7 @@ using CloudinaryDotNet;
 using ClassNotes.API.Services.Cloudinary;
 using Microsoft.Extensions.Configuration;
 using ClassNotes.API.Services.DashboardHome;
+using ClassNotes.API.Services.DashboarCenter;
 
 namespace ClassNotes.API;
 
@@ -57,9 +58,10 @@ public class Startup
 		services.AddTransient<IUsersService, UsersService>();
 		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
+        services.AddTransient<IDashboardCenterService, DashboardCenterService>();
 
-		// Servicios de seguridad
-		services.AddTransient<IAuditService, AuditService>();
+        // Servicios de seguridad
+        services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();
 
 		// Servicio para el envio de correos (SMTP)
