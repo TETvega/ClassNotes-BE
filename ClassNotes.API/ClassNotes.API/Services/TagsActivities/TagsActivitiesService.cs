@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
+using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
-using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.TagsActivities;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
@@ -14,18 +14,21 @@ namespace ClassNotes.API.Services.TagsActivities
 		private readonly ClassNotesContext _context;
 		private readonly IAuditService _auditService;
 		private readonly IMapper _mapper;
+		private readonly ILogger _logger;
 		private readonly int PAGE_SIZE;
 
 		public TagsActivitiesService(
 			ClassNotesContext context, 
 			IAuditService auditService, 
 			IMapper mapper,
+			ILogger<TagsActivitiesService> logger,
 			IConfiguration configuration
 			)
 		{
 			_context = context;
 			_auditService = auditService;
 			_mapper = mapper;
+			_logger = logger;
 			PAGE_SIZE = configuration.GetValue<int>("PageSize");
 		}
 
@@ -63,7 +66,7 @@ namespace ClassNotes.API.Services.TagsActivities
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = totalItems == 0 ? MessagesConstant.TA_RECORDS_NOT_FOUND : MessagesConstant.TA_RECORDS_FOUND, // AM: Si no encuentra items mostrar el mensaje correcto
+				Message = totalItems == 0 ? MessagesConstant.TA_RECORD_NOT_FOUND : MessagesConstant.TA_RECORDS_FOUND, // AM: Si no encuentra items mostrar el mensaje correcto
 				Data = new PaginationDto<List<TagActivityDto>>
 				{
 					CurrentPage = page,
@@ -107,19 +110,80 @@ namespace ClassNotes.API.Services.TagsActivities
 			};
 		}
 
-		public Task<ResponseDto<TagActivityDto>> CreateTagAsync(TagActivityCreateDto dto)
+		// AM: Metodo para crear una nueva Tag
+		public async Task<ResponseDto<TagActivityDto>> CreateTagAsync(TagActivityCreateDto dto)
 		{
-			throw new NotImplementedException();
+			try
+			{
+				/* Las validaciones de seguridad necesarias se realizan en el DTO de TagActivityCreateDto */
+
+				// AM: Crear la nueva tag
+				var tagEntity = _mapper.Map<TagActivityEntity>(dto);
+
+				// AM: el teacher id corresponde al usuario en sesión
+				tagEntity.TeacherId = _auditService.GetUserId();
+
+				// AM: Guardar cambios
+				_context.TagsActivities.Add(tagEntity);
+				await _context.SaveChangesAsync();
+
+				// AM: Mapear Entity a Dto para la respuesta
+				var tagDto = _mapper.Map<TagActivityDto>(tagEntity);
+
+				return new ResponseDto<TagActivityDto>
+				{
+					StatusCode = 201,
+					Status = true,
+					Message = MessagesConstant.TA_CREATE_SUCCESS,
+					Data = tagDto
+				};
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, MessagesConstant.TA_CREATE_ERROR);
+				return new ResponseDto<TagActivityDto>
+				{
+					StatusCode = 500,
+					Status = false,
+					Message = MessagesConstant.TA_CREATE_ERROR
+				};
+			}
 		}
 
-		public Task<ResponseDto<TagActivityDto>> UpdateTagAsync(TagActivityEditDto dto, Guid id)
+		public async Task<ResponseDto<TagActivityDto>> UpdateTagAsync(TagActivityEditDto dto, Guid id)
 		{
-			throw new NotImplementedException();
+			try
+			{
+				throw new NotImplementedException();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, MessagesConstant.TA_UPDATE_ERROR);
+				return new ResponseDto<TagActivityDto>
+				{
+					StatusCode = 500,
+					Status = false,
+					Message = MessagesConstant.TA_UPDATE_ERROR
+				};
+			}
 		}
 
-		public Task<ResponseDto<TagActivityDto>> DeleteTagAsync(Guid id)
+		public async Task<ResponseDto<TagActivityDto>> DeleteTagAsync(Guid id)
 		{
-			throw new NotImplementedException();
+			try
+			{
+				throw new NotImplementedException();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, MessagesConstant.TA_DELETE_ERROR);
+				return new ResponseDto<TagActivityDto>
+				{
+					StatusCode = 500,
+					Status = false,
+					Message = MessagesConstant.TA_DELETE_ERROR
+				};
+			}
 		}
 	}
 }

@@ -7,7 +7,7 @@ namespace ClassNotes.API.Database.Entities
     public class TagActivityEntity : BaseEntity
     {
         [Required]
-        [StringLength(20)]
+        [StringLength(15)]
         [Column("name")]
         public string Name { get; set; }
 
@@ -17,7 +17,7 @@ namespace ClassNotes.API.Database.Entities
         public string ColorHex { get; set; }
 
         [Required]
-        [StringLength(50)]
+        [StringLength(20)]
         [Column ("icon")]
         public string Icon { get; set; }
 
