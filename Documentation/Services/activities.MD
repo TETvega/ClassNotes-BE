@@ -1,5 +1,4 @@
-## 🔗 Navegación  
-
+ 
 📖 [Documentacion](../index.MD "Docuemntacion Home")  
 🏠 [Home](../../README.MD "Home")  
 📖 [Endpoints](./Services.index.md "Services")  
@@ -95,7 +94,7 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y un
 }
 ```
 
-### 🔄 Explicación de los campos
+### 🔄 Explicación de los campos Retornados
 
 | Campo | Tipo | Descripción |
 |--------|------|-------------|
@@ -104,7 +103,9 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y un
 | `qualificationDate` | `string (ISO 8601)` | Fecha en la que se calificará la actividad. |
 | `tagActivityId` | `string (UUID)` | Identificador de la etiqueta asociada a la actividad. |
 | `unitId` | `string (UUID)` | Identificador de la unidad a la que pertenece la actividad. |
-||
+| `class.id` | `string (UUID)` | Identificador unico de la Clase a la cual pertenece |
+| `class.name` | `string (UUID)` | Nombre de la clase a la cual pertenece
+| `centerId` | `string (UUID)` | Identificador unico del centro al cual pertenece esta actividad. | 
 
 ---
 
@@ -114,7 +115,7 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y un
 |--------|-------------|
 | `400 Bad Request` | Ocurre si los parámetros enviados son inválidos. |
 | `500 Internal Server Error` | Error interno en el servidor. |
-| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./LoginDocumentation.MD) |
+| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./AuthDocumentation.MD) |
 
 
 Ejemplo de respuesta en caso de error:
@@ -197,7 +198,28 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y de
   "statusCode": 201,
   "status": true
 }
+
 ```
+### 🔄 Explicación de los campos Retornados
+
+| Campo | Tipo | Descripción |
+|--------|------|-------------|
+| `id` | `string (UUID)` | Identificador único de la actividad. |
+| `name` | `string` | Nombre de la actividad. |
+| `isExtra` | `boolean` | Identificador de una actividad es Extra o no.
+| `qualificationDate` | `string (ISO 8601)` | Fecha en la que se calificará la actividad. |
+| `tagActivityId` | `string (UUID)` | Identificador de la etiqueta asociada a la actividad. |
+| `unitId` | `string (UUID)` | Identificador de la unidad a la que pertenece la actividad. |
+| `class.id` | `string (UUID)` | Identificador unico de la Clase a la cual pertenece |
+
+
+
+### Notas 
+
+> ***isExtra*** = `False`esta es una actividad que pertenece al total de puntos a evaluar dentro de la calificacion maxima que puede sacar el alumno.
+>
+> ***isExtra*** = `True` esta es una actividad fuera del puntaje normal. Una actividad con puntaje extraordinario. Su puntaje se califica sobre el maximo puntaje calificado siempre considerando su respectiva ponderacion por unidad o cenvercion por parcial.
+
 
 ---
 
@@ -208,7 +230,8 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y de
 | `400 Bad Request` | Ocurre si los datos enviados son inválidos o faltan campos requeridos. |
 | `404 Not Found` | Ocurre si la unidad (`unitId`) no existe en la base de datos. |
 | `500 Internal Server Error` | Error interno del servidor al procesar la solicitud. |
-| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./LoginDocumentation.MD) |
+| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./AuthDocumentation.MD) |
+
 📌 **Ejemplo de error si la unidad no existe:**
 ```json
 {
@@ -265,6 +288,23 @@ Este endpoint permite obtener la información detallada de una actividad especí
 }
 ``` 
 
+| Campo | Tipo | Descripción |
+|--------|------|-------------|
+| `id` | `string (UUID)` | Identificador único de la actividad. |
+| `name` | `string` | Nombre de la actividad. |
+| `isExtra` | `boolean` | Identificador de una actividad es Extra o no.|
+| `maxScore` | `number` | Puntaje maximo que podra obtener un alumno en esta actividad.|
+| `qualificationDate` | `string (ISO 8601)` | Fecha en la que se calificará la actividad. |
+| `tagActivityId` | `string (UUID)` | Identificador de la etiqueta asociada a la actividad. |
+| `unit.id` | `string (UUID)` | Identificador de la unidad a la que pertenece la actividad. |
+| `unit.number` | `integer` | Numero de la Unidad a la cual esta asociada esta actividad |
+| `class.id` | `string (UUID)` | Identificador unico de la Clase a la cual pertenece |
+| `class.name` | `string (UUID)` | Nombre de la clase a la cual pertenece |
+
+
+
+---
+
 ## ⚠️ Posibles errores
 
 | Código | Descripción |
@@ -272,8 +312,7 @@ Este endpoint permite obtener la información detallada de una actividad especí
 | `400 Bad Request` | Ocurre si los parámetros enviados son inválidos. |
 | `500 Internal Server Error` | Error interno en el servidor. |
 | `404 Not Found` | No se ha encontrado el registro {`id`}|
-| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./LoginDocumentation.MD) |
-
+| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./AuthDocumentation.MD) |
 ---
 
 ### 📌 Notas  
@@ -293,9 +332,24 @@ PUT /api/activities/{id}
 Este endpoint permite actualizar una actividad existente mediante su `id`. Se debe enviar un cuerpo de solicitud con los nuevos valores de la actividad.
 
 ### 📥 Parámetros
+
+en la consulta del metodo es necesario el parametro siguiente: 
+
 | Nombre | Tipo | Ubicación | Descripción |
 |--------|------|-----------|-------------|
 | `id` | `string (UUID)` | `path` | Identificador único de la actividad a actualizar. |
+
+
+### 📖 Descripción de los campos
+| Campo | Tipo | Requerido | Descripción |
+|--------|------|----------|-------------|
+| `name` | `string` | ✅ | Nombre de la actividad. |
+| `isExtra` | `boolean` | ✅ | Indica si la actividad es complementaria (extra puntos fuera del 100). |
+| `maxScore` | `integer` | ✅ | Puntuación máxima asignada a la actividad. (Diferente del Maximo total qu puede obtener en un curso) |
+| `qualificationDate` | `string (ISO 8601)` | ✅ | Fecha de calificación de la actividad. |
+| `tagActivityId` | `string (UUID)` | ✅ | ID de la etiqueta asociada a la actividad. |
+| `unitId` | `string (UUID)` | ✅ | ID de la unidad a la que pertenece la actividad. |
+
 
 ### 📩 Cuerpo de la Solicitud (`application/json`)
 ```json
@@ -335,7 +389,7 @@ Cuando los Cambios se Han aplicado Correctamente
 | `400 Bad Request` | Datos inválidos en la solicitud. |
 | `404 Not Found` | La actividad con el {`ID`} especificado no existe. |
 | `500 Internal Server Error` | Error en el servidor al procesar la solicitud. |
-| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./LoginDocumentation.MD) |
+| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./AuthDocumentation.MD) |
 
 ### 🔍 Notas Adicionales
 - **El campo `id` es obligatorio** y debe enviarse en la URL.
@@ -391,7 +445,7 @@ Este endpoint permite eliminar una actividad existente mediante su `id`. Al elim
 | `400 Bad Request` | Datos inválidos en la solicitud. |
 | `404 Not Found` | La actividad con el ID especificado no existe. |
 | `500 Internal Server Error` | Error en el servidor al procesar la solicitud. |
-| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./LoginDocumentation.MD) |
+| `401 Unauthorized` | No se encuentra Autorizado a usar este metodo.  Para mas Informacion lea [Login Documentation](./AuthDocumentation.MD) |
 
 ### 🔍 Notas Adicionales
 - **El campo `id` es obligatorio** y debe enviarse en la URL.

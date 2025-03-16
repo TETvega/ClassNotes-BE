@@ -10,7 +10,7 @@ Bienvenido a la documentación de endpoints de la API de **Bruno**.
 Aquí se encuentran organizados por módulos para facilitar la navegación y comprensión del funcionamiento de cada uno.  
 
 📌 **Índice**  
-- 📂 [Activities](#activities)  
+- 📂 [Activities](activities.MD)  
 - 🔑 [Auth](#auth)  
 - 🏢 [Centers](#centers)  
 - ☁️ [Cloudinary](#cloudinary)  
