@@ -5,11 +5,19 @@ meta {
 }
 
 put {
-  url: {{PATH}}/tags_activities/[id]
+  url: {{PATH}}/tags_activities/1086617b-adf6-4135-e464-08dd64423dbe
   body: json
   auth: bearer
 }
 
 auth:bearer {
   token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "TagPruebaEdit",
+    "colorHex": "fff111",
+    "icon": "iconTag"
+  }
 }

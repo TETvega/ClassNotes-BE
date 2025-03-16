@@ -12,7 +12,7 @@ namespace ClassNotes.API.Database.Entities
         public string Name { get; set; }
 
         [Required]
-        [StringLength(7)]
+        [StringLength(6)]
         [Column("color_hex")] 
         public string ColorHex { get; set; }
 

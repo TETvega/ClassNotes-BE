@@ -154,7 +154,37 @@ namespace ClassNotes.API.Services.TagsActivities
 		{
 			try
 			{
-				throw new NotImplementedException();
+				// AM: Id del usuario en sesión
+				var userId = _auditService.GetUserId();
+
+				// AM: Validar existencia y filtrar por CreatedBy
+				var tagEntity = await _context.TagsActivities.FirstOrDefaultAsync(t => t.Id == id && t.CreatedBy == userId);
+				if (tagEntity == null)
+				{
+					return new ResponseDto<TagActivityDto>
+					{
+						StatusCode = 404,
+						Status = false,
+						Message = MessagesConstant.TA_RECORD_NOT_FOUND
+					};
+				}
+
+				// AM: Mapear el DTO a Entity
+				_mapper.Map(dto, tagEntity);
+				// AM: Actualizar y guardar cambios
+				_context.TagsActivities.Update(tagEntity);
+				await _context.SaveChangesAsync();
+
+				// AM: Mapear Entity a Dto para la respuesta
+				var tagDto = _mapper.Map<TagActivityDto>(tagEntity);
+
+				return new ResponseDto<TagActivityDto>
+				{
+					StatusCode = 200,
+					Status = true,
+					Message = MessagesConstant.TA_UPDATE_SUCCESS,
+					Data = tagDto
+				};
 			}
 			catch (Exception ex)
 			{
