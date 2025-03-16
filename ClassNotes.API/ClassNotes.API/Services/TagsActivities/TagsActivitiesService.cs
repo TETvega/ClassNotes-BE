@@ -29,7 +29,7 @@ namespace ClassNotes.API.Services.TagsActivities
 			_auditService = auditService;
 			_mapper = mapper;
 			_logger = logger;
-			PAGE_SIZE = configuration.GetValue<int>("PageSize");
+			PAGE_SIZE = configuration.GetValue<int>("PageSize:Tags"); // AM: Aquí obtenemos el pageSize correspondiente de Tags
 		}
 
 		// AM: Metodo para obtener todas las tags en forma de paginación
@@ -150,6 +150,7 @@ namespace ClassNotes.API.Services.TagsActivities
 			}
 		}
 
+		// AM: Metodo para editar una Tag existente
 		public async Task<ResponseDto<TagActivityDto>> UpdateTagAsync(TagActivityEditDto dto, Guid id)
 		{
 			try
@@ -198,11 +199,52 @@ namespace ClassNotes.API.Services.TagsActivities
 			}
 		}
 
+		// AM: Metodo para eliminar una tag completamente de la base de datos
 		public async Task<ResponseDto<TagActivityDto>> DeleteTagAsync(Guid id)
 		{
 			try
 			{
-				throw new NotImplementedException();
+				// AM: Id del usuario en sesión
+				var userId = _auditService.GetUserId();
+
+				// AM: Validar existencia y filtrar por CreatedBy
+				var tagEntity = await _context.TagsActivities.FirstOrDefaultAsync(t => t.Id == id && t.CreatedBy == userId);
+				if (tagEntity == null)
+				{
+					return new ResponseDto<TagActivityDto>
+					{
+						StatusCode = 404,
+						Status = false,
+						Message = MessagesConstant.TA_RECORD_NOT_FOUND
+					};
+				}
+
+				// AM: Si la tag esta siendo utilizada en alguna actividad, no se podra eliminar
+				var tagUsed = await _context.Activities.AnyAsync(a => a.TagActivityId == tagEntity.Id);
+				if (tagUsed)
+				{
+					return new ResponseDto<TagActivityDto>
+					{
+						StatusCode = 400,
+						Status = false,
+						Message = MessagesConstant.TA_IS_USED
+					};
+				}
+
+				// AM: Eliminar y guardar cambios
+				_context.TagsActivities.Remove(tagEntity);
+				await _context.SaveChangesAsync();
+
+				// AM: Mapear Entity a Dto para la respuesta
+				var tagDto = _mapper.Map<TagActivityDto>(tagEntity);
+
+				return new ResponseDto<TagActivityDto>
+				{
+					StatusCode = 200,
+					Status = true,
+					Message = MessagesConstant.TA_DELETE_SUCCESS,
+					Data = tagDto
+				};
 			}
 			catch (Exception ex)
 			{

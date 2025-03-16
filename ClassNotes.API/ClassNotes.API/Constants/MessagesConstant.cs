@@ -169,6 +169,7 @@ namespace ClassNotes.API.Constants
 		public const string TA_UPDATE_ERROR = "TA-608: No se pudo actualizar la etiqueta de actividad.";
 		public const string TA_DELETE_SUCCESS = "TA-609: Etiqueta de actividad eliminada exitosamente.";
 		public const string TA_DELETE_ERROR = "TA-610: No se pudo eliminar la etiqueta de actividad.";
+		public const string TA_IS_USED = "TA-611: La etiqueta no puede ser eliminada porque está asociada a una o más actividades.";
 
 
 	}
