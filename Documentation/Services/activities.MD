@@ -140,7 +140,7 @@ Ejemplo de respuesta en caso de error:
 
 ---
 <!-- Creacion de una Actividad -->
-## 🆕 Crear una nueva actividad
+## Crear una nueva actividad
 
 Este endpoint permite la creación de una nueva actividad dentro del sistema. Una actividad pertenece a una unidad específica dentro de un curso y esta categorizada con una etiqueta (`tagActivityId`).
 

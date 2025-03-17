@@ -6,11 +6,11 @@
 
 # 📌 Endpoints - Documentación API
 
-Bienvenido a la documentación de endpoints de la API de **Bruno**.  
+Bienvenido a **`Utilidades`**.  
 Aquí se encuentran organizados por módulos para facilitar la navegación y comprensión del funcionamiento de cada uno.  
 
 📌 **Índice**  
-- 📂 [Activities](./activities.MD)  
+- 📂 [Iconos](./activities.MD)  
 - 🔑 [Auth](./AuthDocumentation.MD)  
 - 📌  [Tags](./TagsDocumentatios.MD)   
 - 🏢 [Centers](#centers)  

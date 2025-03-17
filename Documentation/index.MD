@@ -12,12 +12,25 @@ Bienvenido a la documentación del proyecto backend. Aquí encontrarás toda la 
 
 ## Índice de Contenidos
 
+> Navega Directamente a lo que necesites
+
 1. [Introducción](#introducción)
-2. [Endpoints](#endpoints)
+2. [Endpoints o Servicios ](./Services/Services.index.md)
+3. [Funciones Importantes](#funciones-importantes) ***Proximamente***
+4. [Dependencias](#dependencias)  ***Proximamente***
+5. [Contribución](#contribución)  ***Proximamente***
+6. [Utilidades](./Utils/Utils.index.MD)  
+
+
+## 📌 **Índice**
+
+1. [Introducción](#introducción)
+2. [Endpoints o Servicios ](#endpoints)
 3. [Funciones Importantes](#funciones-importantes)
 4. [Dependencias](#dependencias)
 5. [Contribución](#contribución)
 6. [Utilidades](#utilidades)
+
 
 ## Introducción
 
@@ -59,4 +72,6 @@ Si tienes alguna pregunta o necesitas más información, no dudes en contactarno
 
 ## Utilidades
 
-Usa el Siguiente enlace [Utilidades](./Utils/icons.md)
+Encontraras variedad de Utilidades en las que podras integrarte de gran manera al proyecto, desde iconos, paginas web o herramientas utiles que puedes utilizar
+
+Usa el Siguiente enlace [Utilidades](./Utils/Utils.index.MD)
