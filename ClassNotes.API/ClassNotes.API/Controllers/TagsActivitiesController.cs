@@ -59,13 +59,5 @@ namespace ClassNotes.API.Controllers
 			var response = await _tagsActivitiesService.DeleteTagAsync(id);
 			return StatusCode(response.StatusCode, response);
 		}
-
-		[HttpPost("{userId}")]
-		[Authorize(Roles = $"{RolesConstant.USER}")]
-		public async Task<ActionResult<ResponseDto<List<TagActivityDto>>>> CreateDefautTags(string userId)
-		{
-			var response = await _tagsActivitiesService.CreateDefaultTagsAsync(userId);
-			return StatusCode(response.StatusCode, response);
-		}
 	}
 }
