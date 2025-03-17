@@ -25,7 +25,7 @@ namespace ClassNotes.API.Services.CourseNotes
             _context = context;
             _auditService = auditService;
             _mapper = mapper;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:CourseNotes");
         }
 
         public async Task<ResponseDto<PaginationDto<List<CourseNoteDto>>>> GetAllCourseNotesAsync(string searchTerm = "",

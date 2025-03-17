@@ -23,7 +23,7 @@ namespace ClassNotes.API.Services.Activities
         {
             _context = context;
             _mapper = mapper;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Activities");
         }
 
         // Traer todas las actividades (Paginadas)

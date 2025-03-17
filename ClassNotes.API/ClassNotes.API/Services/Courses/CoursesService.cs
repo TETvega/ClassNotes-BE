@@ -27,7 +27,7 @@ namespace ClassNotes.API.Services.Courses
             _context = context;
             _auditService = auditService;
             _mapper = mapper;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Courses");
         }
 
         // EG -> Enlistar todos los cursos, paginacion

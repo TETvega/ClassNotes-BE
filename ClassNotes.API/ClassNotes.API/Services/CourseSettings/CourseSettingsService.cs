@@ -27,7 +27,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			_context = context;
 			_auditService = auditService;
 			_mapper = mapper;
-			PAGE_SIZE = configuration.GetValue<int>("PageSize");
+			PAGE_SIZE = configuration.GetValue<int>("PageSize:CourseSettings");
 		}
 
 		// CP -> Para listar todas las configuraciones de un docente
