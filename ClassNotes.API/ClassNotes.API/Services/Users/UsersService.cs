@@ -327,10 +327,16 @@ namespace ClassNotes.API.Services.Users
 					await _context.Attendances.Where(a => a.CreatedBy == id).ExecuteDeleteAsync();
 					await _context.StudentsActivitiesNotes.Where(sa => sa.CreatedBy == id).ExecuteDeleteAsync();
 
-					// AM: Eliminar actividades y notas asociadas a cursos del usuario
+					// AM: Eliminar unidades y notas asociadas a cursos del usuario
 					var userCourses = await _context.Courses.Where(c => c.CreatedBy == id).Select(c => c.Id).ToListAsync();
-					await _context.Units.Where(a => userCourses.Contains(a.Id)).ExecuteDeleteAsync();
+					await _context.Units.Where(u => userCourses.Contains(u.Id)).ExecuteDeleteAsync();
 					await _context.CoursesNotes.Where(cn => userCourses.Contains(cn.CourseId)).ExecuteDeleteAsync();
+
+					// AM: Eliminar Activities
+					await _context.Activities.Where(a => a.CreatedBy == id).ExecuteDeleteAsync();
+
+					// AM: Eliminar Tags
+					await _context.TagsActivities.Where(ta => ta.CreatedBy == id).ExecuteDeleteAsync();
 
 					// AM: Notificar al correo
 					await _emailsService.SendEmailAsync(new EmailDto

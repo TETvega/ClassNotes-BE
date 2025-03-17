@@ -115,7 +115,7 @@ namespace ClassNotes.API.Database
                     }
                 }
 
-                await context.SaveChangesAsync();
+                await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
             {
@@ -146,7 +146,7 @@ namespace ClassNotes.API.Database
 						await context.StudentsUnits.AddAsync(studentUnit);
 					}
 
-					await context.SaveChangesAsync();
+					await context.SaveChangesWithoutAuditAsync();
 				}
 			}
 			catch (Exception e)
@@ -180,7 +180,7 @@ namespace ClassNotes.API.Database
                                 await context.TagsActivities.AddAsync(tag);
                         }
                    
-                    await context.SaveChangesAsync();
+                    await context.SaveChangesWithoutAuditAsync();
                 }
             }
             catch (Exception e)
@@ -214,7 +214,7 @@ namespace ClassNotes.API.Database
                                 await context.Units.AddAsync(unit);
                             }
 
-                    await context.SaveChangesAsync();
+                    await context.SaveChangesWithoutAuditAsync();
                 }
             }
             catch (Exception e)
@@ -246,7 +246,7 @@ namespace ClassNotes.API.Database
                         await context.Activities.AddAsync(activity);
                     }
                 }
-              await context.SaveChangesAsync();
+              await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
             {
@@ -275,7 +275,7 @@ namespace ClassNotes.API.Database
                     }
 
                     await context.Centers.AddRangeAsync(center);
-                    await context.SaveChangesAsync();
+                    await context.SaveChangesWithoutAuditAsync();
                 }
             }
             catch (Exception e)
@@ -304,7 +304,7 @@ namespace ClassNotes.API.Database
                         await context.Courses.AddAsync(course);
                     }
                 }
-                await context.SaveChangesAsync();
+                await context.SaveChangesWithoutAuditAsync();
             }
 
             catch (Exception e)
@@ -314,8 +314,6 @@ namespace ClassNotes.API.Database
             }
         }
 
-       
-        
         //DD: Aqui se llama el json de Asistencias 
         public static async Task LoadAttendanceAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
@@ -337,7 +335,7 @@ namespace ClassNotes.API.Database
                         await context.Attendances.AddAsync(attendace);
                     }
                 }
-                await context.SaveChangesAsync();
+                await context.SaveChangesWithoutAuditAsync();
 
             }
             catch (Exception e)
@@ -346,8 +344,8 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Asistencia ");
             }
         }
-        //DD: Aqui se llama el json de Notas de Cursos 
 
+        // DD: Aqui se llama el json de Notas de Cursos 
         public static async Task LoadCourseNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -369,7 +367,7 @@ namespace ClassNotes.API.Database
                         await context.CoursesNotes.AddAsync(courseNote);
                     }
                 }
-                await context.SaveChangesAsync();
+                await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
             {
@@ -401,7 +399,7 @@ namespace ClassNotes.API.Database
                        await context.CoursesSettings.AddAsync(courseSetting);
                     }
                 }
-                await context.SaveChangesAsync();
+                await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
             {
@@ -409,7 +407,6 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, $"Error al ejecutar el Seed de Configuraciones de Curso: {e.Message}\n{e.StackTrace}");
             }
         }
-
 
         // DD: Aqui se llama el json de Notas de Actividades 
         public static async Task LoadStudentsActivitesNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
@@ -433,7 +430,7 @@ namespace ClassNotes.API.Database
                     }
 
                 }
-                await context.SaveChangesAsync();
+                await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
             {
@@ -441,6 +438,7 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Notas de Actividades");
             }
         }
+
         //DD: Aqui se llama el json de Curso de Estudiantes 
         public static async Task LoadStudentCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
@@ -466,7 +464,7 @@ namespace ClassNotes.API.Database
                         try
                         {
                             await context.StudentsCourses.AddAsync(student_course);
-                            await context.SaveChangesAsync();  // JA: Guardar cada registro individualmente
+                            await context.SaveChangesWithoutAuditAsync();  // JA: Guardar cada registro individualmente
                         }
                         catch (Exception dbEx)
                         {

@@ -6,6 +6,7 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.TagsActivities;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace ClassNotes.API.Services.TagsActivities
 {
@@ -254,6 +255,56 @@ namespace ClassNotes.API.Services.TagsActivities
 					StatusCode = 500,
 					Status = false,
 					Message = MessagesConstant.TA_DELETE_ERROR
+				};
+			}
+		}
+
+		// AM: Metodo para crear un conjunto de tags predeterminadas
+		public async Task<ResponseDto<List<TagActivityDto>>> CreateDefaultTagsAsync(string userId)
+		{
+			try
+			{
+				// AM: Cargar las tags predeterminadas desde el archivo JSON
+				var jsonFilePath = "SeedData/default_tags_activities.json";
+				var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
+				var defaultTags = JsonConvert.DeserializeObject<List<TagActivityEntity>>(jsonContent);
+
+				// AM: Asignar cada tag al nuevo usuario
+				foreach (var tag in defaultTags)
+				{
+					tag.Id = Guid.NewGuid();
+					tag.TeacherId = userId;
+					tag.CreatedDate = DateTime.Now;
+					tag.UpdatedDate = DateTime.Now;
+					tag.CreatedBy = userId;
+					tag.UpdatedBy = userId;
+
+					// AM: Agregar la tag al contexto
+					await _context.TagsActivities.AddAsync(tag);
+				}
+
+				// AM: Guardar cambios omitiendo el AuditService porque el usuario no esta autenticado
+				await _context.SaveChangesWithoutAuditAsync();
+
+				// AM: Mapear Entity a Dto para la respuesta
+				var tagDtos = defaultTags.Select(tag => _mapper.Map<TagActivityDto>(tag)).ToList();
+
+				return new ResponseDto<List<TagActivityDto>>
+				{
+					StatusCode = 201,
+					Status = true,
+					Message = MessagesConstant.TA_CREATE_SUCCESS,
+					Data = tagDtos
+				};
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, MessagesConstant.TA_CREATE_ERROR);
+				return new ResponseDto<List<TagActivityDto>>
+				{
+					StatusCode = 500,
+					Status = false,
+					Message = MessagesConstant.TA_CREATE_ERROR
 				};
 			}
 		}

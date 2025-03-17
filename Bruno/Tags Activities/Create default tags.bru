@@ -1,0 +1,15 @@
+meta {
+  name: Create default tags
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{PATH}}/tags_activities/6f708192-0123-45ab-cdef-6789012345fk
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
