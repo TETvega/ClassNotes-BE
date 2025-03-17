@@ -1,0 +1,23 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{PATH}}/tags_activities/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "TagPrueba",
+    "colorHex": "fff000",
+    "icon": "icon"
+  }
+}

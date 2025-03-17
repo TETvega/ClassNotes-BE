@@ -1,0 +1,23 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/tags_activities/55329e47-f10f-4a68-84ad-08dd65000267
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "TagPruebaEdit",
+    "colorHex": "fff111",
+    "icon": "iconTag"
+  }
+}
