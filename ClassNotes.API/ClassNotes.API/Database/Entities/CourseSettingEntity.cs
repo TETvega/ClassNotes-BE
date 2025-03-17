@@ -34,7 +34,6 @@ namespace ClassNotes.API.Database.Entities
         public float MinimumGrade { get; set; }
 
 		[Required]
-		[Range(0, 100)]
 		[Column("maximum_grade")]
 		public float MaximumGrade { get; set; }
 

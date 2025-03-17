@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Services.Activities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +51,14 @@ namespace ClassNotes.API.Controllers
         public async Task<ActionResult<ResponseDto<ActivityDto>>> Create(ActivityCreateDto dto)
         {
             var response = await _activitiesService.CreateAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpPost("review")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<ActivityDto>>> Review(StudentActivityNoteCreateDto dto)
+        {
+            var response = await _activitiesService.ReviewActivityAsync(dto);
             return StatusCode(response.StatusCode, response);
         }
 

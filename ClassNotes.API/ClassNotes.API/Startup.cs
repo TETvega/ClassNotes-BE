@@ -24,7 +24,7 @@ using Microsoft.Extensions.Configuration;
 using ClassNotes.API.Services.DashboardHome;
 using ClassNotes.API.Services.TagsActivities;
 using ClassNotes.API.Services.DashboardCourses;
-
+using ClassNotes.API.Services.Notes;
 namespace ClassNotes.API;
 
 public class Startup
@@ -50,7 +50,7 @@ public class Startup
 		// Servicios personalizados
 		services.AddTransient<IActivitiesService, ActivitiesService>();
 		services.AddTransient<IAttendancesService, AttendancesService>();
-		services.AddTransient<ICentersService, CentersService>();
+		services.AddTransient<INotesService, NotesService>();
 		services.AddTransient<ICourseNotesService, CourseNotesService>();
 		services.AddTransient<ICourseSettingsService, CourseSettingsService>();
 		services.AddTransient<ICoursesService, CoursesService>();
@@ -59,9 +59,10 @@ public class Startup
 		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
 		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
 		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
-    services.AddTransient<ICloudinaryService, CloudinaryService>();
+        services.AddTransient<ICloudinaryService, CloudinaryService>();
 
-		// Servicios de seguridad
+        // Servicios de seguridad
+        services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();
 		services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IOtpService, OtpService>();

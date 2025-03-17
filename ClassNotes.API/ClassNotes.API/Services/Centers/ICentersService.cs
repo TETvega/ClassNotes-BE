@@ -1,5 +1,6 @@
 ﻿using ClassNotes.API.Dtos.Centers;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClassNotes.API.Services.Centers

@@ -4,7 +4,10 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace ClassNotes.API.Services.Activities
 {
@@ -13,17 +16,20 @@ namespace ClassNotes.API.Services.Activities
     {
         private readonly ClassNotesContext _context;
         private readonly IMapper _mapper;
+        private readonly IAuditService _auditService;
         private readonly int PAGE_SIZE;
 
         public ActivitiesService(
             ClassNotesContext context,
             IMapper mapper,
+            IAuditService auditService,
             IConfiguration configuration
         )
         {
             _context = context;
             _mapper = mapper;
             PAGE_SIZE = configuration.GetValue<int>("PageSize:Activities");
+            _auditService = auditService;
         }
 
         // Traer todas las actividades (Paginadas)
@@ -70,6 +76,91 @@ namespace ClassNotes.API.Services.Activities
                     HasNextPage = page < totalPages
                 }
             };
+        }
+
+        public async Task<ResponseDto<StudentActivityNoteDto>> ReviewActivityAsync(StudentActivityNoteCreateDto dto)
+        {
+            var studentActivityEntity = _mapper.Map<StudentActivityNoteEntity>(dto);
+
+            var activityEntity = await _context.Activities
+                .FirstOrDefaultAsync(a => a.Id == dto.ActivityId );
+
+            var studentUnits =  _context.StudentsUnits.Include(a => a.StudentCourse).Where(x => x.StudentCourse.StudentId == studentActivityEntity.StudentId);
+
+            var studentUnitEntity = await studentUnits.FirstOrDefaultAsync(a => a.UnitId == activityEntity.UnitId);
+
+         
+
+            if (studentUnitEntity == null || activityEntity == null)
+            {
+                return new ResponseDto<StudentActivityNoteDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+
+            if (dto.Note > activityEntity.MaxScore  || dto.Note < 0)
+            {
+                return new ResponseDto<StudentActivityNoteDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Se ingresó una calificación no valida."
+                };
+            }
+
+            var activityCount = await _context.Activities.Where(x => x.UnitId == studentUnitEntity.UnitId && x.IsExtra == false).CountAsync();
+           
+            if (activityCount == 0)
+            {
+                return new ResponseDto<StudentActivityNoteDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+
+            if(!activityEntity.IsExtra){
+
+                var newUnitScore = studentUnitEntity.UnitNote+((dto.Note - studentUnitEntity.UnitNote) / activityCount);
+
+                var totalPoints = new List<float>();
+
+                foreach (var unit in studentUnits)
+                {
+                    totalPoints.Add(unit.UnitNote);
+                }
+
+                studentUnitEntity.StudentCourse.FinalNote = totalPoints.Sum() /totalPoints.Count();
+                studentUnitEntity.UnitNote = newUnitScore;
+
+                _context.StudentsCourses.Update(studentUnitEntity.StudentCourse);
+                await _context.SaveChangesAsync(); //cambiaaaaaaaaaaaaaaaaaaar
+
+                _context.StudentsUnits.Update(studentUnitEntity);
+                await _context.SaveChangesAsync();
+            }
+
+
+            _context.StudentsActivitiesNotes.Add(studentActivityEntity);
+            await _context.SaveChangesAsync();
+
+
+
+            var studentActivityDto = _mapper.Map<StudentActivityNoteDto>(studentActivityEntity);
+            return new ResponseDto<StudentActivityNoteDto>
+            {
+                StatusCode = 201,
+                Status = true,
+                Message = MessagesConstant.CREATE_SUCCESS,
+                Data = studentActivityDto
+            };
+
         }
 
         // Obtener una actividad mediante su id

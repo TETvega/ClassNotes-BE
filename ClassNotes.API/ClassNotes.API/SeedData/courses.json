@@ -5,7 +5,7 @@
     "section": "1600",
     "code": "DQ-101",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": false,
     "start_time": "08:00:00",
     "finish_time": "09:00:00"
@@ -16,7 +16,7 @@
     "section": "1000",
     "code": "FS-100",
     "CenterId": "72ed66eb-6396-4788-a337-eb40174dd756",
-    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "09:00:00",
     "finish_time": "10:00:00"
@@ -27,7 +27,7 @@
     "section": "1100",
     "code": "MM-110",
     "CenterId": "3f471eaa-2cb9-404b-bbc7-5173c45d2083",
-    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "10:00:00",
     "finish_time": "11:00:00"
@@ -38,7 +38,7 @@
     "section": "1200",
     "code": "QG-120",
     "CenterId": "9106f197-3996-4213-95fe-db492c10c1f3",
-    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "11:00:00",
     "finish_time": "12:00:00"
@@ -49,7 +49,7 @@
     "section": "1300",
     "code": "BG-130",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "12:00:00",
     "finish_time": "13:00:00"
@@ -60,7 +60,7 @@
     "section": "1400",
     "code": "PI-140",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "13:00:00",
     "finish_time": "14:00:00"
@@ -71,7 +71,7 @@
     "section": "1500",
     "code": "IT-150",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": false,
     "start_time": "14:00:00",
     "finish_time": "15:00:00"
@@ -82,7 +82,7 @@
     "section": "1700",
     "code": "ES-170",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "15:00:00",
     "finish_time": "16:00:00"
@@ -93,7 +93,7 @@
     "section": "1800",
     "code": "CI-180",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "16:00:00",
     "finish_time": "17:00:00"
@@ -104,7 +104,7 @@
     "section": "1900",
     "code": "HH-190",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": false,
     "start_time": "17:00:00",
     "finish_time": "18:00:00"
@@ -115,7 +115,7 @@
     "section": "2000",
     "code": "FL-200",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "08:00:00",
     "finish_time": "09:00:00"
@@ -126,7 +126,7 @@
     "section": "2100",
     "code": "EC-210",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": true,
     "start_time": "09:00:00",
     "finish_time": "10:00:00"
@@ -137,7 +137,7 @@
     "section": "2200",
     "code": "DC-220",
     "CenterId": "550e8400-e29b-41d4-a716-446655440000",
-    "SettingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "SettingId": "F9F69C44-6CD2-4762-ABC6-192A729BDF51",
     "is_active": false,
     "start_time": "10:00:00",
     "finish_time": "11:00:00"
