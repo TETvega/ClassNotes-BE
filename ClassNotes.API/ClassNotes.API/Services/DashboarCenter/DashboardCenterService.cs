@@ -3,6 +3,7 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.DashboarCenter;
 using ClassNotes.API.Services.Audit;
+using iText.Kernel.Geom;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -13,20 +14,27 @@ namespace ClassNotes.API.Services.DashboarCenter
         private readonly ClassNotesContext _context;
         private readonly ILogger<DashboardCenterService> _logger;
         private readonly IAuditService _auditService;
+        private readonly int PAGE_SIZE;
 
         public DashboardCenterService(
                 ClassNotesContext context,
                 ILogger<DashboardCenterService> logger,
-                IAuditService auditService
+                IAuditService auditService,
+                IConfiguration configuration
             )
         {
             this._context = context;
             this._logger = logger;
             this._auditService = auditService;
+            //JA: Accedemos al tamanio de la pagina de centros
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Centers");
         }
 
-        public async Task<ResponseDto<DashboardCenterDto>> GetDashboardCenterAsync(Guid centerId)
+        public async Task<ResponseDto<DashboardCenterDto>> GetDashboardCenterAsync(Guid centerId, string searchTerm = "", int page = 1)
         {
+            //JA: Calculamos el Indice de inicio para la paginaciOn
+            int startIndex = (page - 1) * PAGE_SIZE;
+
             //JA: Obtiene el ID del usuario autenticado
             var userId = _auditService.GetUserId();
 
@@ -54,7 +62,7 @@ namespace ClassNotes.API.Services.DashboarCenter
             var totalStudents = center.Courses?.SelectMany(c => c.Students)?.Count() ?? 0;
 
             //JA: Total de cursos de ese centro que estan activos
-            var totalCourses = center.Courses?.Count(c => !c.IsActive) ?? 0;
+            var totalCourses = center.Courses?.Count(c => c.IsActive) ?? 0;
 
             //JA: Calcular las actividades pendientes de ese centro
             var pendingActivities = center.Courses?
@@ -62,61 +70,87 @@ namespace ClassNotes.API.Services.DashboarCenter
                 .SelectMany(u => u.Activities)
                 .Count(a => a.QualificationDate > DateTime.Now) ?? 0;
 
-            //JA: Obtener las clases que estan activas
-            var activeClasses = _context.Courses
-            .Include(c => c.Attendances) //JA: incluimos las asistencias
-            .Include(c => c.Students) //JA: Incluimos los estudiantes también
-            .Where(c => c.CenterId == center.Id && c.IsActive == false)
-            .Select(c => new DashboarCenterActiveClassDto
+            // JA: Obtenemos las clases del centro que estan activas
+            var query = _context.Courses
+                .Include(c => c.Attendances)
+                .Include(c => c.Students)
+                .Where(c => c.CenterId == center.Id && c.IsActive == true);//JA: Validamos que nuestro curso este activo
+
+            //JA: Filtramos y buscamos por el parametro que recibimos
+            if (!string.IsNullOrEmpty(searchTerm))
             {
-                IdCourse = c.Id,
-                CourseName = c.Name,
-                CourseCode = c.Code,
-                //JA: Aqui sacamos cuantos estudiantes tiene cada curso
-                StudentCount = c.Students.Count(),
-                //JA: Aqui obtenemos la asistencia Promedio de la clase, si no hay asistencia devolvemos 0
-                AverageAttendance = c.Attendances.Count() > 0
-                ? (double)c.Attendances.Count(a => a.Attended) / c.Attendances.Count() * 100 : 0,
-                //JA: Aqui la nota promedio del curso
+                query = query.Where(c => c.Name.Contains(searchTerm) || c.Code.Contains(searchTerm));
+            }
 
-                //TODO JA: Calculamos la nota promedio del curso
+            //JA: Obtener total de elementos antes de paginar
+                    var totalItems = await query.CountAsync();
 
-                //JA: Aqui devolvemos las actividad mas proxima a vencer
-                ActivityStatus = new DashboardCenterActivityStatusDto
-                {
-                    //JA: Contamos las actividades de todas las unidades
-                    Total = c.Units.SelectMany(u => u.Activities).Count(),
-                    //JA: Contamos las actividades completadas
-                    CompletedCount = c.Units
-                            .SelectMany(u => u.Activities)
-                            .Count(a => a.QualificationDate <= DateTime.Now),
-                    //JA: contamos las actividades pendientes
-                    PendingCount = c.Units
-                            .SelectMany(u => u.Activities)
-                            .Count(a => a.QualificationDate > DateTime.Now),
-                    //JA: Mostramos la siguiente actividad a vencer
-                    NextActivity = c.Units
-                            .SelectMany(u => u.Activities)
-                            .Where(a => a.QualificationDate > DateTime.Now)
-                            .OrderBy(a => a.QualificationDate)
-                            .Select(a => a.Name)
-                            .FirstOrDefault() ?? "Ninguna", // Asignamos "Ninguna" si no hay actividades
-                    //JA: Mandamos la fecha de la siguiente actividad
-                    NextActivityDate = c.Units
-                            .SelectMany(u => u.Activities)
-                            .Where(a => a.QualificationDate > DateTime.Now)
-                            .OrderBy(a => a.QualificationDate)
-                            .Select(a => a.QualificationDate)
-                            .FirstOrDefault(),
-                    //JA: Mandamos la fecha de la ultima actividad vencida por si acaso
-                    LastExpiredDate = c.Units
-                            .SelectMany(u => u.Activities)
-                            .Where(a => a.QualificationDate <= DateTime.Now)
-                            .OrderByDescending(a => a.QualificationDate)
-                            .Select(a => a.QualificationDate)
-                            .FirstOrDefault()
-                }
-            }).ToList();
+            //JA: Aplicamos la paginacion a los items por orden de fecha de creacion
+            var activeClasses = await query
+           .OrderByDescending(c => c.CreatedDate)
+           .Skip(startIndex)
+           .Take(PAGE_SIZE)
+           .Select(c => new DashboarCenterActiveClassDto
+           {
+               IdCourse = c.Id,
+               CourseName = c.Name,
+               CourseCode = c.Code,
+               //JA: Aqui sacamos cuantos estudiantes tiene cada curso
+               StudentCount = c.Students.Count(),
+               //JA: Aqui obtenemos la asistencia Promedio de la clase, si no hay asistencia devolvemos 0
+               AverageAttendance = c.Attendances.Count() > 0
+           ? (double)c.Attendances.Count(a => a.Attended) / c.Attendances.Count() * 100 : 0,
+
+               //TODO JA: Calculamos la nota promedio del curso
+
+               //JA: Aqui devolvemos las actividad mas proxima a vencer
+               ActivityStatus = new DashboardCenterActivityStatusDto
+               {
+                   //JA: Contamos las actividades de todas las unidades
+                   Total = c.Units.SelectMany(u => u.Activities).Count(),
+                   //JA: Contamos las actividades completadas
+                   CompletedCount = c.Units
+                       .SelectMany(u => u.Activities)
+                       .Count(a => a.QualificationDate <= DateTime.Now),
+                   //JA: contamos las actividades pendientes
+                   PendingCount = c.Units
+                       .SelectMany(u => u.Activities)
+                       .Count(a => a.QualificationDate > DateTime.Now),
+                   //JA: Mostramos la siguiente actividad a vencer
+                   NextActivity = c.Units
+                       .SelectMany(u => u.Activities)
+                       .Where(a => a.QualificationDate > DateTime.Now)
+                       .OrderBy(a => a.QualificationDate)
+                       .Select(a => a.Name)
+                       .FirstOrDefault() ?? "Ninguna", // Asignamos "Ninguna" si no hay actividades
+                                                       //JA: Mandamos la fecha de la siguiente actividad
+                   NextActivityDate = c.Units
+                       .SelectMany(u => u.Activities)
+                       .Where(a => a.QualificationDate > DateTime.Now)
+                       .OrderBy(a => a.QualificationDate)
+                       .Select(a => a.QualificationDate)
+                       .FirstOrDefault(),
+                   //JA: Mandamos la fecha de la ultima actividad vencida por si acaso
+                   LastExpiredDate = c.Units
+                       .SelectMany(u => u.Activities)
+                       .Where(a => a.QualificationDate <= DateTime.Now)
+                       .OrderByDescending(a => a.QualificationDate)
+                       .Select(a => a.QualificationDate)
+                       .FirstOrDefault()
+               }
+           }).ToListAsync();
+
+            //JA: Creamos un objeto de paginacio ya que si no lo hacemos cuando enviemos los items nos saldra error por que la paginacion espera un objeto no una lista,
+            var paginatedClasses = new PaginationDto<List<DashboarCenterActiveClassDto>>
+            {
+                CurrentPage = page,
+                PageSize = PAGE_SIZE,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)PAGE_SIZE),
+                HasPreviousPage = page > 1,
+                HasNextPage = page * PAGE_SIZE < totalItems,
+                Items = activeClasses
+            };
 
             //JA: Calculamos la asistencia promedio global de todos los cursos del centro, excluyendo aquellos con asistencia promedio de 0
             var globalAverageAttendance = activeClasses
@@ -143,7 +177,8 @@ namespace ClassNotes.API.Services.DashboarCenter
                         PendingActivities = pendingActivities,
                         AverageAttendance = globalAverageAttendance
                     },
-                    ActiveClasses = activeClasses
+                    //JA: Enviamos las clases paginadas
+                    ActiveClasses = paginatedClasses,
                 },
                 Message = MessagesConstant.RECORD_FOUND,
                 Status = true,
