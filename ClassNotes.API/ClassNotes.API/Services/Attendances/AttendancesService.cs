@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ClassNotes.API.Services
 {
-   
+
 
     public class AttendanceService : IAttendancesService
     {
@@ -38,12 +38,12 @@ namespace ClassNotes.API.Services
             // Crear la asistencia
             var attendance = new AttendanceEntity
             {
-                Attended = attendanceCreateDto.Attended, 
+                Attended = attendanceCreateDto.Attended,
                 RegistrationDate = DateTime.UtcNow,
                 CourseId = attendanceCreateDto.CourseId,
                 StudentId = attendanceCreateDto.StudentId,
                 CreatedByUser = await _context.Users.FindAsync(course.TeacherId),
-                UpdatedByUser = await _context.Users.FindAsync(course.TeacherId) 
+                UpdatedByUser = await _context.Users.FindAsync(course.TeacherId)
             };
 
             // Guardar la asistencia en la base de datos
@@ -59,6 +59,88 @@ namespace ClassNotes.API.Services
                 CourseId = attendance.CourseId,
                 StudentId = attendance.StudentId
             };
+        }
+        public async Task<AttendanceDto> EditAttendanceAsync(Guid attendanceId, AttendanceEditDto attendanceEditDto)
+        {
+            var attendance = await _context.Attendances.FindAsync(attendanceId);
+            if (attendance == null)
+            {
+                throw new ArgumentException("La asistencia no existe.");
+            }
+
+            // Editar solo el campo permitido
+            attendance.Attended = attendanceEditDto.Attended;
+
+            await _context.SaveChangesAsync();
+
+            return new AttendanceDto
+            {
+                Id = attendance.Id,
+                Attended = attendance.Attended,
+                RegistrationDate = attendance.RegistrationDate,
+                CourseId = attendance.CourseId,
+                StudentId = attendance.StudentId
+            };
+        }
+         public async Task<List<AttendanceDto>> ListAttendancesAsync()
+        {
+            var attendances = await _context.Attendances
+                .Include(a => a.Course) // Incluir información del curso
+                .Include(a => a.Student) // Incluir información del estudiante
+                .ToListAsync();
+
+            return attendances.Select(a => new AttendanceDto
+            {
+                Id = a.Id,
+                Attended = a.Attended,
+                RegistrationDate = a.RegistrationDate,
+                CourseId = a.CourseId,
+                StudentId = a.StudentId,
+                CourseName = a.Course?.Name, // Opcional: incluir el nombre del curso
+                StudentName = a.Student?.FirstName// Opcional: incluir el nombre del estudiante
+            }).ToList();
+        }
+
+        // Método para listar asistencias por curso
+        public async Task<List<AttendanceDto>> ListAttendancesByCourseAsync(Guid courseId)
+        {
+            var attendances = await _context.Attendances
+                .Where(a => a.CourseId == courseId)
+                .Include(a => a.Course)
+                .Include(a => a.Student)
+                .ToListAsync();
+
+            return attendances.Select(a => new AttendanceDto
+            {
+                Id = a.Id,
+                Attended = a.Attended,
+                RegistrationDate = a.RegistrationDate,
+                CourseId = a.CourseId,
+                StudentId = a.StudentId,
+                CourseName = a.Course?.Name,
+                StudentName = a.Student?.FirstName
+            }).ToList();
+        }
+
+        // Método para listar asistencias por estudiante
+        public async Task<List<AttendanceDto>> ListAttendancesByStudentAsync(Guid studentId)
+        {
+            var attendances = await _context.Attendances
+                .Where(a => a.StudentId == studentId)
+                .Include(a => a.Course)
+                .Include(a => a.Student)
+                .ToListAsync();
+
+            return attendances.Select(a => new AttendanceDto
+            {
+                Id = a.Id,
+                Attended = a.Attended,
+                RegistrationDate = a.RegistrationDate,
+                CourseId = a.CourseId,
+                StudentId = a.StudentId,
+                CourseName = a.Course?.Name,
+                StudentName = a.Student?.FirstName
+            }).ToList();
         }
     }
 }

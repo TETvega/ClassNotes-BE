@@ -1,5 +1,4 @@
-﻿// Controllers/QRController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using ClassNotes.API.Dtos.QR;
 using ClassNotes.API.Services;
@@ -15,7 +14,7 @@ public class QRController : ControllerBase
         _qrService = qrService;
     }
 
-    // DD: Endpoint para generar el código QR
+    // Endpoint para generar el código QR
     [HttpPost("generate")]
     public async Task<IActionResult> GenerateQR([FromBody] QRGenerationRequestDto request)
     {
@@ -30,7 +29,7 @@ public class QRController : ControllerBase
         }
     }
 
-    //DD:  Endpoint para validar el código QR
+    // Endpoint para validar el código QR
     [HttpPost("validate")]
     public async Task<IActionResult> ValidateQR([FromBody] QRValidationRequestDto request)
     {

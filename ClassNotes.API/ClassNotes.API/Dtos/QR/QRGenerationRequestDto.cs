@@ -8,6 +8,7 @@
         public double Latitud { get; set; }
         public double Longitud { get; set; }
         public int TiempoLimiteMinutos { get; set; } 
-        public int RangoValidacionMetros { get; set; } 
+        public int RangoValidacionMetros { get; set; }
+        public bool PermitirMultiplesDispositivos { get; set; }
     }
 }

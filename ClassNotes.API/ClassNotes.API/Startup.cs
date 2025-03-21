@@ -58,6 +58,7 @@ public class Startup
 		services.AddScoped<DistanceService>();
         services.AddScoped<EmailAttendanceService>();
         services.AddScoped<QRService>();
+        services.AddHostedService<QRService>();
         services.AddSingleton<OTPCleanupService>();
         services.AddHostedService(provider =>provider.GetRequiredService<OTPCleanupService>());
         // Servicios de seguridad

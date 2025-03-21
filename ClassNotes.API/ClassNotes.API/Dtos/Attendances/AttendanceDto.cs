@@ -13,6 +13,7 @@ namespace ClassNotes.API.Dtos.Attendances
         public Guid CourseId { get; set; }
 
         public Guid StudentId { get; set; }
-     
+        public string CourseName { get; set; } 
+        public string StudentName { get; set; }
     }
 }
