@@ -18,6 +18,10 @@ namespace ClassNotes.API.Database.Configuration
                 .HasForeignKey(e => e.UpdatedBy)
                 .HasPrincipalKey(e => e.Id);
 
+            builder.HasOne(cs => cs.Course)
+                .WithOne(c => c.CourseSetting) // relación uno a uno
+                .HasForeignKey<CourseEntity>(c => c.SettingId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
