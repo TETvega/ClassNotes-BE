@@ -1,6 +1,7 @@
 [
     {
         "id": "f47c3c99-d52d-4f33-95f1-63e4cd07ab39",
+        "name": "Configuración 1",
         "unit": 1,
         "ScoreType": "Ponderado",
         "StartDate": "2025-01-01",
@@ -10,6 +11,7 @@
     },
     {
         "id": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+        "name": "Configuración 2",
         "unit": 4,
         "ScoreType": "Puntos_Oros",
         "StartDate": "2025-02-01",
@@ -19,6 +21,7 @@
     },
     {
         "id": "aa48af7c-783d-496c-a16c-59be000b2774",
+        "name": "Configuración 3",
         "unit": 3,
         "ScoreType": "Puntos_Oros",
         "StartDate": "2025-02-01",

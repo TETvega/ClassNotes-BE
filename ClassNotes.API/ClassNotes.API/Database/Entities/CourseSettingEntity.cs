@@ -9,6 +9,11 @@ namespace ClassNotes.API.Database.Entities
     public class CourseSettingEntity : BaseEntity
     {
         [Required]
+        [StringLength(25)]
+        [Column("name")] // Campo agregado para diferenciar las diferentes configuraciones de curso
+        public string Name { get; set; }
+
+        [Required]
         [StringLength(15)]
         [Column("score_type")]
         public string ScoreType { get; set; }
