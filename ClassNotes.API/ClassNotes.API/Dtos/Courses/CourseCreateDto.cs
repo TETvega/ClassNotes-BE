@@ -44,5 +44,5 @@ namespace ClassNotes.API.Dtos.Courses
 		[Display(Name = "id de la configuración")]
 		[Required(ErrorMessage = "El {0} es requerido.")]
 		public Guid SettingId { get; set; }
-	}
+    }
 }

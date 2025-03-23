@@ -22,5 +22,10 @@ namespace ClassNotes.API.Dtos.Students
         [Required(ErrorMessage = "El correo electrónico es requerido.")]
         [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
         public string Email { get; set; }
+
+        // EG -> Id del curso
+        [Display(Name = "id del curso")]
+        [Required(ErrorMessage = "El {0} es requerido.")]
+        public Guid CourseId { get; set; }
     }
 }

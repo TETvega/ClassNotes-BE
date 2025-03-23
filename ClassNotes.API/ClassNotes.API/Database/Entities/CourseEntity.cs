@@ -49,7 +49,6 @@ namespace ClassNotes.API.Database.Entities
 		public virtual ICollection<AttendanceEntity> Attendances { get; set; }
         public virtual ICollection<StudentCourseEntity> Students { get; set; }
         public virtual ICollection<CourseNoteEntity> CourseNotes { get; set; }
-
         public virtual UserEntity CreatedByUser { get; set; }
         public virtual UserEntity UpdatedByUser { get; set; }
 

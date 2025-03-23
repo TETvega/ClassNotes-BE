@@ -5,10 +5,13 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
+using ClassNotes.API.Services.Emails;
 using iText.Commons.Actions.Contexts;
 using iText.Layout.Properties;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -18,14 +21,17 @@ namespace ClassNotes.API.Services.Students
     {
         private readonly ClassNotesContext classNotesContext_;
         private readonly IMapper mapper_;
+        private readonly IEmailSender email;
         private readonly IAuditService _auditService;
         private readonly int PAGE_SIZE;
+        private readonly IEmailsService _emailsService;
 
-        public StudentsService(ClassNotesContext classNotesContext, IAuditService auditService, IMapper mapper, IConfiguration configuration)
+        public StudentsService(ClassNotesContext classNotesContext, IAuditService auditService, IMapper mapper, IConfiguration configuration, IEmailsService emailsService)
         {
             classNotesContext_ = classNotesContext;
             mapper_ = mapper;
             _auditService = auditService;
+            this._emailsService = emailsService;
             PAGE_SIZE = configuration.GetValue<int>("PageSize");
         }
 
@@ -114,17 +120,16 @@ namespace ClassNotes.API.Services.Students
 
         public async Task<ResponseDto<StudentDto>> CreateStudentAsync(StudentCreateDto studentCreateDto)
         {
-            // Verificar si el correo ya esta registrado
+            //  Verificar si el correo ya está registrado
             var existingStudent = await classNotesContext_.Students
                 .FirstOrDefaultAsync(s => s.Email == studentCreateDto.Email);
 
             if (existingStudent != null)
             {
-                // Si el correo ya existe, verificar si los nombres son iguales
+                // Si los nombres coinciden, devolver el estudiante existente
                 if (existingStudent.FirstName == studentCreateDto.FirstName &&
                     existingStudent.LastName == studentCreateDto.LastName)
                 {
-                    // Si los nombres son iguales, apuntamos a ese estudiante
                     var studentDtos = mapper_.Map<StudentDto>(existingStudent);
 
                     return new ResponseDto<StudentDto>
@@ -135,32 +140,74 @@ namespace ClassNotes.API.Services.Students
                         Data = studentDtos
                     };
                 }
-                else
+
+                //EG 
+                // si el correo se repite se genera uno de esta manera classnotes+1@gmail.com
+                string baseEmail = studentCreateDto.Email.Split('@')[0]; // Parte antes de @
+                string domain = studentCreateDto.Email.Split('@')[1]; // Dominio después de @
+                string newEmail = studentCreateDto.Email;
+                int counter = 1;
+
+                //EG
+                // Generamos un nuevo email hasta encontrar uno único
+                while (await classNotesContext_.Students.AnyAsync(s => s.Email == newEmail))
                 {
-                    // Si los nombres no son iguales, retornar un error porque el correo ya esta registrado
-                    return new ResponseDto<StudentDto>
-                    {
-                        StatusCode = 400,
-                        Status = false,
-                        Message = MessagesConstant.EMAIL_ALREADY_REGISTERED,
-                        Data = null
-                    };
+                    counter++;
+                    newEmail = $"{baseEmail}+{counter}@{domain}";                  
                 }
+      
+                studentCreateDto.Email = newEmail;
             }
 
-            // Si el correo no existe, crear un nuevo estudiante
+            //  Crear la entidad del estudiante y guardarla en la base de datos
             var studentEntity = mapper_.Map<StudentEntity>(studentCreateDto);
-
-            // Agregar la entidad al contexto
             classNotesContext_.Students.Add(studentEntity);
-
-            // Guardar los cambios en la base de datos
             await classNotesContext_.SaveChangesAsync();
 
-            // Mapear la entidad guardada a un DTO para la respuesta
-            var studentDto = mapper_.Map<StudentDto>(studentEntity);
+            //EG
+            //  Asignar el curso al estudiante en la tabla intermedia
+            var studentCourse = new StudentCourseEntity
+            {
+                StudentId = studentEntity.Id,
+                CourseId = studentCreateDto.CourseId
+            };
 
-            // Retornar la respuesta con el DTO
+            classNotesContext_.StudentsCourses.Add(studentCourse);
+            await classNotesContext_.SaveChangesAsync();
+
+            // EG
+            // Buscar el curso al que fue asignado el estudiante
+            var course = await classNotesContext_.Courses.FindAsync(studentCreateDto.CourseId);
+
+            if (course == null)
+            {
+                throw new InvalidOperationException($"No se encontró el curso con ID: {studentCreateDto.CourseId}");
+            }
+
+            // Validar que el curso tenga toda la información necesaria
+            if (string.IsNullOrEmpty(course.Name) || string.IsNullOrEmpty(course.Section) || course.StartTime == null)
+            {
+                throw new InvalidOperationException($"El curso con ID {studentCreateDto.CourseId} tiene datos incompletos.");
+            }
+
+            // EG
+            // contenido del correo que se enviara luego de haber inscribido un alumno 
+            string emailContent = $"Hola {studentEntity.FirstName},\n\n" +
+                      $"Has sido inscrito en el curso {course.Name}.\n" +
+                      $"Sección: {course.Section}\n" +
+                      $"Inicio: {course.StartTime}\n\n" +
+                      "¡Bienvenido!";
+            //EG
+            // enviar el correo generado al alumno 
+            await _emailsService.SendEmailAsync(new EmailDto
+            {
+                To = studentEntity.Email,
+                Subject = "Inscripción en curso",
+                Content = emailContent
+            });
+
+            //  Retornar el resultado con el DTO del estudiante
+            var studentDto = mapper_.Map<StudentDto>(studentEntity);
             return new ResponseDto<StudentDto>
             {
                 StatusCode = 201,
@@ -172,7 +219,7 @@ namespace ClassNotes.API.Services.Students
 
         public async Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto)
         {
-            // Necesitamos obtener el i de quien hace la petición
+            // Necesitamos obtener el id de quien hace la petición
             var userId = _auditService.GetUserId();          
 
             // Buscar el estudiante por su ID
