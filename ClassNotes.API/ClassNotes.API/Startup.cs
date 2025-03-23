@@ -59,7 +59,7 @@ public class Startup
 		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
 		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
 		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
-    services.AddTransient<ICloudinaryService, CloudinaryService>();
+		services.AddTransient<ICloudinaryService, CloudinaryService>();
 
 		// Servicios de seguridad
 		services.AddTransient<IAuthService, AuthService>();
