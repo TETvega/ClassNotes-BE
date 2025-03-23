@@ -5,6 +5,12 @@ namespace ClassNotes.API.Dtos.CourseSettings
 	// --------------------- CP --------------------- //
 	public class CourseSettingCreateDto
 	{
+		// Nombre de la configuración
+		[Display(Name = "nombre")]
+		[Required(ErrorMessage = "El {0} es requerido")]
+		[StringLength(25, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
+		public string Name { get; set; }
+
 		// Tipo de puntuación
 		[Display(Name = "tipo de puntuación")]
 		[Required(ErrorMessage = "El {0} es requerido.")]

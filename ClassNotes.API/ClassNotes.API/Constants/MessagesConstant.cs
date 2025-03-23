@@ -100,6 +100,7 @@ namespace ClassNotes.API.Constants
         public const string CRS_INVALID_COURSE_DATA = "CRS-9078: Los datos del curso proporcionados no son válidos.";
         public const string CRS_INSUFFICIENT_COURSE_DATA = "CRS-9079: No se proporcionaron todos los datos necesarios para crear el curso.";
         public const string CRS_PAGINATION_ERROR = "CRS-9010: Error al calcular la paginación.";
+        public const string CRS_INVALID_SETTING = "CRS-9020: La configuración seleccionada no existe o no pertenece al usuario." ;
 
         // Manejo Notas de Curso (CNS-XXX)
         public const string CNS_RECORD_NOT_FOUND = "CNS-101: La nota de curso no fue encontrada.";
