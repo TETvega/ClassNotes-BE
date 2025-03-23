@@ -133,6 +133,7 @@ namespace ClassNotes.API.Services.Attendances
 				{
 					Id = s.Student.Id,
 					StudentName = s.Student.FirstName + " " + s.Student.LastName,
+					Email = s.Student.Email,
 					AttendanceRate = _context.Attendances
 						.Where(a => a.CourseId == courseId && a.StudentId == s.Student.Id) // AM: Filtrar asistencias por CourseId y StudentId
 						.Average(a => (double?)(a.Attended ? 1 : 0)), // AM: Calcular la tasa de asistencia
