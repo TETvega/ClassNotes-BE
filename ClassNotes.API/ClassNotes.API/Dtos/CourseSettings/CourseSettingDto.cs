@@ -5,6 +5,8 @@
 	{
 		public Guid Id { get; set; }
 
+		public string Name { get; set; } // El nombre que se le dara a la configuración
+
 		public string ScoreType { get; set; } // El tipo de puntuación por si es ponderado u oro
 
 		public DateTime StartDate { get; set; } // Inicio de periodo

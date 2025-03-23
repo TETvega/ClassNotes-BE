@@ -27,7 +27,7 @@ namespace ClassNotes.API.Services.Courses
             _context = context;
             _auditService = auditService;
             _mapper = mapper;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Courses");
         }
 
         // EG -> Enlistar todos los cursos, paginacion
@@ -67,7 +67,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORDS_FOUND,
+                Message = MessagesConstant.CNS_RECORDS_FOUND,
                 Data = new PaginationDto<List<CourseDto>>
                 {
                     CurrentPage = page,
@@ -95,7 +95,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
             var courseDto = _mapper.Map<CourseDto>(courseEntity);
@@ -103,7 +103,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.RECORD_FOUND,
+                Message = MessagesConstant.CNS_RECORDS_FOUND,
                 Data = courseDto
             };
         }
@@ -120,12 +120,11 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "La hora de finalización no puede ser menor a la hora de inicio"
+                    Message = MessagesConstant.CNS_END_TIME_BEFORE_START_TIME
                 };
             }
 
             // Verificar si ya existe una clase con el mismo nombre, sección, codigo y hora de inicio
-            // También se verifica si una persona ya creo la sección ya que las clases no se comparten entre docentes
             var existingCourse = await _context.Courses
                 .FirstOrDefaultAsync(c =>
                     c.CreatedBy == userId &&
@@ -134,27 +133,76 @@ namespace ClassNotes.API.Services.Courses
                     c.Code.ToLower() == dto.Code.ToLower() &&
                     c.StartTime == dto.StartTime
                 );
-
             if (existingCourse != null)
             {
                 return new ResponseDto<CourseDto>
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = "Ya existe la clase"
+                    Message = MessagesConstant.CNS_CLASS_ALREADY_EXISTS
                 };
             }
 
-            // Pasa las validaciones y se crea la clase
+            // Crear o duplicar el course_setting
+            CourseSettingEntity courseSettingEntity;
+            if (dto.SettingId != Guid.Empty) // Si se proporciona un SettingId, duplicar el course_setting existente
+            {
+                var existingSetting = await _context.CoursesSettings
+                    .FirstOrDefaultAsync(cs => cs.Id == dto.SettingId && cs.CreatedBy == userId);
+
+                if (existingSetting == null)
+                {
+                    return new ResponseDto<CourseDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = MessagesConstant.CRS_INVALID_SETTING
+                    };
+                }
+
+                // Duplicar el course_setting
+                courseSettingEntity = new CourseSettingEntity
+                {
+                    Name = existingSetting.Name,
+                    ScoreType = existingSetting.ScoreType,
+                    StartDate = existingSetting.StartDate,
+                    EndDate = existingSetting.EndDate,
+                    MinimumGrade = existingSetting.MinimumGrade,
+                    MaximumGrade = existingSetting.MaximumGrade,
+                    MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
+                    CreatedBy = userId,
+                    UpdatedBy = userId
+                };
+            }
+            else // Si no se proporciona un SettingId, crear un course_setting predeterminado
+            {
+                courseSettingEntity = new CourseSettingEntity
+                {
+                    Name = "Default",
+                    ScoreType = "Ponderado",
+                    StartDate = DateTime.Now,
+                    // EndDate = DateTime.Now.AddMonths(6), // No se que tan apropiado es definirle una fecha de fin
+                    MinimumGrade = 70,
+                    MaximumGrade = 100,
+                    MinimumAttendanceTime = 10,
+                    CreatedBy = userId,
+                    UpdatedBy = userId
+                };
+            }
+
+            // Crear el curso y asociarlo con el course_setting
             var courseEntity = _mapper.Map<CourseEntity>(dto);
+            courseEntity.CourseSetting = courseSettingEntity;
+
             _context.Courses.Add(courseEntity);
             await _context.SaveChangesAsync();
+
             var courseDto = _mapper.Map<CourseDto>(courseEntity);
             return new ResponseDto<CourseDto>
             {
                 StatusCode = 201,
                 Status = true,
-                Message = MessagesConstant.CREATE_SUCCESS,
+                Message = MessagesConstant.CNS_CREATE_SUCCESS,
                 Data = courseDto
             };
         }
@@ -176,7 +224,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
 
@@ -199,7 +247,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.UPDATE_SUCCESS,
+                Message = MessagesConstant.CNS_UPDATE_SUCCESS,
                 Data = courseDto
             };
         }
@@ -219,7 +267,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 404,
                     Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
+                    Message = MessagesConstant.CNS_RECORD_NOT_FOUND
                 };
             }
 
@@ -278,7 +326,7 @@ namespace ClassNotes.API.Services.Courses
             {
                 StatusCode = 200,
                 Status = true,
-                Message = MessagesConstant.DELETE_SUCCESS
+                Message = MessagesConstant.CNS_DELETE_SUCCESS
             };
         }
     }

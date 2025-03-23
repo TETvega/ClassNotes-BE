@@ -19,6 +19,15 @@
 4. [Como instalar](#instrucciones-de-instalacion)
  
 
+## Documentacion
+
+Sige este Enlace [Documentacion](./Documentation/index.MD "Documentation")
+
+## Guia de Contribucion
+
+Sige este Enlace [Guia de Contribucion](./contribution.MD  "Contrubution")
+
+
 ## Descripcion 
 
 **El siguiente Link es un video producido para que los usarios comprendan mejor la herramienta:**

@@ -99,7 +99,15 @@ namespace ClassNotes.API.Database
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        public DbSet<ActivityEntity> Activities { get; set; }
+        // AM: Funcion SaveChangesAsync pero que omite el AuditService que se puede usar cuando el usuario no esta autenticado
+        // Por ejemplo, se puede utilizar en el seeder ya que los campos de auditoria se pasan manualmente
+		public async Task<int> SaveChangesWithoutAuditAsync(CancellationToken cancellationToken = default)
+		{
+			// AM: Omite cualquier lógica relacionada con AuditService.
+			return await base.SaveChangesAsync(cancellationToken);
+		}
+
+		public DbSet<ActivityEntity> Activities { get; set; }
         public DbSet<AttendanceEntity> Attendances { get; set; }
         public DbSet<CenterEntity> Centers { get; set; }
         public DbSet<CourseEntity> Courses { get; set; }

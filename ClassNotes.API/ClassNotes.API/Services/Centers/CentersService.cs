@@ -39,7 +39,7 @@ namespace ClassNotes.API.Services.Centers
             this._auditService = auditService;
             this._logger = logger;
             this._configuration = configuration;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Centers");
             this._context = context;
         }
 
@@ -64,7 +64,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 400,
                             Status = false,
-                            Message = "El nombre es requerido."
+                            Message = MessagesConstant.NAME_REQUIRED
                         };
                     }
 
@@ -77,7 +77,7 @@ namespace ClassNotes.API.Services.Centers
                             {
                                 StatusCode = 400,
                                 Status = false,
-                                Message = "El archivo no es una imagen válida. Formatos permitidos: .png, .jpg, .jpeg, .gif, .bmp, .tiff, .webp"
+                                Message = MessagesConstant.INVALID_IMAGE_FORMAT
                             };
                         }
                     }
@@ -94,7 +94,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 409,
                             Status = false,
-                            Message = "Ya existe un centro con este nombre, ingrese uno nuevo."
+                            Message = MessagesConstant.DUPLICATE_NAME
                         };
                     }
                     
@@ -253,7 +253,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 409,
                             Status = false,
-                            Message = "No se confirmó la eliminación del centro."
+                            Message = MessagesConstant.DELETE_CONFIRMATION_REQUIRED
                         };
                     }
 
@@ -267,7 +267,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 401,
                             Status = false,
-                            Message = "No esta autorizado para borrar este registro."
+                            Message = MessagesConstant.UNAUTHORIZED_DELETE
                         };
                     }
 
@@ -279,7 +279,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 409,
                             Status = false,
-                            Message = "No se puede eliminar un centro si aún contiene clases asignadas."
+                            Message = MessagesConstant.CENTER_HAS_COURSES
                         };
                     }
 
@@ -304,7 +304,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 400,
                             Status = false,
-                            Message = "Error al tratar de eliminar la imagen, ponerse en contacto con soporte",
+                            Message = MessagesConstant.ERROR_DELETE_IMAGE
                         };
                     }
 
@@ -387,7 +387,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 401,
                             Status = false,
-                            Message = "No esta autorizado para editar este registro."
+                            Message = MessagesConstant.ERROR_NOT_AUTHORIZED
                         };
                     }
 
@@ -409,7 +409,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 409,
                             Status = false,
-                            Message = "Ya existe un centro con este nombre, ingrese uno nuevo."
+                            Message = MessagesConstant.DUPLICATE_NAME
                         };
                     }
 
@@ -425,7 +425,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 400,
                             Status = false,
-                            Message = "El nombre es requerido."
+                            Message = MessagesConstant.NAME_REQUIRED
                         };
                     }
 
@@ -439,7 +439,7 @@ namespace ClassNotes.API.Services.Centers
                             {
                                 StatusCode = 400,
                                 Status = false,
-                                Message = "El archivo no es una imagen válida. Formatos permitidos: .png, .jpg, .jpeg, .gif, .bmp, .tiff, .webp"
+                                Message = MessagesConstant.INVALID_IMAGE_FORMAT
                             };
                         }
                     }
@@ -461,7 +461,7 @@ namespace ClassNotes.API.Services.Centers
                             {
                                 StatusCode = 400,
                                 Status = false,
-                                Message = "Error al tratar de eliminar la imagen, ponerse en contacto con soporte",
+                                Message = MessagesConstant.ERROR_DELETE_IMAGE
                             };
                         }
 
@@ -547,7 +547,7 @@ namespace ClassNotes.API.Services.Centers
                             {
                                 StatusCode = 400,
                                 Status = false,
-                                Message = "Error al tratar de eliminar la imagen, ponerse en contacto con soporte",
+                                Message = MessagesConstant.ERROR_DELETE_IMAGE
                             };
                         }
 
@@ -645,7 +645,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 401,
                             Status = false,
-                            Message = "No esta autorizado para archivar este centro."
+                            Message = MessagesConstant.UNAUTHORIZED_ARCHIVE_CENTER
                         };
                     }
 
@@ -666,7 +666,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 401,
                             Status = false,
-                            Message = "Ya archivó este centro."
+                            Message = MessagesConstant.CENTER_ALREADY_ARCHIVED
                         };
                     }
                 
@@ -684,7 +684,7 @@ namespace ClassNotes.API.Services.Centers
                     {
                         StatusCode = 200,
                         Status = true,
-                        Message = "Se archivó correctamente.",
+                        Message = MessagesConstant.CENTER_ARCHIVED_SUCCESS,
                         Data = centerDto
                     };
                 }
@@ -724,7 +724,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 401,
                             Status = false,
-                            Message = "No esta autorizado para recuperar este centro."
+                            Message = MessagesConstant.CENTER_RECOVERY_UNAUTHORIZED
                         };
                     }
 
@@ -745,7 +745,7 @@ namespace ClassNotes.API.Services.Centers
                         {
                             StatusCode = 401,
                             Status = false,
-                            Message = "Este centro no esta archivado."
+                            Message = MessagesConstant.CENTER_NOT_ARCHIVED,
                         };
                     }
 
@@ -762,7 +762,7 @@ namespace ClassNotes.API.Services.Centers
                     {
                         StatusCode = 200,
                         Status = true,
-                        Message = "Se recuperó correctamente.",
+                        Message = MessagesConstant.CENTER_RECOVERED_SUCCESS,
                         Data = centerDto
                     };
 

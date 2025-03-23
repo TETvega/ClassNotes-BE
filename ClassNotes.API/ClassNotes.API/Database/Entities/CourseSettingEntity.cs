@@ -9,6 +9,11 @@ namespace ClassNotes.API.Database.Entities
     public class CourseSettingEntity : BaseEntity
     {
         [Required]
+        [StringLength(25)]
+        [Column("name")] // Campo agregado para diferenciar las diferentes configuraciones de curso
+        public string Name { get; set; }
+
+        [Required]
         [StringLength(15)]
         [Column("score_type")]
         public string ScoreType { get; set; }
@@ -33,19 +38,19 @@ namespace ClassNotes.API.Database.Entities
         [Column("minimum_grade")]
         public float MinimumGrade { get; set; }
 
-		[Required]
-		[Range(0, 100)]
-		[Column("maximum_grade")]
-		public float MaximumGrade { get; set; }
+        [Required]
+        [Range(0, 100)]
+        [Column("maximum_grade")]
+        public float MaximumGrade { get; set; }
 
-		[Required]
+        [Required]
         [Column("minimum_attendance_time")]
         [Range(5, 59)]
         [DefaultValue(10)]
         public int MinimumAttendanceTime { get; set; }
 
 
-        public virtual ICollection<CourseEntity> Courses { get; set; } = new List<CourseEntity>();
+        public virtual CourseEntity Course { get; set; } // Se modifico para la relación de uno a uno con cursos
         public virtual ICollection<UserEntity> Teachers { get; set; } = new List<UserEntity>();
 
         public virtual UserEntity CreatedByUser { get; set; }

@@ -50,7 +50,7 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = MessagesConstant.RECORD_NOT_FOUND
+					Message = MessagesConstant.USER_RECORD_NOT_FOUND
 				};
 			}
 
@@ -68,8 +68,8 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = MessagesConstant.UPDATE_ERROR
-				};
+					Message = MessagesConstant.USER_OPERATION_FAILED
+                };
 			}
 
 			// AM: Mapear Entity a Dto para la respuesta
@@ -79,7 +79,7 @@ namespace ClassNotes.API.Services.Users
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = MessagesConstant.UPDATE_SUCCESS,
+				Message = MessagesConstant.USER_UPDATE_SUCCESS,
 				Data = userDto
 			};
 		}
@@ -95,7 +95,7 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = MessagesConstant.RECORD_NOT_FOUND
+					Message = MessagesConstant.USER_RECORD_NOT_FOUND
 				};
 			}
 
@@ -107,8 +107,8 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "La contraseña actual es incorrecta."
-				};
+					Message = MessagesConstant.INCORRECT_PASSWORD
+                };
 			}
 
 			// AM: Actualizar la contraseña
@@ -119,8 +119,8 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "No se pudo cambiar la contraseña."
-				};
+					Message = MessagesConstant.USER_PASSWORD_CHANGE_FAILED
+                };
 			}
 
 			// AM: Mapear Entity a Dto para la respuesta
@@ -130,8 +130,9 @@ namespace ClassNotes.API.Services.Users
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = "La contraseña fue actualizada satisfactoriamente.",
-				Data = userDto
+				Message = MessagesConstant.PASSWORD_UPDATED_SUCCESSFULLY,
+
+                Data = userDto
 			};
 		}
 
@@ -171,8 +172,8 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = "El usuario ingresado no está registrado."
-				};
+					Message = MessagesConstant.USER_RECORD_NOT_FOUND
+                };
 			}
 
 			// AM: Cambiar la contraseña sin necesidad de la actual
@@ -185,8 +186,8 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "No se pudo cambiar la contraseña."
-				};
+					Message = MessagesConstant.USER_OPERATION_FAILED
+                };
 			}
 
 			// AM: Mapear Entity a Dto para la respuesta
@@ -196,8 +197,9 @@ namespace ClassNotes.API.Services.Users
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = "La contraseña fue actualizada satisfactoriamente.",
-				Data = userDto
+				Message = MessagesConstant.PASSWORD_UPDATED_SUCCESSFULLY,
+
+                Data = userDto
 			};
 		}
 
@@ -212,7 +214,7 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = MessagesConstant.RECORD_NOT_FOUND
+					Message = MessagesConstant.USER_RECORD_NOT_FOUND
 				};
 			}
 
@@ -224,8 +226,8 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "El correo electrónico ingresado ya está registrado."
-				};
+					Message = MessagesConstant.USER_EMAIL_ALREADY_REGISTERED
+                };
 			}
 
 			// AM: Notificamos a la nueva dirección de correo sobre el cambio
@@ -273,8 +275,8 @@ namespace ClassNotes.API.Services.Users
 				{
 					StatusCode = 400,
 					Status = false,
-					Message = "No se pudo cambiar el correo electrónico."
-				};
+					Message = MessagesConstant.USER_Email_FAILED
+                };
 			}
 
 			// AM: Actualizar el username del correo
@@ -289,8 +291,8 @@ namespace ClassNotes.API.Services.Users
 			{
 				StatusCode = 200,
 				Status = true,
-				Message = "El correo electrónico fue actualizado satisfactoriamente.",
-				Data = userDto
+				Message = MessagesConstant.EMAIL_UPDATED_SUCCESSFULLY,
+                Data = userDto
 			};
 		}
 
@@ -309,7 +311,7 @@ namespace ClassNotes.API.Services.Users
 						{
 							StatusCode = 404,
 							Status = false,
-							Message = MessagesConstant.RECORD_NOT_FOUND
+							Message = MessagesConstant.USER_RECORD_NOT_FOUND
 						};
 					}
 
@@ -325,10 +327,16 @@ namespace ClassNotes.API.Services.Users
 					await _context.Attendances.Where(a => a.CreatedBy == id).ExecuteDeleteAsync();
 					await _context.StudentsActivitiesNotes.Where(sa => sa.CreatedBy == id).ExecuteDeleteAsync();
 
-					// AM: Eliminar actividades y notas asociadas a cursos del usuario
+					// AM: Eliminar unidades y notas asociadas a cursos del usuario
 					var userCourses = await _context.Courses.Where(c => c.CreatedBy == id).Select(c => c.Id).ToListAsync();
-					await _context.Units.Where(a => userCourses.Contains(a.Id)).ExecuteDeleteAsync();
+					await _context.Units.Where(u => userCourses.Contains(u.Id)).ExecuteDeleteAsync();
 					await _context.CoursesNotes.Where(cn => userCourses.Contains(cn.CourseId)).ExecuteDeleteAsync();
+
+					// AM: Eliminar Activities
+					await _context.Activities.Where(a => a.CreatedBy == id).ExecuteDeleteAsync();
+
+					// AM: Eliminar Tags
+					await _context.TagsActivities.Where(ta => ta.CreatedBy == id).ExecuteDeleteAsync();
 
 					// AM: Notificar al correo
 					await _emailsService.SendEmailAsync(new EmailDto
@@ -364,8 +372,8 @@ namespace ClassNotes.API.Services.Users
 						{
 							StatusCode = 400,
 							Status = false,
-							Message = "No se pudo eliminar el usuario."
-						};
+							Message = MessagesConstant.USER_OPERATION_FAILED
+                        };
 					}
 
 					// AM: Guardar cambios y confirmar la transacción
@@ -376,7 +384,7 @@ namespace ClassNotes.API.Services.Users
 					{
 						StatusCode = 200,
 						Status = true,
-						Message = MessagesConstant.DELETE_SUCCESS
+						Message = MessagesConstant.USER_DELETE_SUCCESS
 					};
 				}
 				catch (Exception ex)
@@ -387,8 +395,8 @@ namespace ClassNotes.API.Services.Users
 					{
 						StatusCode = 500,
 						Status = false,
-						Message = MessagesConstant.DELETE_ERROR
-					};
+						Message = MessagesConstant.USER_OPERATION_FAILED
+                    };
 				}
 			}
 		}

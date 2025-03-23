@@ -16,6 +16,7 @@ using ClassNotes.API.Dtos.Otp;
 using ClassNotes.API.Database.Entities;
 using System.Threading.Tasks;
 using iText.Kernel.Pdf.Canvas.Draw;
+using ClassNotes.API.Constants;
 
 namespace ClassNotes.API.Services.Emails
 {
@@ -69,8 +70,8 @@ namespace ClassNotes.API.Services.Emails
 			{
 				StatusCode = 201,
 				Status = true,
-				Message = "El correo fue enviado correctamente",
-				Data = dto
+				Message = MessagesConstant.EMAIL_SENT_SUCCESSFULLY,
+                Data = dto
 			};
 		}
 
@@ -85,8 +86,8 @@ namespace ClassNotes.API.Services.Emails
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = "El curso ingresado no está registrado.",
-				};
+					Message = MessagesConstant.EMAIL_COURSE_NOT_REGISTERED
+                };
 			}
 
 			// AM: Obtener y validar existencia del estudiante
@@ -97,8 +98,8 @@ namespace ClassNotes.API.Services.Emails
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = "El estudiante ingresado no está registrado.",
-				};
+					Message = MessagesConstant.EMAIL_STUDENT_NOT_REGISTERED
+                };
 			}
 
 			// AM: Validar el registro del estudiante en la clase
@@ -109,8 +110,8 @@ namespace ClassNotes.API.Services.Emails
 				{
 					StatusCode = 404,
 					Status = false,
-					Message = "El estudiante ingresado no está registrado en la clase ingresada.",
-				};
+					Message = MessagesConstant.EMAIL_STUDENT_NOT_REGISTERED_IN_CLASS
+                };
 			}
 
 			// AM: Obtener el centro
