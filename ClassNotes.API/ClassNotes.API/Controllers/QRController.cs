@@ -2,9 +2,12 @@
 using System.Threading.Tasks;
 using ClassNotes.API.Dtos.QR;
 using ClassNotes.API.Services;
+using Microsoft.AspNetCore.Authorization;
+using ClassNotes.API.Constants;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class QRController : ControllerBase
 {
     private readonly QRService _qrService;
@@ -14,8 +17,9 @@ public class QRController : ControllerBase
         _qrService = qrService;
     }
 
-    // Endpoint para generar el código QR
+    //DD: Endpoint para generar el código QR
     [HttpPost("generate")]
+    [Authorize(Roles = $"{RolesConstant.USER}")]
     public async Task<IActionResult> GenerateQR([FromBody] QRGenerationRequestDto request)
     {
         try
@@ -29,7 +33,7 @@ public class QRController : ControllerBase
         }
     }
 
-    // Endpoint para validar el código QR
+    //DD: Endpoint para validar el código QR
     [HttpPost("validate")]
     public async Task<IActionResult> ValidateQR([FromBody] QRValidationRequestDto request)
     {

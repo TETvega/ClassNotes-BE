@@ -22,7 +22,7 @@ namespace ClassNotes.API.Services
 
         public async Task<AttendanceDto> CreateAttendanceAsync(AttendanceCreateDto attendanceCreateDto)
         {
-            // Verificar si el curso y el estudiante existen
+            //DD: Verificar si el curso y el estudiante existen
             var course = await _context.Courses.FindAsync(attendanceCreateDto.CourseId);
             if (course == null)
             {
@@ -35,7 +35,7 @@ namespace ClassNotes.API.Services
                 throw new ArgumentException("El estudiante no existe.");
             }
 
-            // Crear la asistencia
+            //DD: Crear la asistencia
             var attendance = new AttendanceEntity
             {
                 Attended = attendanceCreateDto.Attended,
@@ -46,11 +46,11 @@ namespace ClassNotes.API.Services
                 UpdatedByUser = await _context.Users.FindAsync(course.TeacherId)
             };
 
-            // Guardar la asistencia en la base de datos
+            //DD: Guardar la asistencia en la base de datos
             _context.Attendances.Add(attendance);
             await _context.SaveChangesAsync();
 
-            // Retornar el DTO de la asistencia creada
+            //DD: Retornar el DTO de la asistencia creada
             return new AttendanceDto
             {
                 Id = attendance.Id,
@@ -68,7 +68,7 @@ namespace ClassNotes.API.Services
                 throw new ArgumentException("La asistencia no existe.");
             }
 
-            // Editar solo el campo permitido
+            //DD: Editar solo el campo permitido
             attendance.Attended = attendanceEditDto.Attended;
 
             await _context.SaveChangesAsync();
@@ -85,8 +85,8 @@ namespace ClassNotes.API.Services
          public async Task<List<AttendanceDto>> ListAttendancesAsync()
         {
             var attendances = await _context.Attendances
-                .Include(a => a.Course) // Incluir información del curso
-                .Include(a => a.Student) // Incluir información del estudiante
+                .Include(a => a.Course)
+                .Include(a => a.Student) 
                 .ToListAsync();
 
             return attendances.Select(a => new AttendanceDto
@@ -97,11 +97,11 @@ namespace ClassNotes.API.Services
                 CourseId = a.CourseId,
                 StudentId = a.StudentId,
                 CourseName = a.Course?.Name, // Opcional: incluir el nombre del curso
-                StudentName = a.Student?.FirstName// Opcional: incluir el nombre del estudiante
+                StudentName = a.Student?.FirstName
             }).ToList();
         }
 
-        // Método para listar asistencias por curso
+        //DD: Método para listar asistencias por curso
         public async Task<List<AttendanceDto>> ListAttendancesByCourseAsync(Guid courseId)
         {
             var attendances = await _context.Attendances
@@ -122,7 +122,7 @@ namespace ClassNotes.API.Services
             }).ToList();
         }
 
-        // Método para listar asistencias por estudiante
+        //DD: Método para listar asistencias por estudiante
         public async Task<List<AttendanceDto>> ListAttendancesByStudentAsync(Guid studentId)
         {
             var attendances = await _context.Attendances

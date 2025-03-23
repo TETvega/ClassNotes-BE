@@ -21,6 +21,7 @@ using ClassNotes.API.Services.Users;
 using ClassNotes.API.Services.Distance;
 using ClassNotes.API.Services;
 using ClassNotes.API.Hubs;
+using ClassNotes.API.Services.Date;
 
 namespace ClassNotes.API;
 
@@ -56,11 +57,14 @@ public class Startup
 		services.AddTransient<IStudentsService, StudentsService>();
 		services.AddTransient<IUsersService, UsersService>();
 		services.AddScoped<DistanceService>();
-        services.AddScoped<EmailAttendanceService>();
+        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>();
         services.AddScoped<QRService>();
         services.AddHostedService<QRService>();
         services.AddSingleton<OTPCleanupService>();
         services.AddHostedService(provider =>provider.GetRequiredService<OTPCleanupService>());
+		services.AddSingleton<EmailScheduleService>();
+		services.AddHostedService<ScheduledEmailSender>();
+        services.AddSingleton<IDateTimeService, DateTimeService>();
         // Servicios de seguridad
         services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();

@@ -24,7 +24,7 @@ public class QRService : BackgroundService
     private int _validationCount = 0;
     private Timer _expirationTimer;
 
-    // Lista en memoria para almacenar direcciones MAC permitidas
+    //DD: Lista en memoria para almacenar direcciones MAC permitidas
     private static List<string> _macAddressesPermitidas = new List<string>();
 
     public QRService(
@@ -269,13 +269,13 @@ public class QRService : BackgroundService
 
                 if (!string.IsNullOrEmpty(request.MacAddress))
                 {
-                    // Verificar si la dirección MAC ya ha sido usada
+                    //DD: Verificar si la dirección MAC ya ha sido usada
                     if (_macAddressesPermitidas.Contains(request.MacAddress))
                     {
                         throw new ArgumentException("El dispositivo ya ha sido usado para validar la asistencia.");
                     }
 
-                    // Agregar la dirección MAC a la lista de permitidas
+                   
                     _macAddressesPermitidas.Add(request.MacAddress);
                 }
 
@@ -286,14 +286,14 @@ public class QRService : BackgroundService
                     throw new ArgumentException("No se encontró la asistencia del estudiante.");
                 }
 
-                // Verificar si la asistencia ya ha sido validada
+                //DD Verificar si la asistencia ya ha sido validada
                 if (asistencia.Attended != "En espera")
                 {
                     return new
                     {
                         Message = "El estudiante ya ha sido marcado como presente o ausente.",
                         Correo = request.EstudianteCorreo,
-                        Attendance = new AttendanceDto // Usa el DTO aquí
+                        Attendance = new AttendanceDto 
                         {
                             Id = asistencia.Id,
                             Attended = asistencia.Attended,
@@ -304,7 +304,7 @@ public class QRService : BackgroundService
                     };
                 }
 
-                // Actualizar la asistencia a "Presente"
+                //DD: Actualizar la asistencia a "Presente"
                 var attendanceEditDto = new AttendanceEditDto
                 {
                     Attended = "Presente"
@@ -312,7 +312,7 @@ public class QRService : BackgroundService
 
                 var updatedAttendance = await attendanceService.EditAttendanceAsync(asistencia.Id, attendanceEditDto);
 
-                // Mapea la asistencia actualizada a un DTO
+                //DD: Mapea la asistencia actualizada a un DTO
                 var attendanceDto = new AttendanceDto
                 {
                     Id = updatedAttendance.Id,
@@ -326,7 +326,7 @@ public class QRService : BackgroundService
                 {
                     Message = "Asistencia confirmada y registrada.",
                     Correo = request.EstudianteCorreo,
-                    Attendance = attendanceDto // Devuelve el DTO
+                    Attendance = attendanceDto 
                 };
             }
             catch (Exception ex)

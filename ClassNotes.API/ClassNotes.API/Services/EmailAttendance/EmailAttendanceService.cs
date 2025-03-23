@@ -4,19 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClassNotes.API.Database;
 using ClassNotes.API.Dtos;
-using ClassNotes.API.Dtos.EmailsAttendace;
-using ClassNotes.API.Services.Emails;
-using Microsoft.Extensions.Logging;
-using ClassNotes.API.Services.Distance;
-using ClassNotes.API.Dtos.Attendances;
-using ClassNotes.API.Services.Attendances;
 using ClassNotes.API.Dtos.Emails;
-using Microsoft.AspNetCore.Mvc;
+using ClassNotes.API.Dtos.EmailsAttendace;
+using ClassNotes.API.Dtos.Attendances;
+using ClassNotes.API.Services;
+using ClassNotes.API.Hubs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
+using ClassNotes.API.Services.Attendances;
+using ClassNotes.API.Services.Distance;
+using ClassNotes.API.Services.Emails;
 
 namespace ClassNotes.API.Services
 {
-    public class EmailAttendanceService
+    public class EmailAttendanceService : IEmailAttendanceService
     {
         private readonly ClassNotesContext _context;
         private readonly IEmailsService _emailsService;
@@ -24,10 +26,11 @@ namespace ClassNotes.API.Services
         private readonly DistanceService _distanceService;
         private readonly IAttendancesService _attendanceService;
         private readonly OTPCleanupService _otpCleanupService;
+        private readonly IHubContext<AttendanceHub> _hubContext;
+        private readonly EmailScheduleService _emailScheduleService;
 
-        // Lista estática para almacenar los OTPs
-        public List<StudentOTPDto> OTPList { get; } = new List<StudentOTPDto>();
-
+        // Lista privada para almacenar los OTPs
+        private static List<StudentOTPDto> _otpList = new List<StudentOTPDto>();
 
         public EmailAttendanceService(
             ClassNotesContext context,
@@ -35,7 +38,9 @@ namespace ClassNotes.API.Services
             ILogger<EmailAttendanceService> logger,
             DistanceService distanceService,
             IAttendancesService attendanceService,
-            OTPCleanupService otpCleanupService)
+            OTPCleanupService otpCleanupService,
+            IHubContext<AttendanceHub> hubContext,
+            EmailScheduleService emailScheduleService)
         {
             _context = context;
             _emailsService = emailsService;
@@ -43,22 +48,24 @@ namespace ClassNotes.API.Services
             _distanceService = distanceService;
             _attendanceService = attendanceService;
             _otpCleanupService = otpCleanupService;
+            _hubContext = hubContext;
+            _emailScheduleService = emailScheduleService;
         }
 
-        public async Task<IActionResult> SendEmails(EmailAttendanceRequestDto request)
+        public async Task SendEmailsAsync(EmailAttendanceRequestDto request)
         {
             try
             {
                 // Validar el rango de validación
                 if (request.RangoValidacionMetros < 15 || request.RangoValidacionMetros > 100)
                 {
-                    return new BadRequestObjectResult("El rango de validación debe estar entre 15 y 100 metros.");
+                    throw new ArgumentException("El rango de validación debe estar entre 15 y 100 metros.");
                 }
 
-                // Validar el tiempo de expiración del OTP
-                if (request.TiempoExpiracionOTPMinutos < 3)
+                // Validar el tiempo de expiración del OTP (mínimo 1 minuto, máximo 30 minutos)
+                if (request.TiempoExpiracionOTPMinutos < 1 || request.TiempoExpiracionOTPMinutos > 30)
                 {
-                    return new BadRequestObjectResult("El tiempo de expiración del OTP debe ser de al menos 3 minutos.");
+                    throw new ArgumentException("El tiempo de expiración del OTP debe estar entre 1 y 30 minutos.");
                 }
 
                 // Obtener la clase con los estudiantes asociados
@@ -70,7 +77,7 @@ namespace ClassNotes.API.Services
 
                 if (clase == null)
                 {
-                    return new BadRequestObjectResult("La clase no está asociada con el profesor o el centro.");
+                    throw new ArgumentException("La clase no está asociada con el profesor o el centro.");
                 }
 
                 // Obtener la lista de estudiantes asociados a la clase
@@ -80,11 +87,8 @@ namespace ClassNotes.API.Services
 
                 if (!estudiantes.Any())
                 {
-                    return new BadRequestObjectResult("No hay estudiantes asociados a esta clase.");
+                    throw new ArgumentException("No hay estudiantes asociados a esta clase.");
                 }
-
-                // Lista para almacenar los destinatarios y los correos enviados
-                var destinatarios = new List<object>();
 
                 // Enviar correos a los estudiantes
                 foreach (var estudiante in estudiantes)
@@ -110,8 +114,8 @@ namespace ClassNotes.API.Services
                         RangoValidacionMetros = request.RangoValidacionMetros
                     };
 
-                    // Almacenar el OTP en la lista estática
-                    OTPList.Add(studentOTP);
+                    // Almacenar el OTP en la lista privada
+                    AddOTP(studentOTP);
 
                     // Crear el objeto EmailDto con el enlace de validación y el OTP
                     var emailDto = new EmailDto
@@ -132,44 +136,47 @@ namespace ClassNotes.API.Services
                     }
                     else
                     {
-                        // Agregar el destinatario y el correo a la lista
-                        destinatarios.Add(new
+                        // Notificar a los clientes en tiempo real
+                        await _hubContext.Clients.All.SendAsync("ReceiveEmailSent", new
                         {
-                            Nombre = estudiante.FirstName,
-                            Correo = estudiante.Email
+                            StudentName = estudiante.FirstName,
+                            Email = estudiante.Email,
+                            OTP = otp
                         });
                     }
                 }
 
-                // Reactivar el servicio de limpieza de OTPs
-                _otpCleanupService.ReactivateService();
+                // Enviar la lista de OTPs activos al servicio de limpieza
+                SendActiveOTPsToCleanupService();
 
-                // Retornar la lista de destinatarios y un mensaje de éxito
-                return new OkObjectResult(new
+                // Guardar las preferencias para envío automático
+                if (request.EnvioAutomatico)
                 {
-                    Message = "Correos enviados correctamente.",
-                    Destinatarios = destinatarios,
-                    RangoValidacionMetros = request.RangoValidacionMetros,
-                    TiempoExpiracionOTPMinutos = request.TiempoExpiracionOTPMinutos
-                });
+                    _emailScheduleService.AddOrUpdateConfig(
+                        request.ClaseId, // Guid
+                        true, // EnvioAutomatico
+                        TimeSpan.Parse(request.HoraEnvio), // HoraEnvio
+                        request.DiasEnvio.Select(d => (DayOfWeek)d).ToList() // DiasEnvio
+                    );
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al enviar correos electrónicos");
-                return new StatusCodeResult(500);
+                throw;
             }
         }
 
-        public async Task<IActionResult> ValidateAttendance(ValidateAttendanceRequestDto request)
+        public async Task ValidateAttendanceAsync(ValidateAttendanceRequestDto request)
         {
             try
             {
-                // Buscar el OTP en la lista estática
-                var studentOTP = OTPList.FirstOrDefault(sotp => sotp.OTP == request.OTP);
+                // Buscar el OTP en la lista privada
+                var studentOTP = _otpList.FirstOrDefault(sotp => sotp.OTP == request.OTP);
 
                 if (studentOTP == null || studentOTP.ExpirationDate < DateTime.UtcNow)
                 {
-                    return new BadRequestObjectResult("OTP inválido o expirado.");
+                    throw new ArgumentException("OTP inválido o expirado.");
                 }
 
                 // Calcular la distancia entre la ubicación proporcionada y la almacenada
@@ -180,7 +187,7 @@ namespace ClassNotes.API.Services
                 // Validar si el estudiante está dentro del rango permitido
                 if (distance > studentOTP.RangoValidacionMetros)
                 {
-                    return new BadRequestObjectResult($"Debes estar dentro de un radio de {studentOTP.RangoValidacionMetros} metros para validar tu asistencia.");
+                    throw new ArgumentException($"Debes estar dentro de un radio de {studentOTP.RangoValidacionMetros} metros para validar tu asistencia.");
                 }
 
                 // Obtener el estudiante por su ID
@@ -189,7 +196,7 @@ namespace ClassNotes.API.Services
 
                 if (estudiante == null)
                 {
-                    return new BadRequestObjectResult("Estudiante no encontrado.");
+                    throw new ArgumentException("Estudiante no encontrado.");
                 }
 
                 // Crear el DTO para la asistencia
@@ -203,40 +210,63 @@ namespace ClassNotes.API.Services
                 // Crear la asistencia utilizando el servicio
                 var attendanceDto = await _attendanceService.CreateAttendanceAsync(attendanceCreateDto);
 
-                // Eliminar el OTP de la lista estática después de usarlo
-                OTPList.Remove(studentOTP);
+                // Eliminar el OTP de la lista privada después de usarlo
+                RemoveOTP(studentOTP);
 
-                // Retornar la respuesta con los datos del estudiante y la asistencia
-                return new OkObjectResult(new
+                // Notificar a los clientes en tiempo real
+                await _hubContext.Clients.All.SendAsync("ReceiveAttendanceValidation", new
                 {
-                    Message = "Asistencia validada correctamente.",
-                    Estudiante = new
-                    {
-                        Id = estudiante.Id,
-                        Nombre = estudiante.FirstName,
-                        Correo = estudiante.Email
-                    },
-                    Asistencia = new
-                    {
-                        Id = attendanceDto.Id,
-                        Estado = attendanceDto.Attended,
-                        Fecha = attendanceDto.RegistrationDate
-                    }
+                    StudentName = estudiante.FirstName,
+                    Email = estudiante.Email,
+                    AttendanceStatus = "Presente",
+                    ValidationTime = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al validar la asistencia");
-                return new StatusCodeResult(500);
+                throw;
             }
         }
 
-        private string GenerateOTP()
+        // Método para agregar un OTP a la lista
+        public void AddOTP(StudentOTPDto otp)
+        {
+            _otpList.Add(otp);
+        }
+
+        // Método para obtener OTPs expirados
+        public List<StudentOTPDto> GetExpiredOTPs()
+        {
+            return _otpList.Where(otp => otp.ExpirationDate < DateTime.UtcNow).ToList();
+        }
+
+        // Método para obtener OTPs activos
+        public List<StudentOTPDto> GetActiveOTPs()
+        {
+            return _otpList.Where(otp => otp.ExpirationDate >= DateTime.UtcNow).ToList();
+        }
+
+        // Método para eliminar un OTP de la lista
+        public void RemoveOTP(StudentOTPDto otp)
+        {
+            _otpList.Remove(otp);
+        }
+
+        // Método para generar un OTP
+        public string GenerateOTP()
         {
             var random = new Random();
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Repeat(chars, 6)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        // Método para enviar la lista de OTPs activos a OTPCleanupService
+        public void SendActiveOTPsToCleanupService()
+        {
+            var activeOTPs = GetActiveOTPs();
+            _otpCleanupService.ReceiveActiveOTPs(activeOTPs);
         }
     }
 }

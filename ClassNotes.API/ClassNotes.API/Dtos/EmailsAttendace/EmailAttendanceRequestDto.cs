@@ -10,5 +10,11 @@
         public double Longitude { get; set; }
         public int RangoValidacionMetros { get; set; }
         public int TiempoExpiracionOTPMinutos { get; set; }
+
+        public bool EnvioAutomatico { get; set; }
+        public string HoraEnvio {  get; set; }
+        public List<DayOfWeek> DiasEnvio {  get; set; }
+
+        public TimeSpan HoraEnvioTimeSpan => TimeSpan.Parse(HoraEnvio);
     }
 }

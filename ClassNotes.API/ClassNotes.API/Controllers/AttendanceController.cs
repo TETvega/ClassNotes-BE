@@ -1,5 +1,7 @@
-﻿using ClassNotes.API.Dtos.Attendances;
+﻿using ClassNotes.API.Constants;
+using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Services.Attendances;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -9,6 +11,7 @@ namespace ClassNotes.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class AttendanceController : ControllerBase
     {
         private readonly IAttendancesService _attendanceService;
@@ -18,8 +21,9 @@ namespace ClassNotes.API.Controllers
             _attendanceService = attendanceService;
         }
 
-        // POST: api/attendance
+        //DD: Creacion de attendance 
         [HttpPost]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<AttendanceDto>> CreateAttendance([FromBody] AttendanceCreateDto attendanceCreateDto)
         {
             try
@@ -37,8 +41,9 @@ namespace ClassNotes.API.Controllers
             }
         }
 
-        // PUT: api/attendance/{id}
+        // DD: Edicion de Assistencia 
         [HttpPut("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<AttendanceDto>> EditAttendance(Guid id, [FromBody] AttendanceEditDto attendanceEditDto)
         {
             try
@@ -56,8 +61,9 @@ namespace ClassNotes.API.Controllers
             }
         }
 
-        // GET: api/attendance
+        // dD: Listar Asistencia 
         [HttpGet]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<List<AttendanceDto>>> GetAllAttendances()
         {
             try
@@ -71,8 +77,9 @@ namespace ClassNotes.API.Controllers
             }
         }
 
-        // GET: api/attendance/course/{courseId}
+        // DD: Listar Asistencia por Curso Id 
         [HttpGet("course/{courseId}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<List<AttendanceDto>>> GetAttendancesByCourse(Guid courseId)
         {
             try
@@ -86,8 +93,9 @@ namespace ClassNotes.API.Controllers
             }
         }
 
-        // GET: api/attendance/student/{studentId}
+        //DD: Listar Asistencia por Estudiante Id
         [HttpGet("student/{studentId}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<List<AttendanceDto>>> GetAttendancesByStudent(Guid studentId)
         {
             try
@@ -101,8 +109,9 @@ namespace ClassNotes.API.Controllers
             }
         }
 
-        // GET: api/attendance/{id}
+        //DD: Listar por Id 
         [HttpGet("{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<AttendanceDto>> GetAttendanceById(Guid id)
         {
             try
