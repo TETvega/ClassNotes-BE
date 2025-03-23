@@ -17,18 +17,18 @@ namespace ClassNotes.API.Database
             try
             {
                 await LoadUsersAndRolesAsync(userManager, roleManager, loggerFactory);
-                //await LoadCourseSenttingsAsync(loggerFactory, context);
-                //await LoadCenterAsync(loggerFactory, context);
-                //await LoadCourseAsync(loggerFactory, context);
-                //await LoadCourseNotesAsync(loggerFactory, context);
-                //await LoadTagActivityAsync(loggerFactory, context);
-                //await LoadUnitAsync(loggerFactory, context);
-                //await LoadActivitiesAsync(loggerFactory, context);
-                //await LoadStudentsAsync(loggerFactory, context);
-                //await LoadAttendanceAsync(loggerFactory, context);
-                //await LoadStudentCourseAsync(loggerFactory, context);
-                //await LoadStudentsActivitesNotesAsync(loggerFactory, context);
-                //await LoadStudentUnitAsync(loggerFactory, context);
+                await LoadCourseSenttingsAsync(loggerFactory, context);
+                await LoadCenterAsync(loggerFactory, context);
+                await LoadCourseAsync(loggerFactory, context);
+                await LoadCourseNotesAsync(loggerFactory, context);
+                await LoadTagActivityAsync(loggerFactory, context);
+                await LoadUnitAsync(loggerFactory, context);
+                await LoadActivitiesAsync(loggerFactory, context);
+                await LoadStudentsAsync(loggerFactory, context);
+                await LoadAttendanceAsync(loggerFactory, context);
+                await LoadStudentCourseAsync(loggerFactory, context);
+                await LoadStudentsActivitesNotesAsync(loggerFactory, context);
+                await LoadStudentUnitAsync(loggerFactory, context);
             }
             catch (Exception ex)
             {
