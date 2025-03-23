@@ -40,29 +40,29 @@ public class DashboardHomeService : IDashboardHomeService
             .Where(c => c.Center.TeacherId == userId && c.IsActive)
             .CountAsync();
 
-        //CG: Obtener los Id de los estudiantes creados por el docente
-        var studentIds = await _context.Students
-            .Where(s => s.TeacherId == userId)
-            .Select(s => s.Id)
-            .ToListAsync();
-
         //CG: Obtener los Id de los cursos activos del docente
         var courseIds = await _context.Courses
             .Where(c => c.Center.TeacherId == userId && c.IsActive)
             .Select(c => c.Id)
-            .Take(3)                    //tomar solo 3 segun diseño del dashboard
             .ToListAsync();
 
-        //CG: Retornar el total de estudiantes de las clases que esten activas y que los estudiantes esten activos
-        //      sujeto a cambios, aqui hay redudancia en cantidad de estudiantes repetidos por clase
-        var studentsCount = await _context.StudentsCourses
-            .Where(sc => courseIds.Contains(sc.CourseId)) // Filtra por cursos del docente
-            .Where(sc => studentIds.Contains(sc.StudentId)) // Filtra por estudiantes del docente
+        // Obtener los estudiantes activos en los cursos activos del docente
+        var activeStudentIds = await _context.StudentsCourses
+            .Where(sc => courseIds.Contains(sc.CourseId)) // Filtra por cursos activos del docente
             .Where(sc => sc.IsActive) // Solo estudiantes activos en el curso
-            .CountAsync();
+            .Select(sc => sc.StudentId)
+            .Distinct() // Evitar duplicados si un estudiante está en varios cursos
+            .ToListAsync();
+
+        //CG: Retornar el total de estudiantes de las clases que esten activas
+        var studentsCount = activeStudentIds.Count();
 
         // --------------------------- Creacion del List<DashboardHomePendingActivityDto> --------------------------
+
+        var courseIdsForGraphics = courseIds.Take(3).ToList();          //Para la graficas solo se ocupan 3 cursos
+
         var pendingActivitiesDto = new List<DashboardHomePendingActivityDto>();     //variable que se usará dentro del foreach de courseIds y como respuesta
+
         //CG: Diccionario para almacenar el conteo de estudiantes activos por curso
         var activeStudentsPerCourse = new Dictionary<Guid, int>();
 
@@ -85,16 +85,16 @@ public class DashboardHomeService : IDashboardHomeService
         foreach (var courseId in courseIds)
         {
             //CG: Obtener los StudentId activos en el curso
-            var activeStudentIds = await _context.StudentsCourses
+            var activeStudentIdsPerCourse = await _context.StudentsCourses
                 .Where(sc => sc.CourseId == courseId && sc.IsActive)
                 .Select(sc => sc.StudentId)
                 .ToListAsync();
 
             //CG: Almacenar el conteo en el diccionario
-            activeStudentsPerCourse[courseId] = activeStudentIds.Count;
+            activeStudentsPerCourse[courseId] = activeStudentIdsPerCourse.Count;
 
             //CG: Almacenar los StudentId en el diccionario
-            activeStudentsIdsPerCourse[courseId] = activeStudentIds;
+            activeStudentsIdsPerCourse[courseId] = activeStudentIdsPerCourse;
 
             //CG: Obtener los id's de actividades del curso (IsExtra == false)
             var activityIds = await _context.Units
@@ -120,7 +120,7 @@ public class DashboardHomeService : IDashboardHomeService
             var activitiesNotesCount = 0;
             foreach (var activityId in activityIds)
             {
-                foreach (var studentId in activeStudentIds)
+                foreach (var studentId in activeStudentIdsPerCourse)
                 {
                     var count = await _context.StudentsActivitiesNotes
                         .Where(san => san.ActivityId == activityId && san.StudentId == studentId)
@@ -136,9 +136,13 @@ public class DashboardHomeService : IDashboardHomeService
             var difference = activitiesStudentsTotalPerCourse[courseId] - activitiesNotesCountPerCourse[courseId];
 
             //CG: Obtener el nombre del curso
-            var courseName = await _context.Courses
+            var courseInfo = await _context.Courses
                 .Where(c => c.Id == courseId)
-                .Select(c => c.Name)
+                .Select(c => new
+                {
+                    c.Name,
+                    c.Code,
+                })
                 .FirstOrDefaultAsync();
 
             //CG: Crear una instancia de DashboardHomePendingActivityDto
@@ -146,7 +150,8 @@ public class DashboardHomeService : IDashboardHomeService
             {
                 Id = courseId,
                 Number = difference,
-                CourseName = courseName
+                CourseName = courseInfo.Name,
+                CourseCode = courseInfo.Code,
             };
 
             //CG: Agregar a la lista de actividades pendientes
@@ -273,7 +278,7 @@ public class DashboardHomeService : IDashboardHomeService
         foreach (var courseId in activeCourseIds)
         {
             //CG: Obtener los StudentId activos en el curso
-            var activeStudentIds = await _context.StudentsCourses
+            var activeStudentIdsPerCourse = await _context.StudentsCourses
                 .Where(sc => sc.CourseId == courseId && sc.IsActive)
                 .Select(sc => sc.StudentId)
                 .ToListAsync();
@@ -294,7 +299,7 @@ public class DashboardHomeService : IDashboardHomeService
                 //CG: Contar los registros en StudentsActivitiesNotes para la actividad
                 var activitiesNotesCount = 0;
                 
-                foreach (var studentId in activeStudentIds)
+                foreach (var studentId in activeStudentIdsPerCourse)
                 {
                     var count = await _context.StudentsActivitiesNotes
                         .Where(san => san.ActivityId == activityId && san.StudentId == studentId)
@@ -303,7 +308,7 @@ public class DashboardHomeService : IDashboardHomeService
                 }
 
                 //CG: Debe existir igualdad entre el numero de registros y el numero de estudiantes activos
-                if (activitiesNotesCount == activeStudentIds.Count)
+                if (activitiesNotesCount == activeStudentIdsPerCourse.Count)
                 {
                     completedActivitiesCount++;
                 }
@@ -327,8 +332,7 @@ public class DashboardHomeService : IDashboardHomeService
                 Name = courseDetails.Name,
                 Code = courseDetails.Code,
                 CenterAbbreviation = courseDetails.CenterAbbreviation,
-                StudentsCount = activeStudentIds.Count,
-                //Average = 0, // Por el momento se deja en 0
+                StudentsCount = activeStudentIdsPerCourse.Count,
                 CompletedActivitiesCount = completedActivitiesCount,
                 ActivitiesCount = activitiesCount
             };
@@ -345,16 +349,62 @@ public class DashboardHomeService : IDashboardHomeService
 
         var studentsDto = new List<DashboardHomeStudentDto>();
 
-        //CG: Obtener los primeros 8 estudiantes creados por el docente
-        var firstsStudentIds = await _context.Students
-            .Where(s => s.TeacherId == userId)
-            .Select(s => s.Id)
-            .Take(8) // Tomar solo 8 según diseño del dashboard
-            .ToListAsync();
+        //CG: Se hará uso de courseIds de la linea 44 para saber los id's de los estudiantes del usuario
+        //CG: Se hará uso de activeStudentIds de la linea 50 para saber los id's de los estudiantes activos del usuario
 
-        foreach (var studentId in firstsStudentIds)
+        //CG: Diccionario para almacenar el número de actividades pendientes por estudiante
+        var pendingCounts = new Dictionary<Guid, int>();
+
+        foreach (var studentId in activeStudentIds) {
+            //CG: Obtener los cursos activos del estudiante, usando el id estudiante que se este recorriendo y el id del curso exista y este activo
+            var activeCourseIdsForStudent = await _context.StudentsCourses
+                .Where(sc => sc.StudentId == studentId && courseIds.Contains(sc.CourseId) && sc.IsActive)
+                .Select(sc => sc.CourseId)
+                .ToListAsync();
+
+            //CG: Calcular el número de actividades pendientes para el estudiante
+            var pendingsCountForStudent = 0;
+
+            foreach (var courseId in activeCourseIdsForStudent)
+            {
+                //CG: Obtener las actividades del curso (IsExtra == false)
+                var activityIds = await _context.Units
+                    .Where(u => u.CourseId == courseId)
+                    .SelectMany(u => u.Activities)
+                    .Where(a => !a.IsExtra)
+                    .Select(a => a.Id)
+                    .ToListAsync();
+
+                //CG: Contar los registros en StudentsActivitiesNotes para el estudiante
+                var activitiesNotesCount = 0;
+
+                foreach (var activityId in activityIds)
+                {
+                    var count = await _context.StudentsActivitiesNotes
+                        .Where(san => san.ActivityId == activityId && san.StudentId == studentId)
+                        .CountAsync();
+
+                    activitiesNotesCount += count;
+                }
+
+                //CG: Calcular la diferencia entre el total de actividades y las actividades calificadas
+                pendingsCountForStudent += activityIds.Count - activitiesNotesCount;
+            }
+
+            //CG: Almacenar el número de actividades pendientes en el diccionario
+            pendingCounts[studentId] = pendingsCountForStudent;
+        }
+
+        //CG: Ordenar los estudiantes por el número de actividades pendientes (en orden descendente)
+        var sortedStudentIds = pendingCounts
+            .OrderByDescending(pair => pair.Value)      //Los valores mayores iran de primero
+            .ThenBy(pair => pair.Key)                   //En caso de que hayan mas de dos valores con el mismo Value, "desempatar" segun el orden de su Id
+            .Select(pair => pair.Key)                   //Tomar solo el id de los estudiantes para poder obtener mas informacion de ellos
+            .Take(8) // Tomar solo los 8 estudiantes con más pendientes
+            .ToList();
+
+        foreach (var studentId in sortedStudentIds)
         {
-            //CG: Obtener los detalles del estudiante
             var studentDetails = await _context.Students
                 .Where(s => s.Id == studentId)
                 .Select(s => new
@@ -368,58 +418,25 @@ public class DashboardHomeService : IDashboardHomeService
 
             //CG: Obtener los cursos activos del estudiante
             var activeCourseIdsForStudent = await _context.StudentsCourses
-                .Where(sc => sc.StudentId == studentId && courseIds.Contains(sc.CourseId) && sc.IsActive) // Filtra por cursos activos del estudiante
+                .Where(sc => sc.StudentId == studentId && courseIds.Contains(sc.CourseId) && sc.IsActive)
                 .Select(sc => sc.CourseId)
                 .ToListAsync();
-
-            //CG: Calcular el CoursesCount
-            var coursesCountForStudent = activeCourseIdsForStudent.Count;
-
-            // Calcular el PendingsCount
-            var pendingsCountForStudent = 0;
-            foreach (var courseId in activeCourseIdsForStudent)
-            {
-                //CG: Obtener las actividades del curso (IsExtra == false)
-                var activityIds = await _context.Units
-                    .Where(u => u.CourseId == courseId) // Filtra por unidades del curso
-                    .SelectMany(u => u.Activities) // Obtiene las actividades de las unidades
-                    .Where(a => !a.IsExtra) // Filtra por actividades no extra
-                    .Select(a => a.Id) // Selecciona los Id de las actividades
-                    .ToListAsync();
-
-                //CG: Contar los registros en StudentsActivitiesNotes para el estudiante
-                var activitiesNotesCount = 0;
-                foreach (var activityId in activityIds)
-                {
-                    var count = await _context.StudentsActivitiesNotes
-                        .Where(san => san.ActivityId == activityId && san.StudentId == studentId)
-                        .CountAsync();
-                    activitiesNotesCount += count;
-                }
-
-                //CG: Calcular la diferencia entre el total de actividades y las actividades calificadas
-                pendingsCountForStudent += activityIds.Count - activitiesNotesCount;
-            }
 
             //CG: Crear una instancia de DashboardHomeStudentDto
             var studentDto = new DashboardHomeStudentDto
             {
                 Id = studentDetails.Id,
-                FullName = $"{studentDetails.FirstName} {studentDetails.LastName}", // Concatenar FirstName y LastName
+                FullName = $"{studentDetails.FirstName} {studentDetails.LastName}",
                 Email = studentDetails.Email,
-                CoursesCount = coursesCountForStudent,
-                PendingsCount = pendingsCountForStudent
+                CoursesCount = activeCourseIdsForStudent.Count,
+                PendingsCount = pendingCounts[studentId]
             };
 
             //CG: Agregar a la lista de estudiantes
             studentsDto.Add(studentDto);
-
-            // Imprimir en la terminal (log)
-
         }
 
         // --------------------------- Creacion del List<DashboardHomeStudentDto> --------------------------
-
 
         var dashboardHomeDto = new DashboardHomeDto
         {

@@ -8,25 +8,26 @@ using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Dtos.DashboardCourses;
 using ClassNotes.API.Dtos.Students;
+using ClassNotes.API.Dtos.TagsActivities;
 using ClassNotes.API.Dtos.Users;
 using ClassNotes.API.Services.Audit;
 
 namespace ClassNotes.API.Helpers.Automapper
 {
-    public class AutoMapperProfile : Profile
-    {
-        public AutoMapperProfile()
-        {
-            MapsForActivities();
-            MapsForAttendances();
-            MapsForCenters();
-            MapsForCourses();
-            MapsForStudents();
-            MapsForCourseNotes();
-            MapsForCourseSettings();
-            MapsForUsers();
-            MapsForDashboardCourses();
-        }
+	public class AutoMapperProfile : Profile
+	{
+		public AutoMapperProfile()
+		{
+			MapsForActivities();
+			MapsForAttendances();
+			MapsForCenters();
+			MapsForCourses();
+			MapsForStudents();
+			MapsForCourseNotes();
+			MapsForCourseSettings();
+			MapsForUsers();
+			MapsForTagsActivities();
+		}
 
         private void MapsForActivities()
         {
@@ -113,6 +114,13 @@ namespace ClassNotes.API.Helpers.Automapper
             CreateMap<UserEditDto, UserEntity>();
         }
 
+
+		private void MapsForTagsActivities()
+		{
+			CreateMap<TagActivityEntity, TagActivityDto>();
+			CreateMap<TagActivityCreateDto, TagActivityEntity>();
+			CreateMap<TagActivityEditDto, TagActivityEntity>();
+		}
         // Mapeo del dashboard de cursos
         private void MapsForDashboardCourses()
         {

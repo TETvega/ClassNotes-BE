@@ -28,6 +28,20 @@
     "RegistrationDate": "2025-01-22"
   },
   {
+    "id": "a40204f8-e7ee-4475-9d2c-6b88110a3637",
+    "attended": true,
+    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+    "StudentId": "994827ce-51e6-486d-86bd-458e57ddaea1",
+    "RegistrationDate": "2025-05-22"
+  },
+  {
+    "id": "1b5874a9-46cb-4e93-9325-829431c246ea",
+    "attended": true,
+    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+    "StudentId": "994827ce-51e6-486d-86bd-458e57ddaea1",
+    "RegistrationDate": "2025-02-22"
+  },
+  {
     "id": "59308d72-3a8c-4b7d-b00c-f62652305290",
     "attended": true,
     "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",

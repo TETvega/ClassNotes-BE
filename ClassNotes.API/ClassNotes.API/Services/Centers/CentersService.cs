@@ -39,7 +39,7 @@ namespace ClassNotes.API.Services.Centers
             this._auditService = auditService;
             this._logger = logger;
             this._configuration = configuration;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Centers");
             this._context = context;
         }
 

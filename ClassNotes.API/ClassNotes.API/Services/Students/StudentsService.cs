@@ -26,7 +26,7 @@ namespace ClassNotes.API.Services.Students
             classNotesContext_ = classNotesContext;
             mapper_ = mapper;
             _auditService = auditService;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Students");
         }
 
         public async Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int page = 1)
