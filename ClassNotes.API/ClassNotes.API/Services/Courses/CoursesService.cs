@@ -125,7 +125,6 @@ namespace ClassNotes.API.Services.Courses
             }
 
             // Verificar si ya existe una clase con el mismo nombre, sección, codigo y hora de inicio
-            // También se verifica si una persona ya creo la sección ya que las clases no se comparten entre docentes
             var existingCourse = await _context.Courses
                 .FirstOrDefaultAsync(c =>
                     c.CreatedBy == userId &&
@@ -134,7 +133,6 @@ namespace ClassNotes.API.Services.Courses
                     c.Code.ToLower() == dto.Code.ToLower() &&
                     c.StartTime == dto.StartTime
                 );
-
             if (existingCourse != null)
             {
                 return new ResponseDto<CourseDto>
@@ -145,10 +143,60 @@ namespace ClassNotes.API.Services.Courses
                 };
             }
 
-            // Pasa las validaciones y se crea la clase
+            // Crear o duplicar el course_setting
+            CourseSettingEntity courseSettingEntity;
+            if (dto.SettingId != Guid.Empty) // Si se proporciona un SettingId, duplicar el course_setting existente
+            {
+                var existingSetting = await _context.CoursesSettings
+                    .FirstOrDefaultAsync(cs => cs.Id == dto.SettingId && cs.CreatedBy == userId);
+
+                if (existingSetting == null)
+                {
+                    return new ResponseDto<CourseDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = MessagesConstant.CRS_INVALID_SETTING
+                    };
+                }
+
+                // Duplicar el course_setting
+                courseSettingEntity = new CourseSettingEntity
+                {
+                    Name = existingSetting.Name,
+                    ScoreType = existingSetting.ScoreType,
+                    StartDate = existingSetting.StartDate,
+                    EndDate = existingSetting.EndDate,
+                    MinimumGrade = existingSetting.MinimumGrade,
+                    MaximumGrade = existingSetting.MaximumGrade,
+                    MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
+                    CreatedBy = userId,
+                    UpdatedBy = userId
+                };
+            }
+            else // Si no se proporciona un SettingId, crear un course_setting predeterminado
+            {
+                courseSettingEntity = new CourseSettingEntity
+                {
+                    Name = "Default",
+                    ScoreType = "Ponderado",
+                    StartDate = DateTime.Now,
+                    // EndDate = DateTime.Now.AddMonths(6), // No se que tan apropiado es definirle una fecha de fin
+                    MinimumGrade = 70,
+                    MaximumGrade = 100,
+                    MinimumAttendanceTime = 10,
+                    CreatedBy = userId,
+                    UpdatedBy = userId
+                };
+            }
+
+            // Crear el curso y asociarlo con el course_setting
             var courseEntity = _mapper.Map<CourseEntity>(dto);
+            courseEntity.CourseSetting = courseSettingEntity;
+
             _context.Courses.Add(courseEntity);
             await _context.SaveChangesAsync();
+
             var courseDto = _mapper.Map<CourseDto>(courseEntity);
             return new ResponseDto<CourseDto>
             {
