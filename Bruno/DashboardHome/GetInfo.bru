@@ -1,0 +1,15 @@
+meta {
+  name: GetInfo
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/dashboard_home/info
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

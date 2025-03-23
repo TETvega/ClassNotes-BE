@@ -15,7 +15,14 @@ namespace ClassNotes.API.Database.Entities
         [Column("section")]
         public string Section { get; set; }
 
-        [StringLength(15)]
+        [Required]
+        [Column("start_time")]
+		public TimeSpan StartTime { get; set; } // Se cambio a TimeSpan para poder enviar la hora en formato hora:minutos
+
+        [Column("finish_time")]
+		public TimeSpan FinishTime { get; set; }
+
+		[StringLength(15)]
         [Column("code")]
         public string Code { get; set; }
 
@@ -38,6 +45,7 @@ namespace ClassNotes.API.Database.Entities
 
         public virtual CourseSettingEntity CourseSetting { get; set;}
 
+        // cambio
         [Required]
         [Column("teacher_id")]
         public string TeacherId { get; set; }
@@ -46,6 +54,10 @@ namespace ClassNotes.API.Database.Entities
 
         public virtual ICollection<ActivityEntity> Activities { get; set; }
         public virtual ICollection<AttendanceEntity> Attendances { get; set; }
+        // Cambio
+
+		public virtual ICollection<UnitEntity> Units { get; set; }
+		public virtual ICollection<AttendanceEntity> Attendances { get; set; }
         public virtual ICollection<StudentCourseEntity> Students { get; set; }
         public virtual ICollection<CourseNoteEntity> CourseNotes { get; set; }
 

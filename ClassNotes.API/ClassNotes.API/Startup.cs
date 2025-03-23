@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +18,12 @@ using ClassNotes.API.Services.CoursesSettings;
 using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
 using ClassNotes.API.Services.Users;
+using CloudinaryDotNet;
+using ClassNotes.API.Services.Cloudinary;
+using Microsoft.Extensions.Configuration;
+using ClassNotes.API.Services.DashboardHome;
+using ClassNotes.API.Services.TagsActivities;
+using ClassNotes.API.Services.DashboardCourses;
 using ClassNotes.API.Services.Distance;
 using ClassNotes.API.Services;
 using ClassNotes.API.Hubs;
@@ -42,10 +48,9 @@ public class Startup
         services.AddHttpContextAccessor();
 		services.AddSignalR();
 
-        // ----------------- CG -----------------
         // Contexto de la base de datos
         services.AddDbContext<ClassNotesContext>(options =>
-        options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+			options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
 		// Servicios personalizados
 		services.AddTransient<IActivitiesService, ActivitiesService>();
@@ -56,31 +61,38 @@ public class Startup
 		services.AddTransient<ICoursesService, CoursesService>();
 		services.AddTransient<IStudentsService, StudentsService>();
 		services.AddTransient<IUsersService, UsersService>();
-		services.AddScoped<DistanceService>();
-        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>();
+		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
+		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
+		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
+    	services.AddTransient<ICloudinaryService, CloudinaryService>();
+		services.AddScoped<DistanceService>(); //
+        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
         services.AddScoped<QRService>();
         services.AddHostedService<QRService>();
-        services.AddSingleton<OTPCleanupService>();
-        services.AddHostedService(provider =>provider.GetRequiredService<OTPCleanupService>());
+        services.AddSingleton<OTPCleanupService>(); // 
+        services.AddHostedService(provider =>provider.GetRequiredService<OTPCleanupService>()); //
 		services.AddSingleton<EmailScheduleService>();
 		services.AddHostedService<ScheduledEmailSender>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
         // Servicios de seguridad
-        services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();
+        services.AddTransient<IAuditService, AuditService>();
+		services.AddTransient<IOtpService, OtpService>(); 
 
 		// Servicio para el envio de correos (SMTP)
 		services.AddTransient<IEmailsService, EmailsService>();
-		services.AddTransient<IOtpService, OtpService>();
 
-		// Servicio de AutoMapper
+		// Servicio para la subida de archivos de imagenes en la nube (Cloudinary)
+		services.AddTransient<ICloudinaryService, CloudinaryService>();
+
+		// Servicio para el mapeo automático de Entities y DTOs (AutoMapper)
 		services.AddAutoMapper(typeof(AutoMapperProfile));
 
 		// Habilitar cache en memoria
 		services.AddMemoryCache();
 
-		// Identity 
-		services.AddIdentity<UserEntity, IdentityRole>(options =>
+        // Configuración del IdentityUser
+        services.AddIdentity<UserEntity, IdentityRole>(options =>
         {
             options.SignIn.RequireConfirmedAccount = false;
         }).AddEntityFrameworkStores<ClassNotesContext>()
@@ -117,8 +129,6 @@ public class Startup
 			.AllowAnyHeader()
 			.AllowCredentials());
 		});
-
-		// ----------------- CG  -----------------
 	}
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

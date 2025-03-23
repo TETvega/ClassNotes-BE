@@ -31,12 +31,21 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
             }
 
-        // Traer un curso mediante su nombre
-        [HttpGet("{name}")]
+        // Traer un curso mediante su id
+        [HttpGet("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<CourseDto>>> Get(string name)
+        public async Task<ActionResult<ResponseDto<CourseDto>>> Get(Guid id)
         {
-            var response = await _coursesService.GetCourseByNameAsync(name);
+            var response = await _coursesService.GetCourseByIdAsync(id);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        // Crear un curso
+        [HttpPost]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<CourseDto>>> Create(CourseCreateDto dto)
+        {
+            var response = await _coursesService.CreateAsync(dto);
             return StatusCode(response.StatusCode, response);
         }
 

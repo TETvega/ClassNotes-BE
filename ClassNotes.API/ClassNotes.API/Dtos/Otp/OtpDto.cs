@@ -2,8 +2,6 @@
 {
 	public class OtpDto
 	{
-        public string Email { get; set; }
-        public string OtpCode { get; set; }
-        public int ExpirationSeconds { get; set; }
-    }
+		public string UserId { get; set; }
+	}
 }

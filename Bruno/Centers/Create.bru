@@ -6,7 +6,7 @@ meta {
 
 post {
   url: {{PATH}}/centers
-  body: json
+  body: multipartForm
   auth: bearer
 }
 
@@ -15,6 +15,14 @@ auth:bearer {
 }
 
 body:json {
-  {"name": "Jeronimo J Reina",
-  "abbreviation": "JJR"}
+  {
+    "name": "Jeronimo J Reina",
+    "abbreviation": "JJR"
+  }
+}
+
+body:multipart-form {
+  image: @file(C:\Users\DELL\Pictures\Universidad\UNAH-escudo.png)
+  Name: Universidad Catolica de honduras
+  Abbreviation: CATO
 }

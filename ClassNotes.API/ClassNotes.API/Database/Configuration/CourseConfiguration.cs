@@ -36,8 +36,8 @@ namespace ClassNotes.API.Database.Configuration
                 .HasForeignKey(sc => sc.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Relación entre CourseEntity y ActivityEntity (Actividades del curso)
-            builder.HasMany(c => c.Activities)
+            // Relación entre CourseEntity y UnitEntity (Unidades del curso)
+            builder.HasMany(c => c.Units)
                 .WithOne(a => a.Course)        
                 .HasForeignKey(a => a.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);

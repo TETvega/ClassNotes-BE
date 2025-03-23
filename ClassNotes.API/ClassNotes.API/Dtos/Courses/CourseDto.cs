@@ -1,20 +1,26 @@
-﻿namespace ClassNotes.API.Dtos.Courses
+﻿using Org.BouncyCastle.Asn1.Cms;
+
+namespace ClassNotes.API.Dtos.Courses
 {
     // --------------------- CP --------------------- //
 	public class CourseDto
 	{
 		public Guid Id { get; set; }
 
-		public string Name { get; set; }
+		public string Name { get; set; } // Es el nombre del curso
 
-		public string Section { get; set; }
+		public string Section { get; set; } // La sección en la que esta programado el curso
 
-		public string Code { get; set; }
+		public TimeSpan StartTime { get; set; } // La hora a la que la clase inicia
 
-		public bool IsActive { get; set; }
+		public TimeSpan FinishTime { get; set; } // La hora a la que la clase termina 
 
-		public Guid CenterId { get; set; }
+		public string Code { get; set; } // El codigo de la clase
 
-		public Guid SettingId { get; set; }
+		public bool IsActive { get; set; } // Para poder ocultar la clase de la vista
+
+		public Guid CenterId { get; set; } // El centro al que pertenece
+
+		public Guid SettingId { get; set; } // Configuración globlal de la clase
 	}
 }

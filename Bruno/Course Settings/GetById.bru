@@ -1,0 +1,15 @@
+meta {
+  name: GetById
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/courses_settings/a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
