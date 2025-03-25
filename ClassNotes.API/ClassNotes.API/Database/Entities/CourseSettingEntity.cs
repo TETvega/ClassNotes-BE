@@ -49,6 +49,9 @@ namespace ClassNotes.API.Database.Entities
         [DefaultValue(10)]
         public int MinimumAttendanceTime { get; set; }
 
+        [Required]
+        [Column("is_original")]
+        public bool IsOriginal { get; set; } // Se agrego este nuevo campo ya que se necesitaba determinar cuales configuraciones son originales y cuales solo son replicas de una original (copias)
 
         public virtual CourseEntity Course { get; set; } // Se modifico para la relación de uno a uno con cursos
         public virtual ICollection<UserEntity> Teachers { get; set; } = new List<UserEntity>();
