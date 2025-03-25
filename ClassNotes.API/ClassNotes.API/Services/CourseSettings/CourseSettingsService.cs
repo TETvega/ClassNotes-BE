@@ -40,8 +40,8 @@ namespace ClassNotes.API.Services.CoursesSettings
 
 			// Se hace una consulta para obtener las configuraciones creadas por el usuario actual.
 			var settingsQuery = _context.CoursesSettings
-				.Where(c => c.CreatedBy == userId) // Para mostrar unicamente las configuraciones que pertenecen al usuario que hace la petición
-				.AsQueryable();
+				.Where(c => c.CreatedBy == userId && c.IsOriginal) // Para mostrar unicamente las configuraciones que pertenecen al usuario que hace la petición
+				.AsQueryable(); // Ademas se agrega que solo se muestren las originales ya que no nos interesa ver todas las copias que hemos creado
 
 			// buscar por el tipo de puntuación
 			if (!string.IsNullOrEmpty(searchTerm))
@@ -122,7 +122,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 					StatusCode = 400,
 					Status = false,
 					Message = MessagesConstant.CP_INVALID_DATES
-                };
+				};
 			}
 
 			// Validar que las puntuaciones sean mayores a 0
@@ -133,7 +133,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 					StatusCode = 400,
 					Status = false,
 					Message = MessagesConstant.CP_INVALID_GRADES
-                };
+				};
 			}
 
 			// Validar que puntuación maxima no sea menor a la minima
@@ -144,7 +144,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 					StatusCode = 400,
 					Status = false,
 					Message = MessagesConstant.CP_INVALID_GRADES
-                };
+				};
 			}
 
 			// Verificar si ya existe una configuración igual
@@ -165,11 +165,13 @@ namespace ClassNotes.API.Services.CoursesSettings
 					StatusCode = 400,
 					Status = false,
 					Message = MessagesConstant.CONFIGURATION_ALREADY_EXISTS
-                };
+				};
 			}
 
 			// Pasa las validaciones y se crea la configuración
 			var settingEntity = _mapper.Map<CourseSettingEntity>(dto);
+			settingEntity.IsOriginal = true; // Aqui se marca la configuración como original
+			
 			_context.CoursesSettings.Add(settingEntity);
 			await _context.SaveChangesAsync();
 			var settingDto = _mapper.Map<CourseSettingDto>(settingEntity);

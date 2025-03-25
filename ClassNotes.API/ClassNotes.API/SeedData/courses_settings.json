@@ -7,7 +7,8 @@
         "StartDate": "2025-01-01",
         "end_date": "2025-12-31",
         "MinimumGrade": 65,
-        "MinimumAttendanceTime": 80
+        "MinimumAttendanceTime": 80,
+        "IsOriginal": true
     },
     {
         "id": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
@@ -17,7 +18,8 @@
         "StartDate": "2025-02-01",
         "end_date": "2025-11-30",
         "MinimumGrade": 70,
-        "MinimumAttendanceTime": 80
+        "MinimumAttendanceTime": 80,
+        "IsOriginal": true
     },
     {
         "id": "aa48af7c-783d-496c-a16c-59be000b2774",
@@ -27,6 +29,7 @@
         "StartDate": "2025-02-01",
         "end_date": "2025-11-30",
         "MinimumGrade": 70,
-        "MinimumAttendanceTime": 80
+        "MinimumAttendanceTime": 80,
+        "IsOriginal": true
     }
 ]

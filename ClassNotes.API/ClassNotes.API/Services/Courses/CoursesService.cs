@@ -145,7 +145,7 @@ namespace ClassNotes.API.Services.Courses
 
             // Crear o duplicar el course_setting
             CourseSettingEntity courseSettingEntity;
-            if (dto.SettingId != Guid.Empty) // Si se proporciona un SettingId, duplicar el course_setting existente
+            if (dto.SettingId.HasValue && dto.SettingId != Guid.Empty) // Si se proporciona un SettingId, duplicar el course_setting existente
             {
                 var existingSetting = await _context.CoursesSettings
                     .FirstOrDefaultAsync(cs => cs.Id == dto.SettingId && cs.CreatedBy == userId);
@@ -171,7 +171,8 @@ namespace ClassNotes.API.Services.Courses
                     MaximumGrade = existingSetting.MaximumGrade,
                     MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
                     CreatedBy = userId,
-                    UpdatedBy = userId
+                    UpdatedBy = userId,
+                    IsOriginal = false // Aqui se marca como una copia de otra configuración
                 };
             }
             else // Si no se proporciona un SettingId, crear un course_setting predeterminado
@@ -186,13 +187,15 @@ namespace ClassNotes.API.Services.Courses
                     MaximumGrade = 100,
                     MinimumAttendanceTime = 10,
                     CreatedBy = userId,
-                    UpdatedBy = userId
+                    UpdatedBy = userId,
+                    IsOriginal = false // De igual forma se marca como una copia
                 };
             }
 
             // Crear el curso y asociarlo con el course_setting
             var courseEntity = _mapper.Map<CourseEntity>(dto);
             courseEntity.CourseSetting = courseSettingEntity;
+            courseEntity.SettingId = courseSettingEntity.Id; // Se asigna el id de la configuración
 
             _context.Courses.Add(courseEntity);
             await _context.SaveChangesAsync();

@@ -18,5 +18,7 @@
 		public float MaximumGrade { get; set; } // Nota maxima en una clase
 
 		public int MinimumAttendanceTime { get; set; } // El tiempo en el cual se debe de mandar la asistencia
+
+		public bool IsOriginal { get; set; } // Para separar las configuraciones originales de las replicas (copias)
 	}
 }
