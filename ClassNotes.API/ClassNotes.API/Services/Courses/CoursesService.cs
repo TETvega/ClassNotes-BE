@@ -39,6 +39,7 @@ namespace ClassNotes.API.Services.Courses
             var userId = _auditService.GetUserId();
 
             var coursesQuery = _context.Courses
+                .Include(c => c.CourseSetting) // Para incluir la información de la configuración del curso
                 .Where(c => c.CreatedBy == userId) // Para mostrar unicamente los cursos que pertenecen al usuario que hace la petición
                 .AsQueryable();
 
@@ -88,6 +89,7 @@ namespace ClassNotes.API.Services.Courses
             var userId = _auditService.GetUserId();
 
             var courseEntity = await _context.Courses
+                .Include(c => c.CourseSetting) // Para incluir la información de la configuración del curso
                 .FirstOrDefaultAsync(a => a.Id == id && a.CreatedBy == userId); // Unicamente aprecera el curso si lo creo quien hace la petición
             if (courseEntity == null)
             {
