@@ -151,7 +151,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			var existingConfiguration = await _context.CoursesSettings
 				.FirstOrDefaultAsync(c =>
 					c.CreatedBy == userId &&
-					c.ScoreType.ToLower() == dto.ScoreType.ToLower() &&
+					c.Name.ToLower() == dto.Name.ToLower() &&
 					Math.Round(c.MinimumGrade, 2) == Math.Round(dto.MinimumGrade, 2) &&
 					Math.Round(c.MaximumGrade, 2) == Math.Round(dto.MaximumGrade, 2) &&
 					c.MinimumAttendanceTime == dto.MinimumAttendanceTime &&

@@ -14,20 +14,20 @@ using ClassNotes.API.Services.Audit;
 
 namespace ClassNotes.API.Helpers.Automapper
 {
-	public class AutoMapperProfile : Profile
-	{
-		public AutoMapperProfile()
-		{
-			MapsForActivities();
-			MapsForAttendances();
-			MapsForCenters();
-			MapsForCourses();
-			MapsForStudents();
-			MapsForCourseNotes();
-			MapsForCourseSettings();
-			MapsForUsers();
-			MapsForTagsActivities();
-		}
+    public class AutoMapperProfile : Profile
+    {
+        public AutoMapperProfile()
+        {
+            MapsForActivities();
+            MapsForAttendances();
+            MapsForCenters();
+            MapsForCourses();
+            MapsForStudents();
+            MapsForCourseNotes();
+            MapsForCourseSettings();
+            MapsForUsers();
+            MapsForTagsActivities();
+        }
 
         private void MapsForActivities()
         {
@@ -82,7 +82,15 @@ namespace ClassNotes.API.Helpers.Automapper
 
         private void MapsForCourses()
         {
-            CreateMap<CourseEntity, CourseDto>();
+            CreateMap<CourseEntity, CourseDto>()
+                .ForMember(dest => dest.SettingName, opt => opt.MapFrom(src => src.CourseSetting.Name)) // Mapear el nombre de la configuración
+                .ForMember(dest => dest.ScoreType, opt => opt.MapFrom(src => src.CourseSetting.ScoreType)) // Mapear el tipo de puntuación
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.CourseSetting.StartDate)) // Mapear la fecha de inicio
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.CourseSetting.EndDate)) // Mapear la fecha de fin
+                .ForMember(dest => dest.MinimumGrade, opt => opt.MapFrom(src => src.CourseSetting.MinimumGrade)) // Mapear la nota mínima
+                .ForMember(dest => dest.MaximumGrade, opt => opt.MapFrom(src => src.CourseSetting.MaximumGrade)) // Mapear la nota máxima
+                .ForMember(dest => dest.MinimumAttendanceTime, opt => opt.MapFrom(src => src.CourseSetting.MinimumAttendanceTime)) // Mapear el tiempo mínimo de asistencia
+                .ForMember(dest => dest.IsOriginal, opt => opt.MapFrom(src => src.CourseSetting.IsOriginal)); // Mapear si es original;
             CreateMap<CourseCreateDto, CourseEntity>();
             CreateMap<CourseEditDto, CourseEntity>();
         }
@@ -115,12 +123,12 @@ namespace ClassNotes.API.Helpers.Automapper
         }
 
 
-		private void MapsForTagsActivities()
-		{
-			CreateMap<TagActivityEntity, TagActivityDto>();
-			CreateMap<TagActivityCreateDto, TagActivityEntity>();
-			CreateMap<TagActivityEditDto, TagActivityEntity>();
-		}
+        private void MapsForTagsActivities()
+        {
+            CreateMap<TagActivityEntity, TagActivityDto>();
+            CreateMap<TagActivityCreateDto, TagActivityEntity>();
+            CreateMap<TagActivityEditDto, TagActivityEntity>();
+        }
         // Mapeo del dashboard de cursos
         private void MapsForDashboardCourses()
         {
