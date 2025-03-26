@@ -114,13 +114,35 @@ namespace ClassNotes.API.Services.Courses
             var userId = _auditService.GetUserId();
 
             // Validar que la hora de fin no sea menor a la de inicio
-            if (dto.FinishTime < dto.StartTime)
+            if (dto.FinishTime <= dto.StartTime)
             {
                 return new ResponseDto<CourseDto>
                 {
                     StatusCode = 400,
                     Status = false,
                     Message = MessagesConstant.CNS_END_TIME_BEFORE_START_TIME
+                };
+            }
+
+            // Validar que la fecha de fin no sea menor a la de inicio
+            if (dto.EndDate <= dto.StartDate)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = MessagesConstant.CP_INVALID_DATES
+                };
+            }
+
+            // Validar que las notas sean válidas
+            if (dto.MinimumGrade <= 0 || dto.MaximumGrade <= 0 || dto.MaximumGrade < dto.MinimumGrade)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = MessagesConstant.CP_INVALID_GRADES
                 };
             }
 
@@ -143,9 +165,12 @@ namespace ClassNotes.API.Services.Courses
                 };
             }
 
-            // Crear o duplicar el course_setting
-            CourseSettingEntity courseSettingEntity;
-            if (dto.SettingId.HasValue && dto.SettingId != Guid.Empty) // Si se proporciona un SettingId, duplicar el course_setting existente
+
+            // Crear o duplicar la configuración del curso
+            CourseSettingEntity originalSettingEntity;
+            CourseSettingEntity duplicatedSettingEntity;
+
+            if (dto.SettingId.HasValue && dto.SettingId != Guid.Empty) // Caso 1: Duplicar una configuración existente
             {
                 var existingSetting = await _context.CoursesSettings
                     .FirstOrDefaultAsync(cs => cs.Id == dto.SettingId && cs.CreatedBy == userId);
@@ -160,8 +185,11 @@ namespace ClassNotes.API.Services.Courses
                     };
                 }
 
+                // La configuración original es la existente
+                originalSettingEntity = existingSetting;
+
                 // Duplicar el course_setting
-                courseSettingEntity = new CourseSettingEntity
+                duplicatedSettingEntity = new CourseSettingEntity
                 {
                     Name = existingSetting.Name,
                     ScoreType = existingSetting.ScoreType,
@@ -172,35 +200,84 @@ namespace ClassNotes.API.Services.Courses
                     MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
                     CreatedBy = userId,
                     UpdatedBy = userId,
-                    IsOriginal = false // Aqui se marca como una copia de otra configuración
+                    IsOriginal = false // Marcamos como copia
                 };
             }
-            else // Si no se proporciona un SettingId, crear un course_setting predeterminado
+            else // Caso 2: Crear una configuración original
             {
-                courseSettingEntity = new CourseSettingEntity
+                // Validar que el nombre de la configuración esté presente
+                if (string.IsNullOrEmpty(dto.SettingName))
                 {
-                    Name = "Default",
-                    ScoreType = "Ponderado",
-                    StartDate = DateTime.Now,
-                    // EndDate = DateTime.Now.AddMonths(6), // No se que tan apropiado es definirle una fecha de fin
-                    MinimumGrade = 70,
-                    MaximumGrade = 100,
-                    MinimumAttendanceTime = 10,
+                    return new ResponseDto<CourseDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = MessagesConstant.CP_SETTING_NAME_REQUIRED
+                    };
+                }
+
+                // Crear la configuración original
+                originalSettingEntity = new CourseSettingEntity
+                {
+                    Name = dto.SettingName,
+                    ScoreType = dto.ScoreType,
+                    StartDate = dto.StartDate,
+                    EndDate = dto.EndDate,
+                    MinimumGrade = dto.MinimumGrade,
+                    MaximumGrade = dto.MaximumGrade,
+                    MinimumAttendanceTime = dto.MinimumAttendanceTime,
                     CreatedBy = userId,
                     UpdatedBy = userId,
-                    IsOriginal = false // De igual forma se marca como una copia
+                    IsOriginal = true // Marcamos como configuración original
+                };
+
+                // Guardar la configuración original en la base de datos
+                _context.CoursesSettings.Add(originalSettingEntity);
+                await _context.SaveChangesAsync();
+
+                // Siempre duplicar la configuración antes de asignarla al curso
+                duplicatedSettingEntity = new CourseSettingEntity
+                {
+                    Name = originalSettingEntity.Name,
+                    ScoreType = originalSettingEntity.ScoreType,
+                    StartDate = originalSettingEntity.StartDate,
+                    EndDate = originalSettingEntity.EndDate,
+                    MinimumGrade = originalSettingEntity.MinimumGrade,
+                    MaximumGrade = originalSettingEntity.MaximumGrade,
+                    MinimumAttendanceTime = originalSettingEntity.MinimumAttendanceTime,
+                    CreatedBy = userId,
+                    UpdatedBy = userId,
+                    IsOriginal = false // La copia siempre es marcada como no original
                 };
             }
 
-            // Crear el curso y asociarlo con el course_setting
-            var courseEntity = _mapper.Map<CourseEntity>(dto);
-            courseEntity.CourseSetting = courseSettingEntity;
-            courseEntity.SettingId = courseSettingEntity.Id; // Se asigna el id de la configuración
+            // Guardar la copia en la base de datos
+            _context.CoursesSettings.Add(duplicatedSettingEntity);
+            await _context.SaveChangesAsync();
 
+            // Crear el curso y asociarlo con la configuración
+            var courseEntity = new CourseEntity
+            {
+                Name = dto.Name,
+                Section = dto.Section,
+                StartTime = dto.StartTime,
+                FinishTime = dto.FinishTime,
+                Code = dto.Code,
+                IsActive = dto.IsActive,
+                CenterId = dto.CenterId,
+                CreatedBy = userId,
+                UpdatedBy = userId,
+                CourseSetting = duplicatedSettingEntity, // Asociamos la configuración
+                SettingId = duplicatedSettingEntity.Id // Asignamos el ID de la configuración
+            };
+
+            // Guardar el curso en la base de datos
             _context.Courses.Add(courseEntity);
             await _context.SaveChangesAsync();
 
+            // Mapear a DTO para la respuesta
             var courseDto = _mapper.Map<CourseDto>(courseEntity);
+
             return new ResponseDto<CourseDto>
             {
                 StatusCode = 201,

@@ -26,10 +26,10 @@ namespace ClassNotes.API.Controllers
             string searchTerm = "",
             int page = 1
             )
-            {
+        {
             var response = await _coursesService.GetCoursesListAsync(searchTerm, page);
             return StatusCode(response.StatusCode, response);
-            }
+        }
 
         // Traer un curso mediante su id
         [HttpGet("{id}")]
@@ -57,7 +57,6 @@ namespace ClassNotes.API.Controllers
             var response = await _coursesService.EditAsync(dto, id);
             return StatusCode(response.StatusCode, response);
         }
-
 
         // Eliminar un curso
         [HttpDelete("{id}")]

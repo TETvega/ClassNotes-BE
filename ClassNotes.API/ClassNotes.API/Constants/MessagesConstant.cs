@@ -113,7 +113,7 @@ namespace ClassNotes.API.Constants
         public const string CNS_RECORDS_FOUND = "CNS-125: Se encontraron las notas de curso.";
         public const string CNS_EDIT_PERMISSION_DENIED = "CNS-126: No puede editar una nota que no le pertenece.";
         public const string CNS_DELETE_PERMISSION_DENIED = "CNS-127: No puede eliminar una nota que no le pertenece.";
-        public const string CNS_END_TIME_BEFORE_START_TIME = "CNS-128 :La hora de finalización no puede ser menor a la hora de inicio.";
+        public const string CNS_END_TIME_BEFORE_START_TIME = "CNS-128 :La hora de finalización no puede ser menor o igual a la hora de inicio.";
         public const string CNS_CLASS_ALREADY_EXISTS = "CNS-129: Ya existe la clase.";
 
         // Manejo Configuracion Curso (CP-XXX)
@@ -122,9 +122,10 @@ namespace ClassNotes.API.Constants
         public const string CP_DELETE_SUCCESS = "CP-233: Configuración de curso eliminada exitosamente.";
         public const string CP_RECORD_NOT_FOUND = "CP-244: La configuración de curso no fue encontrada.";
         public const string CP_RECORD_FOUND = "CP-244: La configuración de curso fue encontrada.";
-        public const string CP_INVALID_DATES = "CP-245: La fecha de finalización no puede ser menor a la de inicio.";
+        public const string CP_INVALID_DATES = "CP-245: La fecha de finalización no puede ser menor o igual a la de inicio.";
         public const string CP_INVALID_GRADES = "CP-246: Las puntuaciones mínima y máxima deben ser mayores a 0, y la máxima no puede ser menor a la mínima.";
         public const string CONFIGURATION_ALREADY_EXISTS = "CP-247: Ya existe la configuración";
+        public const string CP_SETTING_NAME_REQUIRED = "CP-248: El nombre de la configuración es requerido";
 
         // Manewjo Emails (EM-XXX)
         public const string EMAIL_CREATE_SUCCESS = "EM-311: Correo electrónico creado exitosamente.";
