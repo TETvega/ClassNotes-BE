@@ -4,119 +4,119 @@
     "name": "Universidad Nacional Autónoma de Honduras",
     "abbreviation": "UNAH",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": true,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "72ed66eb-6396-4788-a337-eb40174dd756",
     "name": "Universidad Nacional Autónoma de Honduras",
     "abbreviation": "UNAH",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+    "isArchived": true,
+    "teacherId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
   },
   {
     "id": "3f471eaa-2cb9-404b-bbc7-5173c45d2083",
     "name": "Universidad Nacional Autónoma de Honduras",
     "abbreviation": "UNAH",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "8f920314-2345-67ab-cdef-8901234567fc"
+    "isArchived": true,
+    "teacherId": "8f920314-2345-67ab-cdef-8901234567fc"
   },
   {
     "id": "9106f197-3996-4213-95fe-db492c10c1f3",
     "name": "Universidad Nacional Autónoma de Honduras",
     "abbreviation": "UNAH",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "9f031425-3456-78ab-cdef-9012345678fd"
+    "isArchived": true,
+    "teacherId": "9f031425-3456-78ab-cdef-9012345678fd"
   },
   {
     "id": "e29b8400-e29b-41d4-a716-446655440001",
     "name": "Universidad Tecnológica Centroamericana",
     "abbreviation": "UNITEC",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": true,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "e29b8400-e29b-41d4-a716-446655440002",
     "name": "Universidad José Cecilio del Valle",
     "abbreviation": "UJCV",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": true,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "234ef0aa-9ad5-411e-b34a-872b61deac7d",
     "name": "Universidad Católica de Honduras",
     "abbreviation": "UNICAH",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": true,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "15ead739-8a7e-411b-97d1-0c719faf1008",
     "name": "Universidad Católica de Honduras",
     "abbreviation": "UNICAH",
     "logo": null,
-    "is_archived": true,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": true,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "a8519f94-6210-4110-8ba5-65b3c7d22081",
     "name": "Escuela Licenciado Jerónimo J. Reina",
     "abbreviation": "ELJJR",
     "logo": null,
-    "is_archived": false,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": false,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "300c439c-e4e2-4eab-bb6e-e1eaec4252ff",
     "name": "Escuela Manuel Bonilla",
     "abbreviation": "EMB",
     "logo": null,
-    "is_archived": false,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": false,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "643e622c-ea02-4690-b63d-f78960d515c4",
     "name": "Instituto Oficial Álvaro Contreras",
     "abbreviation": "IDAC",
     "logo": null,
-    "is_archived": false,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": false,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "8c86ddbb-f619-4257-a9fa-a2bd8f4d9333",
     "name": "Instituto Salesiano María Auxiliadora",
     "abbreviation": "ISMA",
     "logo": null,
-    "is_archived": false,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": false,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "a6118753-9a7c-4949-9f9e-d86193d15880",
     "name": "Instituto Bilingüe Héctor Emilio Medina",
     "abbreviation": "IBHEM",
     "logo": null,
-    "is_archived": false,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": false,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "faba84c3-9f09-4bdd-a5db-d5ca5888f88a",
     "name": "Western International School - Campus Santa Rosa de Lima",
     "abbreviation": "WIS",
     "logo": null,
-    "is_archived": false,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": false,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   },
   {
     "id": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
     "name": "Alfa y Omega Bilingual School",
     "abbreviation": "AYO",
     "logo": null,
-    "is_archived": false,
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "isArchived": false,
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
   }
 ]

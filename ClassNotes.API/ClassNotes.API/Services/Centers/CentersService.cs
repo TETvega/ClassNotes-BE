@@ -171,13 +171,19 @@ namespace ClassNotes.API.Services.Centers
 
          //(ken)
         //Por Ahora este metodo separa completamente los centros archivados y no archivados, quiza cambie si se quiere la opcion de recibirlos todos en una sola llamada...
-        public async Task<ResponseDto<PaginationDto<List<CenterDto>>>> GetCentersListAsync(string searchTerm = "",bool isArchived = false,int page = 1)
+        public async Task<ResponseDto<PaginationDto<List<CenterDto>>>> GetCentersListAsync(string searchTerm = "", bool? isArchived = null, int page = 1)
         {
             int startIndex = (page - 1) * PAGE_SIZE;
 
             var userId = _auditService.GetUserId();
 
-            var centersQuery = _context.Centers.AsQueryable().Where(x => x.IsArchived == isArchived && x.TeacherId == userId);
+            var centersQuery = _context.Centers.AsQueryable().Where(x => x.TeacherId == userId);
+
+			// AM: Filtrar los centros activos e inactivos si se proporciona el parametro isArchived
+			if (isArchived.HasValue)
+			{
+				centersQuery = centersQuery.Where(c => c.IsArchived == isArchived.Value);
+			}
 
             if (!string.IsNullOrEmpty(searchTerm))
             {

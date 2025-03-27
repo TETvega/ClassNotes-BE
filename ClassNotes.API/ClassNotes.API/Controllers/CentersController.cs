@@ -31,7 +31,7 @@ namespace ClassNotes.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<List<CenterDto>>>> GetAll(string searchTerm = "", bool isArchived = false, int page = 1)
+        public async Task<ActionResult<ResponseDto<List<CenterDto>>>> GetAll(string searchTerm = "", bool? isArchived = null, int page = 1)
         {
             var response = await _centersService.GetCentersListAsync(searchTerm, isArchived, page);
             return StatusCode(response.StatusCode, response);
