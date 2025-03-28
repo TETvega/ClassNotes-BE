@@ -11,7 +11,7 @@ namespace ClassNotes.API.Services.Centers
         Task<ResponseDto<CenterDto>> DeleteAsync(bool confirmation, Guid id);
         Task<ResponseDto<CenterDto>> EditAsync([FromForm] CenterEditDto dto, Guid id, IFormFile image, bool changedImage);
         Task<ResponseDto<CenterDto>> GetCenterByIdAsync(Guid id);
-        Task<ResponseDto<PaginationDto<List<CenterDto>>>> GetCentersListAsync(string searchTerm = "", bool? isArchived = null, int page = 1);
+        Task<ResponseDto<PaginationDto<List<CenterExtendDto>>>> GetCentersListAsync(string searchTerm = "", bool? isArchived = null, int? pageSize = null,  int page = 1);
         Task<ResponseDto<CenterDto>> RecoverAsync(Guid id);
     }
 }
