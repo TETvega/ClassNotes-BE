@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Azure;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
@@ -29,38 +30,61 @@ namespace ClassNotes.API.Services.Students
             PAGE_SIZE = configuration.GetValue<int>("PageSize:Students");
         }
 
-        public async Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int page = 1)
+
+        // HR 
+        // Realize optimizaciones de querys 
+        public async Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(
+            string searchTerm = "",
+            int? pageSize = null,
+            int page = 1
+            )
         {
-            // Calculamos el Indice de inicio para la paginaciOn
-            int startIndex = (page - 1) * PAGE_SIZE;
+            /** HR
+             * Si pageSize es -1, se devuelve int.MaxValue
+             * -1 significa "obtener todos los elementos", por lo que usamos int.MaxValue 
+             *  int.MaxValue es 2,147,483,647, que es el valor máximo que puede tener un int en C#.
+             *  Math.Max(1, valor) garantiza que currentPageSize nunca sea menor que 1 excepto el -1 al inicio
+             *  si pageSize es nulo toma el valor de PAGE_SIZE
+             */
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
 
             // Necesitamos obtener el i de quien hace la petición
             var userId = _auditService.GetUserId();
 
-            // Obtenemos la consulta base de los estudiantes registrados en la base de datos
+            // Consulta base con filtrado por TeacherId
             var studentEntityQuery = classNotesContext_.Students
-                .Where(x => x.TeacherId == userId).AsQueryable(); // Solo incluimos estudiantes creados por quien hace la petición
+                .Where(x => x.TeacherId == userId);
 
-            // Si se proporciona un termino de busqueda, filtramos los estudiantes por nombre
+            // Aplicar búsqueda si hay un término
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                searchTerm = searchTerm.ToLower(); // Convertimos a minusculas
+                // https://www.csharptutorial.net/entity-framework-core-tutorial/ef-core-like/
+                // Optimizacion de consultas usando EF directamanete que es de SQL 
                 studentEntityQuery = studentEntityQuery.Where(x =>
-                    (x.FirstName + " " + x.LastName).ToLower().Contains(searchTerm) // podemos buscar por nombre completo
+                    EF.Functions.Like(x.FirstName + " " + x.LastName, $"%{searchTerm}%")
                 );
             }
 
-            // Obtenemos el total de estudiantes despues de filtrar
-            int totalStudents = await studentEntityQuery.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalStudents / PAGE_SIZE);
-            var studentEntity = await studentEntityQuery
-                .OrderByDescending(x => x.CreatedDate) // Ordenamos por fecha de creación en orden descendente
-                .Skip(startIndex) // Omitimos los registros de páginas anteriores
-                .Take(PAGE_SIZE) // Tomamos solo la cantidad definida por PAGE_SIZE
+            // Obtener total de elementos antes de la paginación
+            var totalStudents = await studentEntityQuery.CountAsync();
+
+            // HR
+            // Obtener datos paginados y mapear a DTOs directamente en la consulta
+            // cosas de yputube pero tambien lo podes ver en la docu de mapper 
+            // https://automapperdocs.readthedocs.io/en/latest/Dependency-injection.html
+            // https://stackoverflow.com/questions/53528967/how-to-use-projectto-with-automapper-8-0-dependency-injection
+
+            var studentsDtos = await studentEntityQuery
+                .OrderByDescending(x => x.CreatedDate)
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .ProjectTo<StudentDto>(mapper_.ConfigurationProvider) // Directamente mapeamos en la misma consulta
                 .ToListAsync();
 
-            // Mapeamos las entidades obtenidas a DTOs
-            var studentsDtos = mapper_.Map<List<StudentDto>>(studentEntity);
+            // Calcular total de páginas
+            int totalPages = (int)Math.Ceiling((double)totalStudents / currentPageSize);
 
             // Retornamos la respuesta con los datos paginados
             return new ResponseDto<PaginationDto<List<StudentDto>>>
@@ -71,7 +95,7 @@ namespace ClassNotes.API.Services.Students
                 Data = new PaginationDto<List<StudentDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = currentPageSize,
                     TotalItems = totalStudents,
                     TotalPages = totalPages,
                     Items = studentsDtos,

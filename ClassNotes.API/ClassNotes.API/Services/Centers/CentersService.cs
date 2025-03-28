@@ -181,23 +181,14 @@ namespace ClassNotes.API.Services.Centers
             int? pageSize = null, 
             int page = 1)
         {
-            // Si pageSize es null, usamos PAGE_SIZE
-            int currentPageSize = pageSize ?? PAGE_SIZE;
-
-            // Si pageSize -1, significa "todos los elementos"
-            // esta amarrado al valor maximo que puede tener un int en C#
-            if ( pageSize == -1)
-            {
-                currentPageSize = int.MaxValue; // Para obtener todos los elementos
-            }
-            // si la Paginacion es 0 u otro valor negativo exepto el -1 entonces se usa el PAGE Size por defecto
-            if (pageSize == 0 || pageSize < -1)
-            {
-                currentPageSize = PAGE_SIZE;
-            }
-
-
-            // Calculo del indice segun el PageSize
+            /** HR
+             * Si pageSize es -1, se devuelve int.MaxValue
+             * -1 significa "obtener todos los elementos", por lo que usamos int.MaxValue 
+             *  int.MaxValue es 2,147,483,647, que es el valor máximo que puede tener un int en C#.
+             *  Math.Max(1, valor) garantiza que currentPageSize nunca sea menor que 1 excepto el -1 al inicio
+             *  si pageSize es nulo toma el valor de PAGE_SIZE
+             */
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
             int startIndex = (page - 1) * currentPageSize;
             var userId = _auditService.GetUserId();
 
