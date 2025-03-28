@@ -265,9 +265,9 @@ namespace ClassNotes.API.Services.Centers
                     PageSize = currentPageSize, // Total de items que puede tener la peticion
                     TotalItems = totalCenters, // el total de items en la BD segun la consulta y sus filtros
                     TotalPages = totalPages, // Total de paginas que tiene la consulta con todo y filtros
-                    Items = centersWithCounts, 
-                    HasPreviousPage = page > 1,
-                    HasNextPage = page < totalPages
+                    Items = centersWithCounts,  // Los itmes y su informacion
+                    HasPreviousPage = page > 1, //tiene pagina antes
+                    HasNextPage = page < totalPages // tiene pagina despues
                 }
             };
         }
@@ -726,13 +726,17 @@ namespace ClassNotes.API.Services.Centers
                             Message = MessagesConstant.CENTER_ALREADY_ARCHIVED
                         };
                     }
-                
 
+                    // Majedo de poner todas las clases en inactive de un centro archivado
+                    // https://learn.microsoft.com/en-us/ef/core/saving/execute-insert-update-delete
+                    // se realiza una query directamente donde los cursos tienen el id del centro 
+                    await _context.Courses
+                        .Where(course => course.CenterId == centerEntity.Id) //donde el id del centro coincide en la clase
+                        .ExecuteUpdateAsync(setCourses => setCourses.SetProperty(c => c.IsActive, false)); // a ese array le ejecutamos un set donde la propiedad de es activo la pasamos a falso
 
                     centerEntity.IsArchived = true;
 
-                    // Majedo de poner todas las clases en inactive de un centro archivado
-
+                    
 
 
 
@@ -812,8 +816,18 @@ namespace ClassNotes.API.Services.Centers
                         };
                     }
 
+                    // HR
+                    // cuando recupera un centro las clases donde su configuracion 
+                    // la fecha de terminacion de la clase es mayor a la fecha actual las activa
+                    await _context.Courses
+                            .Where(course => course.CenterId == centerEntity.Id && // verifica que la clase pertenezca al centro 
+                                    course.CourseSetting != null &&  // validacion de que no tenga un setting nulo (por si acaso no tendria que pasar nunca pero mejor asegutrar)
+                                    course.CourseSetting.EndDate >= DateTime.UtcNow)  // valida que la fecha sea mayor a la fecha actual 
+                            .ExecuteUpdateAsync(setCourses => setCourses.SetProperty(course => course.IsActive, true)); // a todos en el array del where cambia y hace un set a la proipiedad de activos 
 
-                   centerEntity.IsArchived = false;
+
+
+                    centerEntity.IsArchived = false;
 
                     _context.Centers.Update(centerEntity);
                     await _context.SaveChangesAsync();
