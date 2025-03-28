@@ -186,5 +186,7 @@ namespace ClassNotes.API.Constants
 		public const string ATT_UPDATE_ERROR = "ATT-008: No se pudo actualizar la asistencia.";
 		public const string ATT_DELETE_SUCCESS = "ATT-009: Asistencia eliminada exitosamente.";
 		public const string ATT_DELETE_ERROR = "ATT-010: No se pudo eliminar asistencia.";
-	}
+        public const string ATT_STUDENT_NOT_ENROLLED = "ATT-011: El estudiante no está registrado en el curso.";
+
+    }
 }
