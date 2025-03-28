@@ -65,7 +65,7 @@ Entre las funcionalidades principales que hemos implementado se encuentran:
 ## Autores
  
 > - [@Anthony Edward Miranda Fuentes](https://github.com/AnthonyEMF)  
-> - [@Cristian Andoni Gomez Garcia](https://github.com/CristianGmz7) 
+> - [@Cristian Adonis Gomez Garcia](https://github.com/CristianGmz7) 
 > - [@Josue David Diaz Rodriguez](https://github.com/JDDR200530)
 > - [@Carlos Ovidio Dubon Pineda](https://github.com/Pineda04)
 > - [@Kenneth Leonardo Galdamez Martinez](https://github.com/Kenneth-Galdamez)

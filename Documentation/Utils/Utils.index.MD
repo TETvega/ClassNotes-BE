@@ -10,13 +10,14 @@ Bienvenido a **`Utilidades`**.
 Aquí se encuentran organizados por módulos para facilitar la navegación y comprensión del funcionamiento de cada uno.  
 
 📌 **Índice**  
-- 📂 [Iconos](./activities.MD)  
-- 🔑 [Auth](./AuthDocumentation.MD)  
-- 📌  [Tags](./TagsDocumentatios.MD)   
+- 📂 [Iconos](./icons.MD)
+- 📖 [Activities](../Services/activities.MD)    
+- 🔑 [Auth](../Services/AuthDocumentation.MD)  
+- 📌 [Tags](../Services/TagsDocumentatios.MD)   
 - 🏢 [Centers](#centers)  
 - ☁️ [Cloudinary](#cloudinary)  
 - 📘 [Course Notes](#course-notes)  
-- 📚 [Courses](#courses)  
+- 📚 [Courses](../Services/CoursesDocumentation.MD)  
 - ⚙️ [Courses Settings](#courses-settings)  
 - 🏛️ [Dashboard Courses](#dashboard-courses)  
 - 🏠 [Dashboard Home](#dashboard-home)  

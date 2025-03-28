@@ -81,5 +81,6 @@ Aquí tienes una tabla con los iconos y sus respectivos códigos que puedes copi
 | 📃 | `:page_with_curl:` | 📜 | `:scroll:` |
 | 📄 | `:page_facing_up:` | 📰 | `:newspaper:` |
 | 🗞️ | `:newspaper_roll:` | 📑 | `:bookmark_tabs:` |
-| 🔖 | `:bookmark:` |  |  |
+| 🔖 | `:bookmark:` | ➕ | `:heavy_plus_sign:` |
+| 🔍 | `:mag:` | 🗑️ | `:wastebasket:` |
 
