@@ -6,6 +6,7 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Services.Audit;
+using iText.Kernel.Geom;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassNotes.API.Services.Courses
@@ -32,34 +33,48 @@ namespace ClassNotes.API.Services.Courses
 
         // EG -> Enlistar todos los cursos, paginacion
 
-        public async Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(string searchTerm = "", int page = 1)
+        public async Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = null
+            )
         {
-            int startIndex = (page - 1) * PAGE_SIZE;
+            /** HR
+             * Si pageSize es -1, se devuelve int.MaxValue
+             * -1 significa "obtener todos los elementos", por lo que usamos int.MaxValue 
+             *  int.MaxValue es 2,147,483,647, que es el valor máximo que puede tener un int en C#.
+             *  Math.Max(1, valor) garantiza que currentPageSize nunca sea menor que 1 excepto el -1 al inicio
+             *  si pageSize es nulo toma el valor de PAGE_SIZE
+             */
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = ( page   - 1) * currentPageSize;
 
             var userId = _auditService.GetUserId();
 
+            // Query base con filtro por usuario
             var coursesQuery = _context.Courses
-                .Include(c => c.CourseSetting) // Para incluir la información de la configuración del curso
-                .Where(c => c.CreatedBy == userId) // Para mostrar unicamente los cursos que pertenecen al usuario que hace la petición
-                .AsQueryable();
+                .Include(c => c.CourseSetting)
+                .Where(c => c.CreatedBy == userId);
 
-            // buscar por nombre o codigo del curso 
+            // Filtro por búsqueda es lo mismo aplicado a courses
+            // HR
             if (!string.IsNullOrEmpty(searchTerm))
             {
+                string pattern = $"%{searchTerm}%";
                 coursesQuery = coursesQuery.Where(c =>
-               c.Name.ToLower().Contains(searchTerm.ToLower()) ||
-               c.Code.ToLower().Contains(searchTerm.ToLower()));
+                    EF.Functions.Like(c.Name, pattern) ||
+                    EF.Functions.Like(c.Code, pattern));
             }
 
             int totalItems = await coursesQuery.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+            int totalPages = (int)Math.Ceiling((double)totalItems / currentPageSize);
 
             // aplicar paginacion 
 
             var courseEntities = await coursesQuery
                 .OrderByDescending(n => n.Section) //Ordenara por seccion   
                 .Skip(startIndex)
-                .Take(PAGE_SIZE)
+                .Take(currentPageSize)
                 .ToListAsync();
 
             var coursesDto = _mapper.Map<List<CourseDto>>(courseEntities);
@@ -72,7 +87,7 @@ namespace ClassNotes.API.Services.Courses
                 Data = new PaginationDto<List<CourseDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = currentPageSize,
                     TotalItems = totalItems,
                     TotalPages = totalPages,
                     Items = coursesDto,

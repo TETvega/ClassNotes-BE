@@ -7,7 +7,7 @@ namespace ClassNotes.API.Services.Courses
         {
         // EG -> Listar todos los cursos 	
         Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(
-                string searchTerm = "", int page = 1
+                string searchTerm = "", int page = 1 , int? pageSize = null
         );
 
         // CP -> Listar un curso en especifico
