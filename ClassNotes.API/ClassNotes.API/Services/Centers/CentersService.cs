@@ -15,6 +15,7 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using CloudinaryInstance = CloudinaryDotNet.Cloudinary;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ClassNotes.API.Services.Centers
 {
@@ -171,50 +172,100 @@ namespace ClassNotes.API.Services.Centers
 
          //(ken)
         //Por Ahora este metodo separa completamente los centros archivados y no archivados, quiza cambie si se quiere la opcion de recibirlos todos en una sola llamada...
-        public async Task<ResponseDto<PaginationDto<List<CenterDto>>>> GetCentersListAsync(string searchTerm = "", bool? isArchived = null, int page = 1)
-        {
-            int startIndex = (page - 1) * PAGE_SIZE;
+        // HR
+        // Manejo del pageSize sera general para todos 
 
+        public async Task<ResponseDto<PaginationDto<List<CenterExtendDto>>>> GetCentersListAsync(
+            string searchTerm = "",
+            bool? isArchived = null,
+            int? pageSize = null, 
+            int page = 1)
+        {
+            // Si pageSize es null, usamos PAGE_SIZE
+            int currentPageSize = pageSize ?? PAGE_SIZE;
+
+            // Si pageSize -1, significa "todos los elementos"
+            // esta amarrado al valor maximo que puede tener un int en C#
+            if ( pageSize == -1)
+            {
+                currentPageSize = int.MaxValue; // Para obtener todos los elementos
+            }
+            // si la Paginacion es 0 u otro valor negativo exepto el -1 entonces se usa el PAGE Size por defecto
+            if (pageSize == 0 || pageSize < -1)
+            {
+                currentPageSize = PAGE_SIZE;
+            }
+
+
+            // Calculo del indice segun el PageSize
+            int startIndex = (page - 1) * currentPageSize;
             var userId = _auditService.GetUserId();
 
-            var centersQuery = _context.Centers.AsQueryable().Where(x => x.TeacherId == userId);
+            //Manejo de la Query del que la pide 
+            // HR -> sige siendo AsQueryable() pero ahora es implicito
+            var query = _context.Centers
+                .Where(x => x.TeacherId == userId);
 
-			// AM: Filtrar los centros activos e inactivos si se proporciona el parametro isArchived
-			if (isArchived.HasValue)
-			{
-				centersQuery = centersQuery.Where(c => c.IsArchived == isArchived.Value);
-			}
+            if (isArchived.HasValue)
+            {
+                query = query.Where(c => c.IsArchived == isArchived.Value);
+            }
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                centersQuery = centersQuery
-                    .Where(x => (x.Name + " " + x.Abbreviation)
-                    .ToLower().Contains(searchTerm.ToLower()));
+                query = query.Where(x => (x.Name + " " + x.Abbreviation)
+                           .ToLower().Contains(searchTerm.ToLower()));
             }
 
-            int totalCenters = await centersQuery.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalCenters / PAGE_SIZE);
-
-            var centersEntity = await centersQuery
+            // HR
+            // Decidi realizarlo directamente en la consulta y no en el mapper 
+            // Al realizarlo en el mapper tendria que cargar todos los datos en memoria y en este caso se hacen directamente en la BD
+            // Consulta optimizada con los conteos
+            // 
+            var centersWithCounts = await query
                 .OrderByDescending(x => x.CreatedDate)
+                .Select(c => new CenterExtendDto
+                {
+                    // Mapear props básicas del centro
+                    Id = c.Id,
+                    Name = c.Name,
+                    Abbreviation = c.Abbreviation,
+                    IsArchived = c.IsArchived,
+                    Logo = c.Logo,
+                    TeacherId = c.TeacherId,
+                    // si se ocupan mas seguir este orden
+
+
+                    // Calcular totales directamente en SQL
+                    TotalActiveClasses = c.Courses.Count(cl => cl.IsActive), // Cuanta las clases activas del centro
+                    TotalActiveStudents = c.Courses
+                        .Where(co => co.IsActive) // donde los cursos son activos
+                        .SelectMany(co => co.Students) // seleciona todos los estudiantes
+                        .Where(sc => sc.IsActive) // done el estudiante esta activo
+                        .Select(sc => sc.StudentId) // Seleccionar solo IDs
+                        .Distinct() // Estudiantes únicos
+                        .Count() // retorno de conteo
+
+                })
                 .Skip(startIndex)
-                .Take(PAGE_SIZE)
+                .Take(currentPageSize)
                 .ToListAsync();
 
-            var centersDto = _mapper.Map<List<CenterDto>>(centersEntity);
+            int totalCenters = await query.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalCenters / currentPageSize);
 
-            return new ResponseDto<PaginationDto<List<CenterDto>>>
+            return new ResponseDto<PaginationDto<List<CenterExtendDto>>>
             {
                 StatusCode = 200,
                 Status = true,
                 Message = MessagesConstant.RECORDS_FOUND,
-                Data = new PaginationDto<List<CenterDto>>
+                Data = new PaginationDto<List<CenterExtendDto>>
                 {
-                    CurrentPage = page,
-                    PageSize = PAGE_SIZE,
-                    TotalItems = totalCenters,
-                    TotalPages = totalPages,
-                    Items = centersDto,
+                    CurrentPage = page, // pagina actual
+                    PageSize = currentPageSize, // Total de items que puede tener la peticion
+                    TotalItems = totalCenters, // el total de items en la BD segun la consulta y sus filtros
+                    TotalPages = totalPages, // Total de paginas que tiene la consulta con todo y filtros
+                    Items = centersWithCounts, 
                     HasPreviousPage = page > 1,
                     HasNextPage = page < totalPages
                 }
@@ -644,7 +695,7 @@ namespace ClassNotes.API.Services.Centers
                     var userId = _auditService.GetUserId();
                     var centerEntity = await _context.Centers.FindAsync(id);
 
-
+                    // Manejo de exepciones basicas
                     if (centerEntity.TeacherId != userId)
                     {
                         return new ResponseDto<CenterDto>
@@ -679,6 +730,12 @@ namespace ClassNotes.API.Services.Centers
 
 
                     centerEntity.IsArchived = true;
+
+                    // Majedo de poner todas las clases en inactive de un centro archivado
+
+
+
+
 
                     _context.Centers.Update(centerEntity);
                     await _context.SaveChangesAsync();
