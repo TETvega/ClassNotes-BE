@@ -27,6 +27,7 @@ namespace ClassNotes.API.Helpers.Automapper
             MapsForCourseSettings();
             MapsForUsers();
             MapsForTagsActivities();
+            MapsForDashboardCourses();
         }
 
         private void MapsForActivities()
