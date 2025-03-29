@@ -2,6 +2,8 @@
 {
 	public class AttendanceEditDto
 	{
-        public string Attended { get; set; }
+        public bool Attended { get; set; }
+
+        public string Status { get; set; }
     }
 }

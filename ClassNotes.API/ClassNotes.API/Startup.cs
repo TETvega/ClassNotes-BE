@@ -65,7 +65,7 @@ public class Startup
 		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
 		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
     	services.AddTransient<ICloudinaryService, CloudinaryService>();
-		services.AddScoped<DistanceService>(); //
+		services.AddSingleton<DistanceService>(); //
         services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
         services.AddScoped<QRService>();
         services.AddHostedService<QRService>();

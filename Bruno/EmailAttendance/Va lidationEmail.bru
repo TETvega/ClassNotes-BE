@@ -7,12 +7,16 @@ meta {
 post {
   url: {{PATH}}/EmailAttendance/validate-attendance
   body: json
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
 }
 
 body:json {
   {
-    "otp": "A699F4",
+    "otp": "OKVRZU",
    "latitude":   14.59,
     "longitude":  -88.58
   }

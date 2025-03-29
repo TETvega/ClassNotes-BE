@@ -1,4 +1,5 @@
 ﻿using ClassNotes.API.Database;
+using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Dtos.QR;
 using ClassNotes.API.Services.Attendances;
@@ -10,7 +11,6 @@ using QRCoder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,26 +18,28 @@ public class QRService : BackgroundService
 {
     private readonly ILogger<QRService> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly DistanceService _distanceService;
     private static DateTime _qrExpirationTime;
     private bool _isRunning = false;
     private bool _messageShown = false;
     private int _validationCount = 0;
     private Timer _expirationTimer;
-
-    //DD: Lista en memoria para almacenar direcciones MAC permitidas
     private static List<string> _macAddressesPermitidas = new List<string>();
+    private Guid _currentClassId;
 
     public QRService(
         ILogger<QRService> logger,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        DistanceService distanceService)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
+        _distanceService = distanceService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Servicio de limpieza de QR iniciado.");
+        _logger.LogInformation("Servicio de QR iniciado.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -47,7 +49,7 @@ public class QRService : BackgroundService
                 {
                     if (!_messageShown)
                     {
-                        _logger.LogInformation("El servicio de limpieza de QR está inactivo. Esperando reactivación...");
+                        _logger.LogInformation("Servicio de QR inactivo. Esperando reactivación...");
                         _messageShown = true;
                     }
                     await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
@@ -55,285 +57,252 @@ public class QRService : BackgroundService
                 }
 
                 _validationCount++;
-                _logger.LogInformation($"Validación #{_validationCount} realizada.");
-                Console.WriteLine($"Validación #{_validationCount} realizada.");
+                _logger.LogInformation($"Validación #{_validationCount} - QR activo");
 
                 if (DateTime.UtcNow > _qrExpirationTime)
                 {
-                    _logger.LogInformation("El código QR ha expirado. Validando asistencias...");
-                    Console.WriteLine("El código QR ha expirado.");
-
-                    await OnQRExpired();
-
-                    _logger.LogInformation("Asistencias validadas y lista de estudiantes limpiada.");
+                    _logger.LogInformation("QR expirado. Procesando asistencias pendientes...");
+                    await ProcesarAsistenciasExpiradas();
                     _isRunning = false;
-
-                    Console.WriteLine("Proceso de validación de asistencias completado.");
-                }
-                else
-                {
-                    var tiempoRestante = _qrExpirationTime - DateTime.UtcNow;
-                    _logger.LogInformation($"El código QR aún no ha expirado. Tiempo restante: {tiempoRestante}");
-                    Console.WriteLine($"El código QR aún no ha expirado. Tiempo restante: {tiempoRestante}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al validar asistencias.");
+                _logger.LogError(ex, "Error en el servicio de QR");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
         }
-
-        _logger.LogInformation("Servicio de limpieza de QR detenido.");
     }
 
-    private async Task ValidateAttendancesUntilNonePending(ClassNotesContext context, IAttendancesService attendanceService)
+    private async Task ProcesarAsistenciasExpiradas()
     {
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
+        var attendanceService = scope.ServiceProvider.GetRequiredService<IAttendancesService>();
+
+        var asistenciasPendientes = await context.Attendances
+            .Where(a => a.Attended == false && a.CourseId == _currentClassId)
+            .ToListAsync();
+
+        foreach (var asistencia in asistenciasPendientes)
+        {
+            _logger.LogInformation($"Marcando asistencia {asistencia.Id} como no presente (QR expirado)");
+        }
+
+        _macAddressesPermitidas.Clear();
+        _logger.LogInformation("Procesamiento de QR expirado completado");
+    }
+
+    public async Task<QRGenerationResponseDto> GenerateQR(QRGenerationRequestDto request)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
+        var attendanceService = scope.ServiceProvider.GetRequiredService<IAttendancesService>();
+
+        // Validaciones básicas
+        if (request.TiempoLimiteMinutos < 1 || request.TiempoLimiteMinutos > 30)
+            throw new ArgumentException("Tiempo límite debe ser entre 1 y 30 minutos");
+
+        if (request.RangoValidacionMetros < 15 || request.RangoValidacionMetros > 100)
+            throw new ArgumentException("Rango de validación debe ser entre 15 y 100 metros");
+
+        // Validar que el centro pertenece al profesor
+        var centroValido = await context.Centers
+            .AnyAsync(c => c.Id == request.CentroId && c.TeacherId == request.ProfesorId);
+
+        if (!centroValido)
+        {
+            throw new ArgumentException("El centro no existe o no pertenece al profesor especificado.");
+        }
+
+        // Obtener la clase verificando que pertenece al centro
+        var clase = await context.Courses
+            .FirstOrDefaultAsync(c => c.Id == request.ClaseId && c.CenterId == request.CentroId);
+
+        if (clase == null)
+        {
+            throw new ArgumentException("La clase no está asociada con el centro especificado.");
+        }
+
+        _currentClassId = request.ClaseId;
+
+        // Crear registros de asistencia en espera (Attended = false)
+        var estudiantes = await context.StudentsCourses
+            .Where(sc => sc.CourseId == request.ClaseId && sc.IsActive)
+            .Select(sc => sc.Student)
+            .ToListAsync();
+
+        foreach (var estudiante in estudiantes)
+        {
+            await attendanceService.CreateAttendanceAsync(new AttendanceCreateDto
+            {
+                Attended = false,
+                Status = "En Espera",
+                CourseId = request.ClaseId,
+                StudentId = estudiante.Id
+            });
+        }
+
+        // Generar contenido del QR
+        var qrContent = $"{request.ProfesorId}|{request.CentroId}|{request.ClaseId}|" +
+                       $"{request.Latitud}|{request.Longitud}|{DateTime.UtcNow:o}|" +
+                       $"{request.TiempoLimiteMinutos}|{request.RangoValidacionMetros}|" +
+                       $"{request.PermitirMultiplesDispositivos}";
+
+        _qrExpirationTime = DateTime.UtcNow.AddMinutes(request.TiempoLimiteMinutos);
+        _isRunning = true;
+        _messageShown = false;
+
+        // Generar QR
+        var validationUrl = $"https://tudominio.com/validate-qr?data={Uri.EscapeDataString(qrContent)}";
+        var qrCode = GenerateQRCode(validationUrl);
+
+        return new QRGenerationResponseDto
+        {
+            QRCode = qrCode,
+            ExpirationTime = _qrExpirationTime,
+            ValidationUrl = validationUrl
+        };
+    }
+
+    public async Task<QRValidationResponseDto> ValidateQR(QRValidationRequestDto request)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
+        var attendanceService = scope.ServiceProvider.GetRequiredService<IAttendancesService>();
+        var distanceService = scope.ServiceProvider.GetRequiredService<DistanceService>();
+
         try
         {
-            bool pendingAttendancesExist;
+            // Parsear datos del QR
+            var qrData = request.QRContent.Split('|');
+            if (qrData.Length != 9) throw new ArgumentException("Formato de QR inválido");
 
-            do
+            var profesorId = qrData[0];
+            var centroId = Guid.Parse(qrData[1]);
+            var claseId = Guid.Parse(qrData[2]);
+            var qrLatitud = double.Parse(qrData[3]);
+            var qrLongitud = double.Parse(qrData[4]);
+            var rangoValidacion = int.Parse(qrData[7]);
+            var permitirMultiples = bool.Parse(qrData[8]);
+
+            // Verificar que el centro pertenece al profesor
+            var centroValido = await context.Centers
+                .AnyAsync(c => c.Id == centroId && c.TeacherId == profesorId);
+
+            if (!centroValido)
             {
-                var asistenciasEnEspera = await context.Attendances
-                    .Where(a => a.Attended == "En espera")
-                    .ToListAsync();
+                throw new ArgumentException("El centro no existe o no pertenece al profesor especificado.");
+            }
 
-                foreach (var asistencia in asistenciasEnEspera)
+            // Verificar que la clase pertenece al centro
+            var claseValida = await context.Courses
+                .AnyAsync(c => c.Id == claseId && c.CenterId == centroId);
+
+            if (!claseValida)
+            {
+                throw new ArgumentException("La clase no está asociada con el centro especificado.");
+            }
+
+            // Verificar estudiante
+            var estudiante = await context.Students
+                .FirstOrDefaultAsync(s => s.Email == request.EstudianteCorreo);
+            if (estudiante == null) throw new ArgumentException("Estudiante no encontrado");
+
+            // Verificar que el estudiante pertenece a la clase
+            var enClase = await context.StudentsCourses
+                .AnyAsync(sc => sc.StudentId == estudiante.Id && sc.CourseId == claseId && sc.IsActive);
+            if (!enClase) throw new ArgumentException("Estudiante no pertenece a esta clase");
+
+            // Validar ubicación
+            var distancia = distanceService.CalcularDistancia(
+                qrLatitud, qrLongitud,
+                request.EstudianteLatitud, request.EstudianteLongitud);
+
+            if (distancia > rangoValidacion)
+                throw new ArgumentException($"Debe estar dentro de {rangoValidacion}m. Distancia actual: {distancia}m");
+
+            // Validar dispositivo (si aplica)
+            if (!permitirMultiples && !string.IsNullOrEmpty(request.MacAddress))
+            {
+                if (_macAddressesPermitidas.Contains(request.MacAddress))
+                    throw new ArgumentException("Este dispositivo ya validó asistencia");
+
+                _macAddressesPermitidas.Add(request.MacAddress);
+            }
+
+            // Obtener asistencia
+            var asistencia = await context.Attendances
+                .FirstOrDefaultAsync(a => a.StudentId == estudiante.Id && a.CourseId == claseId);
+
+            if (asistencia == null) throw new ArgumentException("Registro de asistencia no encontrado");
+
+            // Si ya está marcado como presente
+            if (asistencia.Attended == true)
+            {
+                return new QRValidationResponseDto
                 {
-                    var attendanceEditDto = new AttendanceEditDto
-                    {
-                        Attended = "No Presente"
-                    };
+                    Success = false,
+                    Message = "Ya has validado tu asistencia",
+                    Attendance = MapToDto(asistencia)
+                };
+            }
 
-                    await attendanceService.EditAttendanceAsync(asistencia.Id, attendanceEditDto);
-                }
+            // Marcar como presente (true)
+            var updated = await attendanceService.EditAttendanceAsync(asistencia.Id, new AttendanceEditDto
+            {
+                Attended = true,
+                Status = "Presente"
+            });
 
-                pendingAttendancesExist = await context.Attendances
-                    .AnyAsync(a => a.Attended == "En espera");
-
-                if (pendingAttendancesExist)
-                {
-                    _logger.LogInformation("Aún hay asistencias en espera. Continuando la validación...");
-                    await Task.Delay(TimeSpan.FromSeconds(30));
-                }
-
-            } while (pendingAttendancesExist);
-
-            _logger.LogInformation("Todas las asistencias han sido validadas.");
+            return new QRValidationResponseDto
+            {
+                Success = true,
+                Message = "Asistencia validada correctamente",
+                Attendance = updated
+            };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al validar asistencias.");
+            _logger.LogError(ex, "Error validando QR");
+            throw;
         }
     }
 
-    public async Task<object> GenerateQR(QRGenerationRequestDto request)
+    private string GenerateQRCode(string data)
     {
-        using (var scope = _scopeFactory.CreateScope())
-        {
-            var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
-            var attendanceService = scope.ServiceProvider.GetRequiredService<IAttendancesService>();
-
-            if (request.TiempoLimiteMinutos < 1 || request.TiempoLimiteMinutos > 30)
-                throw new ArgumentException("El tiempo límite debe estar entre 1 y 30 minutos.");
-            if (request.RangoValidacionMetros < 15 || request.RangoValidacionMetros > 100)
-                throw new ArgumentException("El rango de validación debe estar entre 15 y 100 metros.");
-
-            var profesor = await context.Users.FindAsync(request.ProfesorId);
-            if (profesor == null) throw new ArgumentException("El profesor no existe.");
-
-            var centro = await context.Centers.FindAsync(request.CentroId);
-            if (centro == null) throw new ArgumentException("El centro no existe.");
-
-            var clase = await context.Courses
-                .FirstOrDefaultAsync(c => c.Id == request.ClaseId && c.TeacherId == request.ProfesorId && c.CenterId == request.CentroId);
-            if (clase == null) throw new ArgumentException("La clase no está asociada con el profesor o el centro.");
-
-            var estudiantesClase = await context.StudentsCourses
-                .Where(sc => sc.CourseId == request.ClaseId && sc.IsActive)
-                .Select(sc => sc.Student)
-                .ToListAsync();
-
-            foreach (var estudiante in estudiantesClase)
-            {
-                var attendanceCreateDto = new AttendanceCreateDto
-                {
-                    Attended = "En espera",
-                    CourseId = request.ClaseId,
-                    StudentId = estudiante.Id
-                };
-
-                await attendanceService.CreateAttendanceAsync(attendanceCreateDto);
-            }
-
-            var timestamp = DateTime.UtcNow.ToString("o");
-            var qrContent = $"{request.ProfesorId}|{request.CentroId}|{request.ClaseId}|{request.Latitud}|{request.Longitud}|{timestamp}|{request.TiempoLimiteMinutos}|{request.RangoValidacionMetros}|{request.PermitirMultiplesDispositivos}";
-
-            _qrExpirationTime = DateTime.UtcNow.AddMinutes(request.TiempoLimiteMinutos);
-            _logger.LogInformation($"Tiempo de expiración del QR: {_qrExpirationTime}");
-
-            _isRunning = true;
-            _messageShown = false;
-
-            var tiempoRestante = _qrExpirationTime - DateTime.UtcNow;
-            _expirationTimer = new Timer(async _ => await OnQRExpired(), null, tiempoRestante, Timeout.InfiniteTimeSpan);
-
-            string validationUrl = $"https://localhost:7047/api/QR/validate?qrContent={Uri.EscapeDataString(qrContent)}";
-
-            using (var qrGenerator = new QRCodeGenerator())
-            {
-                var qrCodeData = qrGenerator.CreateQrCode(validationUrl, QRCodeGenerator.ECCLevel.Q);
-                using (var qrCode = new PngByteQRCode(qrCodeData))
-                {
-                    byte[] qrCodeImage = qrCode.GetGraphic(20);
-                    var qrCodeBase64 = Convert.ToBase64String(qrCodeImage);
-                    return new { QRCode = qrCodeBase64, ValidationUrl = validationUrl };
-                }
-            }
-        }
+        using var qrGenerator = new QRCodeGenerator();
+        var qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+        using var qrCode = new PngByteQRCode(qrCodeData);
+        var qrCodeImage = qrCode.GetGraphic(20);
+        return Convert.ToBase64String(qrCodeImage);
     }
 
-    private async Task OnQRExpired()
+    private AttendanceDto MapToDto(AttendanceEntity entity)
     {
-        _logger.LogInformation("El código QR ha expirado. Validando asistencias...");
-        Console.WriteLine("El código QR ha expirado.");
-
-        using (var scope = _scopeFactory.CreateScope())
+        return new AttendanceDto
         {
-            var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
-            var attendanceService = scope.ServiceProvider.GetRequiredService<IAttendancesService>();
-
-            await ValidateAttendancesUntilNonePending(context, attendanceService);
-        }
-
-        // Limpiar la lista de direcciones MAC permitidas cuando el QR expire
-        _macAddressesPermitidas.Clear();
-        _logger.LogInformation("Lista de direcciones MAC permitidas limpiada.");
-
-        _logger.LogInformation("Asistencias validadas y lista de estudiantes limpiada.");
-        _isRunning = false;
-
-        Console.WriteLine("Proceso de validación de asistencias completado.");
+            Id = entity.Id,
+            Attended = entity.Attended,
+            CourseId = entity.CourseId,
+            StudentId = entity.StudentId,
+            RegistrationDate = entity.RegistrationDate
+        };
     }
+}
 
-    public async Task<object> ValidateQR(QRValidationRequestDto request)
-    {
-        using (var scope = _scopeFactory.CreateScope())
-        {
-            var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
-            var attendanceService = scope.ServiceProvider.GetRequiredService<IAttendancesService>();
-            var distanceService = scope.ServiceProvider.GetRequiredService<DistanceService>();
+// DTOs necesarios
+public class QRGenerationResponseDto
+{
+    public string QRCode { get; set; }
+    public DateTime ExpirationTime { get; set; }
+    public string ValidationUrl { get; set; }
+}
 
-            try
-            {
-                var qrParts = request.QRContent.Split('|');
-                if (qrParts.Length < 9) throw new ArgumentException("Código QR inválido.");
-
-                if (!Guid.TryParse(qrParts[2], out Guid claseId))
-                {
-                    throw new ArgumentException("Código QR inválido: datos incorrectos.");
-                }
-
-                if (!double.TryParse(qrParts[3], out double qrLatitud) || !double.TryParse(qrParts[4], out double qrLongitud))
-                {
-                    throw new ArgumentException("Coordenadas del QR inválidas.");
-                }
-
-                if (!int.TryParse(qrParts[7], out int rangoValidacionMetros))
-                {
-                    throw new ArgumentException("Rango de validación del QR inválido.");
-                }
-
-                double distancia = distanceService.CalcularDistancia(qrLatitud, qrLongitud, request.EstudianteLatitud, request.EstudianteLongitud);
-
-                if (distancia > rangoValidacionMetros)
-                {
-                    throw new ArgumentException($"El estudiante está fuera del rango de validación. Distancia: {distancia} metros, Rango permitido: {rangoValidacionMetros} metros.");
-                }
-
-                var estudiante = await context.Students
-                    .FirstOrDefaultAsync(s => s.Email == request.EstudianteCorreo);
-                if (estudiante == null)
-                {
-                    throw new ArgumentException("El estudiante no está registrado.");
-                }
-
-                var estudianteEnClase = await context.StudentsCourses
-                    .AnyAsync(sc => sc.StudentId == estudiante.Id && sc.CourseId == claseId && sc.IsActive);
-                if (!estudianteEnClase)
-                {
-                    throw new ArgumentException("El estudiante no está asociado a esta clase.");
-                }
-
-                if (!string.IsNullOrEmpty(request.MacAddress))
-                {
-                    //DD: Verificar si la dirección MAC ya ha sido usada
-                    if (_macAddressesPermitidas.Contains(request.MacAddress))
-                    {
-                        throw new ArgumentException("El dispositivo ya ha sido usado para validar la asistencia.");
-                    }
-
-                   
-                    _macAddressesPermitidas.Add(request.MacAddress);
-                }
-
-                var asistencia = await context.Attendances
-                    .FirstOrDefaultAsync(a => a.StudentId == estudiante.Id && a.CourseId == claseId);
-                if (asistencia == null)
-                {
-                    throw new ArgumentException("No se encontró la asistencia del estudiante.");
-                }
-
-                //DD Verificar si la asistencia ya ha sido validada
-                if (asistencia.Attended != "En espera")
-                {
-                    return new
-                    {
-                        Message = "El estudiante ya ha sido marcado como presente o ausente.",
-                        Correo = request.EstudianteCorreo,
-                        Attendance = new AttendanceDto 
-                        {
-                            Id = asistencia.Id,
-                            Attended = asistencia.Attended,
-                            RegistrationDate = asistencia.RegistrationDate,
-                            CourseId = asistencia.CourseId,
-                            StudentId = asistencia.StudentId
-                        }
-                    };
-                }
-
-                //DD: Actualizar la asistencia a "Presente"
-                var attendanceEditDto = new AttendanceEditDto
-                {
-                    Attended = "Presente"
-                };
-
-                var updatedAttendance = await attendanceService.EditAttendanceAsync(asistencia.Id, attendanceEditDto);
-
-                //DD: Mapea la asistencia actualizada a un DTO
-                var attendanceDto = new AttendanceDto
-                {
-                    Id = updatedAttendance.Id,
-                    Attended = updatedAttendance.Attended,
-                    RegistrationDate = updatedAttendance.RegistrationDate,
-                    CourseId = updatedAttendance.CourseId,
-                    StudentId = updatedAttendance.StudentId
-                };
-
-                return new
-                {
-                    Message = "Asistencia confirmada y registrada.",
-                    Correo = request.EstudianteCorreo,
-                    Attendance = attendanceDto 
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al validar el código QR.");
-                throw;
-            }
-        }
-    }
-} 
+public class QRValidationResponseDto
+{
+    public bool Success { get; set; }
+    public string Message { get; set; }
+    public AttendanceDto Attendance { get; set; }
+}

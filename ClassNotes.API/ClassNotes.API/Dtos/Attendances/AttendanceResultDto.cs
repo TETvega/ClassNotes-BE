@@ -1,7 +1,7 @@
 ﻿public class AttendanceResultDto
 {
     public Guid Id { get; set; }
-    public string Attended { get; set; } 
+    public bool Attended { get; set; } 
     public DateTime RegistrationDate { get; set; }
     public Guid CourseId { get; set; }
     public string CourseName { get; set; }

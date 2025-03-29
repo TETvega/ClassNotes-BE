@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,17 +68,20 @@ namespace ClassNotes.API.Services
                 {
                     throw new ArgumentException("El tiempo de expiración del OTP debe estar entre 1 y 30 minutos.");
                 }
+                var centroValido = await _context.Centers.AnyAsync(
+                    c => c.Id == request.CentroId && c.TeacherId == request.ProfesorId
+                    );
 
                 // Obtener la clase con los estudiantes asociados
                 var clase = await _context.Courses
                     .Include(c => c.Students)
                         .ThenInclude(sc => sc.Student)
-                    .Where(c => c.Id == request.ClaseId && c.TeacherId == request.ProfesorId && c.CenterId == request.CentroId)
+                    .Where(c => c.Id == request.ClaseId && c.CenterId == request.CentroId)
                     .FirstOrDefaultAsync();
 
                 if (clase == null)
                 {
-                    throw new ArgumentException("La clase no está asociada con el profesor o el centro.");
+                    throw new ArgumentException("La clase no está asociada con el centro.");
                 }
 
                 // Obtener la lista de estudiantes asociados a la clase
@@ -110,6 +114,7 @@ namespace ClassNotes.API.Services
                         Longitude = request.Longitude,
                         StudentId = estudiante.Id,
                         CourseId = clase.Id,
+                        TeacherId = request.ProfesorId.ToString(),
                         ExpirationDate = DateTime.UtcNow.AddMinutes(request.TiempoExpiracionOTPMinutos),
                         RangoValidacionMetros = request.RangoValidacionMetros
                     };
@@ -202,9 +207,12 @@ namespace ClassNotes.API.Services
                 // Crear el DTO para la asistencia
                 var attendanceCreateDto = new AttendanceCreateDto
                 {
-                    Attended = "Presente",
+                    Attended = true,
+                    Status = "Presente",
                     CourseId = studentOTP.CourseId,
-                    StudentId = studentOTP.StudentId
+                    StudentId = studentOTP.StudentId,
+                    TeacherId = studentOTP.TeacherId,
+
                 };
 
                 // Crear la asistencia utilizando el servicio

@@ -8,8 +8,10 @@ namespace ClassNotes.API.Database.Entities
     {
         [Required]
         [Column("attended")]
-        public string Attended { get; set; }
+        public bool Attended { get; set; }
 
+        [Column("status")]
+        public string Status { get; set; }
 
         [Required]
         [Column("registration_date")]

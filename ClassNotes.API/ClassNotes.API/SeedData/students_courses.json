@@ -1,64 +1,4 @@
 [
-<<<<<<< HEAD
-    {
-        "id": "3a6f0e56-357f-406d-8a2e-7be1f3219a47",
-        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "StudentId": "f2d2b29f-eed2-40cd-b1c1-82a7f9282c2b",
-        "FinalNote": 80,
-        "IsActive": true
-    },
-    {
-        "id": "e384df62-ac89-44d8-ab56-c11aa4b7b2c7",
-        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "StudentId": "12745c10-2710-4271-926b-e24ccffca8db",
-        "FinalNote": 80,
-        "IsActive": true
-    },
-    {
-        "id": "3a6f0e56-357f-406d-8a2e-7be1f3219a48",
-        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "StudentId": "78f358e5-2d4e-43bd-8741-d6217b8289f8",
-        "FinalNote": 80,
-        "IsActive": true
-    },
-    {
-        "id": "15f9f04e-ca81-4a42-a8ce-68c2ad58aba2",
-        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "StudentId": "fe57ad80-dea2-4f3c-b89f-9fc78767a376",
-        "FinalNote": 90,
-        "IsActive": true
-    },
-    {
-        "id": "f1fc3b27-5449-49bf-bf3d-ead09dc61597",
-        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "StudentId": "78f358e5-2d4e-43bd-8741-d6217b8289f8",
-        "FinalNote": 100,
-        "IsActive": true
-    },
-    {
-        "id": "bbe29a9b-edc4-4fdd-83cc-77ab8a42bb81",
-        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-        "StudentId": "16b7405f-5088-4e54-afcb-7a0660ac5384",
-        "FinalNote": 90,
-        "IsActive": true
-    },
-    {
-        "id": "6e28f2b2-b0d2-40f3-bc92-bf2a7e274982",
-        "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-        "StudentId": "27672c7d-b39e-4c80-a78f-e95749bbd98a",
-        "FinalNote": 75,
-        "IsActive": true
-    },
-    {
-        "id": "0f7a7e59-19b9-4b79-8d6c-d8bb5b91b653",
-        "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-        "StudentId": "e2c32a95-3c6a-4743-8bba-87d1d3452320",
-        "FinalNote": 90,
-        "IsActive": true
-    }
-
-]
-=======
   {
     "id": "7a518b04-de18-487b-97ab-984a0c999114",
     "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
@@ -566,4 +506,4 @@
     "IsActive": true
   }
 ]
->>>>>>> development
+

@@ -19,7 +19,6 @@ public class QRController : ControllerBase
 
     //DD: Endpoint para generar el código QR
     [HttpPost("generate")]
-    [Authorize(Roles = $"{RolesConstant.USER}")]
     public async Task<IActionResult> GenerateQR([FromBody] QRGenerationRequestDto request)
     {
         try

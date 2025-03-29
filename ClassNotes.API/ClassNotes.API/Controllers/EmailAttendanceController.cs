@@ -3,11 +3,13 @@ using System.Threading.Tasks;
 using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ClassNotes.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class EmailAttendanceController : ControllerBase
     {
         private readonly IEmailAttendanceService _emailAttendanceService;

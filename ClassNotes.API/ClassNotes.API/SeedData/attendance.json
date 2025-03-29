@@ -1,236 +1,234 @@
 [
-<<<<<<< HEAD
     {
         "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "attended": "Asistio",
-        "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-        "StudentId": "f2d2b29f-eed2-40cd-b1c1-82a7f9282c2b",
-        "RegistrationDate": "2025-01-25"
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "70ce3027-ede7-4e9e-bf52-b7a2e8b7e208",
+        "RegistrationDate": "2025-01-25",
+        "Status": "Presente"
     },
     {
         "id": "88f0be96-0e5f-41a6-a7c3-b8d6d57d65f2",
-        "attended": "No Asistio",
-        "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-        "StudentId": "27672c7d-b39e-4c80-a78f-e95749bbd98a",
-        "RegistrationDate": "2025-01-24"
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "09e11a03-9267-4a88-a4b5-bf102da835b6",
+        "RegistrationDate": "2025-01-24",
+        "Status": "No Presente"
     },
     {
         "id": "6c5d82f7-6802-4f39-9f35-309c5b5e03d0",
-        "attended": "Asistio",
-        "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-        "StudentId": "e2c32a95-3c6a-4743-8bba-87d1d3452320",
-        "RegistrationDate": "2025-01-23"
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "4ddca1ac-9ad6-4877-a518-bc1d500500f9",
+        "RegistrationDate": "2025-01-23",
+        "Status": "Presente"
     },
     {
         "id": "b15f8e61-0ea1-4747-9f8b-57f46d87f8a9",
-        "attended": "No Asistio",
-        "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-        "StudentId": "4ac2b211-3b3f-4c8b-9cdb-197b6182b746",
-        "RegistrationDate": "2025-01-22"
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "994827ce-51e6-486d-86bd-458e57ddaea1",
+        "RegistrationDate": "2025-01-22",
+        "Status": "No Presente"
+    },
+    {
+        "id": "59308d72-3a8c-4b7d-b00c-f62652305290",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "70ce3027-ede7-4e9e-bf52-b7a2e8b7e208",
+        "RegistrationDate": "2024-06-09 04:09:46",
+        "Status": "Presente"
+    },
+    {
+        "id": "25d72e86-964e-409d-a2bd-36c2a5932c90",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "09e11a03-9267-4a88-a4b5-bf102da835b6",
+        "RegistrationDate": "2024-10-12 03:25:30",
+        "Status": "No Presente"
+    },
+    {
+        "id": "25188d37-50b4-4246-a83c-6b3ec8ab39f3",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "ffa0431f-70e8-4c2b-a697-cc147788c06c",
+        "RegistrationDate": "2024-06-08 05:56:03",
+        "Status": "No Presente"
+    },
+    {
+        "id": "71b98d7b-ef6d-49e2-bae1-134f83489770",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "4ddca1ac-9ad6-4877-a518-bc1d500500f9",
+        "RegistrationDate": "2024-11-16 15:10:38",
+        "Status": "Presente"
+    },
+    {
+        "id": "595d216d-38eb-42e0-98b1-f53d93ee710e",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "994827ce-51e6-486d-86bd-458e57ddaea1",
+        "RegistrationDate": "2024-10-15 06:51:48",
+        "Status": "Presente"
+    },
+    {
+        "id": "b0fd9d56-442d-43a0-a055-07c53a704ab9",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "9c06a243-8646-4a91-b372-818e2728e44e",
+        "RegistrationDate": "2024-08-09 12:39:48",
+        "Status": "Presente"
+    },
+    {
+        "id": "64ebfd73-978a-4c4c-8d3a-9c32e6f804c7",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "f723d695-c4bc-413b-a171-ada2ebacbad2",
+        "RegistrationDate": "2024-08-01 06:43:43",
+        "Status": "No Presente"
+    },
+    {
+        "id": "00b0cac2-fa4b-4015-927c-8fcc8bb89409",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "ec99d003-681f-46a8-9670-75db4f7aea97",
+        "RegistrationDate": "2024-12-15 10:31:14",
+        "Status": "Presente"
+    },
+    {
+        "id": "c6a33dcf-8629-4800-8654-294d8ff240cf",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "99d15fb7-ef67-4927-9571-023f95b29f3d",
+        "RegistrationDate": "2024-10-09 07:12:06",
+        "Status": "Presente"
+    },
+    {
+        "id": "f6805a2f-fd71-451c-8e8b-fce99a0c19a2",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "7b006375-d6c9-4c0a-812a-630de20d4462",
+        "RegistrationDate": "2024-10-12 00:18:36",
+        "Status": "No Presente"
+    },
+    {
+        "id": "d015dbab-fa33-4e3f-ab9c-48ef75ecf6fb",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "3d6b9862-65eb-41e1-a521-ba86ac804aaa",
+        "RegistrationDate": "2024-10-30 05:18:22",
+        "Status": "Presente"
+    },
+    {
+        "id": "3e0e5b32-530e-4295-88d8-7e470494b1e3",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "b36ddbe4-e48c-447f-86f5-07cfd1746596",
+        "RegistrationDate": "2024-09-23 04:25:18",
+        "Status": "No Presente"
+    },
+    {
+        "id": "98b360a0-23a5-4bb1-805b-c23f9868f4ec",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "c45ac639-31c5-45e5-955d-4ec7cac26dee",
+        "RegistrationDate": "2024-03-30 07:17:36",
+        "Status": "No Presente"
+    },
+    {
+        "id": "7ae5d14b-b254-436c-8247-fcfa4bfd6f0b",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "e337a206-1ace-4be0-81fb-11f7608b2ede",
+        "RegistrationDate": "2024-03-16 21:49:05",
+        "Status": "No Presente"
+    },
+    {
+        "id": "c86a0b2d-486f-40d4-b819-8062980aaec4",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "c16bf8c6-36c6-44d4-87e1-df7612f1be02",
+        "RegistrationDate": "2024-04-30 10:03:11",
+        "Status": "No Presente"
+    },
+    {
+        "id": "b771638a-7802-4e16-8f18-63e44cfa882f",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "329779d8-4a69-4f27-8c96-5b43a7d0d09d",
+        "RegistrationDate": "2024-08-01 12:09:56",
+        "Status": "Presente"
+    },
+    {
+        "id": "cba0a138-bab3-4d88-973d-73c39ff1e4d1",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "f9594a29-cae2-4528-af65-9647603aa535",
+        "RegistrationDate": "2024-07-08 20:24:46",
+        "Status": "Presente"
+    },
+    {
+        "id": "4779f187-c6bc-4d74-89b9-097c919c7e20",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "cc41e61e-9a2b-4bff-8cde-0b74ab6cfb09",
+        "RegistrationDate": "2024-08-24 09:11:04",
+        "Status": "No Presente"
+    },
+    {
+        "id": "18df21b0-c5b7-44a4-b026-1b093a264139",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "01085456-e8be-4370-83a3-3ee7e1de9b40",
+        "RegistrationDate": "2025-02-24 06:10:28",
+        "Status": "No Presente"
+    },
+    {
+        "id": "adcfcd32-dc9d-4cef-9314-2c278204219c",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "38bb2a0b-cbb2-4a73-8995-0f7440023c1f",
+        "RegistrationDate": "2024-10-11 04:04:12",
+        "Status": "No Presente"
+    },
+    {
+        "id": "b86e6bdb-c143-46a5-b533-645347d88d09",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "3b1bd91b-d735-45ec-b3e2-bb38372ce8e0",
+        "RegistrationDate": "2024-10-20 16:19:58",
+        "Status": "No Presente"
+    },
+    {
+        "id": "fa8743f9-2765-4206-82e7-e7413c074533",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "9fce9d67-3d93-4278-9c03-2d2ef7dbf800",
+        "RegistrationDate": "2024-09-17 04:21:43",
+        "Status": "Presente"
+    },
+    {
+        "id": "db751aa3-2753-4f86-9165-dc535b3db11d",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "0db0992e-a0fe-4559-8d45-bd55b26f2568",
+        "RegistrationDate": "2024-10-21 00:16:51",
+        "Status": "Presente"
+    },
+    {
+        "id": "5435e80c-7dc5-4eea-8a95-9ec74b34f0bb",
+        "attended": false,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "1db7b303-110b-4eef-aa60-52e573ad5f5f",
+        "RegistrationDate": "2024-04-16 01:43:36",
+        "Status": "No Presente"
+    },
+    {
+        "id": "00481aa6-f371-4222-a7a8-51f636f9fc35",
+        "attended": true,
+        "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+        "StudentId": "cfef2d0d-44c1-4c9c-8e20-79ce8a3345f7",
+        "RegistrationDate": "2024-03-26 15:07:02",
+        "Status": "Presente"
     }
-=======
-  {
-    "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "70ce3027-ede7-4e9e-bf52-b7a2e8b7e208",
-    "RegistrationDate": "2025-01-25"
-  },
-  {
-    "id": "88f0be96-0e5f-41a6-a7c3-b8d6d57d65f2",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "09e11a03-9267-4a88-a4b5-bf102da835b6",
-    "RegistrationDate": "2025-01-24"
-  },
-  {
-    "id": "6c5d82f7-6802-4f39-9f35-309c5b5e03d0",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "4ddca1ac-9ad6-4877-a518-bc1d500500f9",
-    "RegistrationDate": "2025-01-23"
-  },
-  {
-    "id": "b15f8e61-0ea1-4747-9f8b-57f46d87f8a9",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "994827ce-51e6-486d-86bd-458e57ddaea1",
-    "RegistrationDate": "2025-01-22"
-  },
-  {
-    "id": "59308d72-3a8c-4b7d-b00c-f62652305290",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "70ce3027-ede7-4e9e-bf52-b7a2e8b7e208",
-    "RegistrationDate": "2024-06-09 04:09:46"
-  },
-  {
-    "id": "25d72e86-964e-409d-a2bd-36c2a5932c90",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "09e11a03-9267-4a88-a4b5-bf102da835b6",
-    "RegistrationDate": "2024-10-12 03:25:30"
-  },
-  {
-    "id": "25188d37-50b4-4246-a83c-6b3ec8ab39f3",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "ffa0431f-70e8-4c2b-a697-cc147788c06c",
-    "RegistrationDate": "2024-06-08 05:56:03"
-  },
-  {
-    "id": "71b98d7b-ef6d-49e2-bae1-134f83489770",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "4ddca1ac-9ad6-4877-a518-bc1d500500f9",
-    "RegistrationDate": "2024-11-16 15:10:38"
-  },
-  {
-    "id": "595d216d-38eb-42e0-98b1-f53d93ee710e",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "994827ce-51e6-486d-86bd-458e57ddaea1",
-    "RegistrationDate": "2024-10-15 06:51:48"
-  },
-  {
-    "id": "b0fd9d56-442d-43a0-a055-07c53a704ab9",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "9c06a243-8646-4a91-b372-818e2728e44e",
-    "RegistrationDate": "2024-08-09 12:39:48"
-  },
-  {
-    "id": "64ebfd73-978a-4c4c-8d3a-9c32e6f804c7",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "f723d695-c4bc-413b-a171-ada2ebacbad2",
-    "RegistrationDate": "2024-08-01 06:43:43"
-  },
-  {
-    "id": "00b0cac2-fa4b-4015-927c-8fcc8bb89409",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "ec99d003-681f-46a8-9670-75db4f7aea97",
-    "RegistrationDate": "2024-12-15 10:31:14"
-  },
-  {
-    "id": "c6a33dcf-8629-4800-8654-294d8ff240cf",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "99d15fb7-ef67-4927-9571-023f95b29f3d",
-    "RegistrationDate": "2024-10-09 07:12:06"
-  },
-  {
-    "id": "f6805a2f-fd71-451c-8e8b-fce99a0c19a2",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "7b006375-d6c9-4c0a-812a-630de20d4462",
-    "RegistrationDate": "2024-10-12 00:18:36"
-  },
-  {
-    "id": "d015dbab-fa33-4e3f-ab9c-48ef75ecf6fb",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "3d6b9862-65eb-41e1-a521-ba86ac804aaa",
-    "RegistrationDate": "2024-10-30 05:18:22"
-  },
-  {
-    "id": "3e0e5b32-530e-4295-88d8-7e470494b1e3",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "b36ddbe4-e48c-447f-86f5-07cfd1746596",
-    "RegistrationDate": "2024-09-23 04:25:18"
-  },
-  {
-    "id": "98b360a0-23a5-4bb1-805b-c23f9868f4ec",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "c45ac639-31c5-45e5-955d-4ec7cac26dee",
-    "RegistrationDate": "2024-03-30 07:17:36"
-  },
-  {
-    "id": "7ae5d14b-b254-436c-8247-fcfa4bfd6f0b",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "e337a206-1ace-4be0-81fb-11f7608b2ede",
-    "RegistrationDate": "2024-03-16 21:49:05"
-  },
-  {
-    "id": "c86a0b2d-486f-40d4-b819-8062980aaec4",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "c16bf8c6-36c6-44d4-87e1-df7612f1be02",
-    "RegistrationDate": "2024-04-30 10:03:11"
-  },
-  {
-    "id": "b771638a-7802-4e16-8f18-63e44cfa882f",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "329779d8-4a69-4f27-8c96-5b43a7d0d09d",
-    "RegistrationDate": "2024-08-01 12:09:56"
-  },
-  {
-    "id": "cba0a138-bab3-4d88-973d-73c39ff1e4d1",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "f9594a29-cae2-4528-af65-9647603aa535",
-    "RegistrationDate": "2024-07-08 20:24:46"
-  },
-  {
-    "id": "4779f187-c6bc-4d74-89b9-097c919c7e20",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "cc41e61e-9a2b-4bff-8cde-0b74ab6cfb09",
-    "RegistrationDate": "2024-08-24 09:11:04"
-  },
-  {
-    "id": "18df21b0-c5b7-44a4-b026-1b093a264139",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "01085456-e8be-4370-83a3-3ee7e1de9b40",
-    "RegistrationDate": "2025-02-24 06:10:28"
-  },
-  {
-    "id": "adcfcd32-dc9d-4cef-9314-2c278204219c",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "38bb2a0b-cbb2-4a73-8995-0f7440023c1f",
-    "RegistrationDate": "2024-10-11 04:04:12"
-  },
-  {
-    "id": "b86e6bdb-c143-46a5-b533-645347d88d09",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "3b1bd91b-d735-45ec-b3e2-bb38372ce8e0",
-    "RegistrationDate": "2024-10-20 16:19:58"
-  },
-  {
-    "id": "fa8743f9-2765-4206-82e7-e7413c074533",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "9fce9d67-3d93-4278-9c03-2d2ef7dbf800",
-    "RegistrationDate": "2024-09-17 04:21:43"
-  },
-  {
-    "id": "db751aa3-2753-4f86-9165-dc535b3db11d",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "0db0992e-a0fe-4559-8d45-bd55b26f2568",
-    "RegistrationDate": "2024-10-21 00:16:51"
-  },
-  {
-    "id": "5435e80c-7dc5-4eea-8a95-9ec74b34f0bb",
-    "attended": false,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "1db7b303-110b-4eef-aa60-52e573ad5f5f",
-    "RegistrationDate": "2024-04-16 01:43:36"
-  },
-  {
-    "id": "00481aa6-f371-4222-a7a8-51f636f9fc35",
-    "attended": true,
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "cfef2d0d-44c1-4c9c-8e20-79ce8a3345f7",
-    "RegistrationDate": "2024-03-26 15:07:02"
-  }
->>>>>>> development
 ]

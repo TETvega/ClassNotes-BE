@@ -2,6 +2,8 @@
 {
 	public interface IAuditService
 	{
-		string GetUserId();
-	}
+        bool DisableAuditTemporarily();
+        string GetUserId();
+        void RestoreAuditState(bool originalState);
+    }
 }

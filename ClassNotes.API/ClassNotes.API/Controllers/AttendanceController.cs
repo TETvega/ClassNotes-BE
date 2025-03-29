@@ -1,10 +1,11 @@
-﻿using ClassNotes.API.Constants;
-using ClassNotes.API.Dtos.Attendances;
+﻿using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Services.Attendances;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ClassNotes.API.Controllers
@@ -15,56 +16,50 @@ namespace ClassNotes.API.Controllers
     public class AttendanceController : ControllerBase
     {
         private readonly IAttendancesService _attendanceService;
+        private readonly ILogger<AttendanceController> _logger;
 
-        public AttendanceController(IAttendancesService attendanceService)
+        public AttendanceController(
+            IAttendancesService attendanceService,
+            ILogger<AttendanceController> logger)
         {
             _attendanceService = attendanceService;
+            _logger = logger;
         }
 
-        //DD: Creacion de attendance 
         [HttpPost]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<AttendanceDto>> CreateAttendance([FromBody] AttendanceCreateDto attendanceCreateDto)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
                 var attendance = await _attendanceService.CreateAttendanceAsync(attendanceCreateDto);
-                return CreatedAtAction(nameof(GetAttendanceById), new { id = attendance.Id }, attendance);
+                return CreatedAtAction(
+                    nameof(GetAttendanceById),
+                    new { id = attendance.Id },
+                    attendance);
             }
             catch (ArgumentException ex)
             {
+                _logger.LogWarning(ex, "Argument error");
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Ocurrió un error interno al crear la asistencia.");
+                _logger.LogError(ex, "Server error");
+                return StatusCode(500, new
+                {
+                    Message = "Internal server error",
+                    Detail = ex.Message
+                });
             }
         }
 
-        // DD: Edicion de Assistencia 
-        [HttpPut("{id}")]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<AttendanceDto>> EditAttendance(Guid id, [FromBody] AttendanceEditDto attendanceEditDto)
-        {
-            try
-            {
-                var attendance = await _attendanceService.EditAttendanceAsync(id, attendanceEditDto);
-                return Ok(attendance);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Ocurrió un error interno al editar la asistencia.");
-            }
-        }
-
-        // dD: Listar Asistencia 
         [HttpGet]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<List<AttendanceDto>>> GetAllAttendances()
+        public async Task<ActionResult<IEnumerable<AttendanceDto>>> GetAllAttendances()
         {
             try
             {
@@ -73,60 +68,33 @@ namespace ClassNotes.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Ocurrió un error interno al obtener las asistencias.");
+                _logger.LogError(ex, "Server error");
+                return StatusCode(500, new
+                {
+                    Message = "Internal server error",
+                    Detail = ex.Message
+                });
             }
         }
 
-        // DD: Listar Asistencia por Curso Id 
-        [HttpGet("course/{courseId}")]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<List<AttendanceDto>>> GetAttendancesByCourse(Guid courseId)
-        {
-            try
-            {
-                var attendances = await _attendanceService.ListAttendancesByCourseAsync(courseId);
-                return Ok(attendances);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Ocurrió un error interno al obtener las asistencias por curso.");
-            }
-        }
-
-        //DD: Listar Asistencia por Estudiante Id
-        [HttpGet("student/{studentId}")]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<List<AttendanceDto>>> GetAttendancesByStudent(Guid studentId)
-        {
-            try
-            {
-                var attendances = await _attendanceService.ListAttendancesByStudentAsync(studentId);
-                return Ok(attendances);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Ocurrió un error interno al obtener las asistencias por estudiante.");
-            }
-        }
-
-        //DD: Listar por Id 
         [HttpGet("{id}")]
-        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<AttendanceDto>> GetAttendanceById(Guid id)
         {
             try
             {
-                var attendances = await _attendanceService.ListAttendancesAsync();
-                var attendance = attendances.FirstOrDefault(a => a.Id == id);
-                if (attendance == null)
-                {
-                    return NotFound("La asistencia no fue encontrada.");
-                }
-                return Ok(attendance);
+                var attendance = (await _attendanceService.ListAttendancesAsync())
+                    .FirstOrDefault(a => a.Id == id);
+
+                return attendance != null ? Ok(attendance) : NotFound();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Ocurrió un error interno al obtener la asistencia.");
+                _logger.LogError(ex, "Server error");
+                return StatusCode(500, new
+                {
+                    Message = "Internal server error",
+                    Detail = ex.Message
+                });
             }
         }
     }

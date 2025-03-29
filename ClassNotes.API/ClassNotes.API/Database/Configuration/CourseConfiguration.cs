@@ -54,11 +54,7 @@ namespace ClassNotes.API.Database.Configuration
                 .HasForeignKey(a => a.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Relación con TeacherEntity
-            builder.HasOne(c => c.Teacher)
-                .WithMany(t => t.Courses)  
-                .HasForeignKey(c => c.TeacherId)
-                .OnDelete(DeleteBehavior.Restrict);
+           
         }
     }
 }

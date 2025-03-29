@@ -7,7 +7,9 @@ namespace ClassNotes.API.Dtos.Attendances
 	public class AttendanceDto
 	{
         public Guid Id { get; set; }
-        public string Attended { get; set; }
+        public bool Attended { get; set; }
+
+        public string Status { get; set; }
         public DateTime RegistrationDate { get; set; }
 
         public Guid CourseId { get; set; }
