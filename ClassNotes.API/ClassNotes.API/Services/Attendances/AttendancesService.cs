@@ -133,7 +133,10 @@ namespace ClassNotes.API.Services.Attendances
 				{
 					Id = s.Student.Id,
 					StudentName = s.Student.FirstName + " " + s.Student.LastName,
+<<<<<<< HEAD
+=======
 					Email = s.Student.Email,
+>>>>>>> development
 					AttendanceRate = _context.Attendances
 						.Where(a => a.CourseId == courseId && a.StudentId == s.Student.Id) // AM: Filtrar asistencias por CourseId y StudentId
 						.Average(a => (double?)(a.Attended ? 1 : 0)), // AM: Calcular la tasa de asistencia
@@ -174,6 +177,62 @@ namespace ClassNotes.API.Services.Attendances
 			};
 		}
 
+<<<<<<< HEAD
+		// AM: Obtener stats de las asistencias por estudiante
+		public async Task<ResponseDto<StudentAttendancesDto>> GetStudentAttendancesStatsAsync(StudentIdCourseIdDto dto)
+		{
+			//JA: Buscamos el nombre del estudiante y lo guardamos 
+			var student = await _context.Students
+				.Where(s => s.Id == dto.StudentId)
+				.Select(s => new { s.FirstName })
+				.FirstOrDefaultAsync();
+
+			//JA:  Validar existencia del estudiante en el curso que se envio
+			var studentCourse = await _context.StudentsCourses
+                .FirstOrDefaultAsync(sc => sc.StudentId == dto.StudentId && sc.CourseId == dto.CourseId);
+            if (studentCourse == null)
+            {
+                //JA: Si no devolmemos que no esta en ese curso
+                return new ResponseDto<StudentAttendancesDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.ATT_STUDENT_NOT_ENROLLED,
+                };
+            }
+
+			//JA: Obtenemos la lista de asistencias de estudiante en el curso
+            var attendances = await _context.Attendances
+                .Where(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId)
+                .ToListAsync();
+
+			//JA: Calcular lo que retornaremos
+            int totalAttendances = attendances.Count; //JA: Total de asistencias del estudiante en el curso
+            int attendedCount = attendances.Count(a => a.Attended);//JA: Numero de asistencias
+            int absenceCount = totalAttendances - attendedCount;//JA: Numero de inasistencias
+            double attendanceRate = totalAttendances > 0 ? Math.Round((double)attendedCount / totalAttendances * 100, 2) : 0;//JA: Porcentaje de asistencias
+            double absenceRate = 100 - attendanceRate;//JA: Porcentaje de inasistencias
+
+            var studentStats = new StudentAttendancesDto
+            {
+                StudentName = student.FirstName, //JA: Nombre del estudiante
+                AttendanceCount = attendedCount, //JA: Cantidad de asistencias
+                AttendanceRate = attendanceRate, //JA: Porcentaje de asistencia
+                AbsenceCount = absenceCount, //JA: Cantidad de inasistencias
+                AbsenceRate = absenceRate, //JA: Porcentaje de inasistencias
+                IsActive = attendedCount > 0 //JA: Determinar si el estudiante ha asistido al menos una vez
+            };
+
+			//JA: Retornamos la respuesta
+            return new ResponseDto<StudentAttendancesDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.ATT_RECORDS_FOUND,
+                Data = studentStats
+            };
+        }
+=======
 		/* 
 			TODO: Las siguientes dos funciones las trabajará Jeyson según su Issue 
 		*/
@@ -183,11 +242,80 @@ namespace ClassNotes.API.Services.Attendances
 		{
 			throw new NotImplementedException();
 		}
+>>>>>>> development
 
 		// AM: Mostrar paginación de asistencias por estudiante
 		public async Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1)
 		{
+<<<<<<< HEAD
+			//JA: calculamos el indice de inicio para la paginacion
+            int startIndex = (page - 1) * PAGE_SIZE;
+
+			//JA: Validar existencia del estudiante en el curso
+			var studentCourse = await _context.StudentsCourses
+				.FirstOrDefaultAsync(sc => sc.StudentId == dto.StudentId && sc.CourseId == dto.CourseId);
+			if (studentCourse == null)
+			{
+				//JA: Si el estudiante no esta registrado en ese curso retornamos un mensaje que no esta incrito
+				return new ResponseDto<PaginationDto<List<AttendanceDto>>>
+				{
+					StatusCode = 404,
+					Status = false,
+					Message = MessagesConstant.ATT_STUDENT_NOT_ENROLLED,
+				};
+			}
+
+			//JA: Consultar asistencias del estudiante en el curso
+			var query = _context.Attendances
+                .Where(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId);
+
+            //JA: Filtrar asistencia por fecha espesifica, (por si se ocupa)
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(a => a.RegistrationDate.ToString().Contains(searchTerm));
+            }
+
+            //JA: Contar el total de registros de asistencia encontrados
+            int totalItems = await query.CountAsync();
+            //JA: Calcular el número total de paginas
+            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+
+            //JA: Obtener y mapear asistencias con paginacion
+            var attendances = await query
+                .OrderByDescending(a => a.RegistrationDate)
+                .Skip(startIndex)
+                .Take(PAGE_SIZE)
+                .Select(a => new AttendanceDto
+                {
+                    Id = a.Id,
+                    Attended = a.Attended,
+                    RegistrationDate = a.RegistrationDate,
+                    CourseId = a.CourseId,
+                    StudentId = a.StudentId
+                })
+                .ToListAsync();
+
+			//Retornamos la respuesta
+            return new ResponseDto<PaginationDto<List<AttendanceDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.ATT_RECORDS_FOUND,
+                Data = new PaginationDto<List<AttendanceDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = PAGE_SIZE,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Items = attendances,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
+            };
+        }
+=======
 			throw new NotImplementedException();
 		}
+>>>>>>> development
 	}
 }

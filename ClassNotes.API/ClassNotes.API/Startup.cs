@@ -61,7 +61,7 @@ public class Startup
 		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
 		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
-    services.AddTransient<IDashboardCenterService, DashboardCenterService>();
+    	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
 
 		// Servicios de seguridad
 		services.AddTransient<IAuthService, AuthService>();
