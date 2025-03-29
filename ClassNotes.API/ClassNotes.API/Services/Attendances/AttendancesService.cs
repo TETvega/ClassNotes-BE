@@ -133,10 +133,7 @@ namespace ClassNotes.API.Services.Attendances
 				{
 					Id = s.Student.Id,
 					StudentName = s.Student.FirstName + " " + s.Student.LastName,
-<<<<<<< HEAD
-=======
 					Email = s.Student.Email,
->>>>>>> development
 					AttendanceRate = _context.Attendances
 						.Where(a => a.CourseId == courseId && a.StudentId == s.Student.Id) // AM: Filtrar asistencias por CourseId y StudentId
 						.Average(a => (double?)(a.Attended ? 1 : 0)), // AM: Calcular la tasa de asistencia
@@ -177,7 +174,6 @@ namespace ClassNotes.API.Services.Attendances
 			};
 		}
 
-<<<<<<< HEAD
 		// AM: Obtener stats de las asistencias por estudiante
 		public async Task<ResponseDto<StudentAttendancesDto>> GetStudentAttendancesStatsAsync(StudentIdCourseIdDto dto)
 		{
@@ -232,22 +228,10 @@ namespace ClassNotes.API.Services.Attendances
                 Data = studentStats
             };
         }
-=======
-		/* 
-			TODO: Las siguientes dos funciones las trabajará Jeyson según su Issue 
-		*/
-
-		// AM: Obtener stats de las asistencias por estudiante
-		public async Task<ResponseDto<StudentAttendancesDto>> GetStudentAttendancesStatsAsync(StudentIdCourseIdDto dto)
-		{
-			throw new NotImplementedException();
-		}
->>>>>>> development
 
 		// AM: Mostrar paginación de asistencias por estudiante
 		public async Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1)
 		{
-<<<<<<< HEAD
 			//JA: calculamos el indice de inicio para la paginacion
             int startIndex = (page - 1) * PAGE_SIZE;
 
@@ -313,9 +297,5 @@ namespace ClassNotes.API.Services.Attendances
                 }
             };
         }
-=======
-			throw new NotImplementedException();
-		}
->>>>>>> development
 	}
 }
