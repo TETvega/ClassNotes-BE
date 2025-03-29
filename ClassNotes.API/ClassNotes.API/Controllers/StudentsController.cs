@@ -22,9 +22,9 @@ namespace ClassNotes.API.Controllers
 		}
 
         [HttpGet]
-        public async Task<ActionResult<ResponseDto<PaginationDto<List<StudentDto>>>>> PaginationList(string searchTerm, int page = 1)
+        public async Task<ActionResult<ResponseDto<PaginationDto<List<StudentDto>>>>> PaginationList(string searchTerm, int? pageSize = null, int page = 1)
         {
-            var response = await _studentsService.GetStudentsListAsync(searchTerm, page);
+            var response = await _studentsService.GetStudentsListAsync(searchTerm,pageSize, page);
             return StatusCode(response.StatusCode, new
             {
                 response.Status,

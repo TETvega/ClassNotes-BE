@@ -2,9 +2,10 @@
 
 namespace ClassNotes.API.Dtos.Courses
 {
-    // --------------------- CP --------------------- //
+	// --------------------- CP --------------------- //
 	public class CourseCreateDto
 	{
+		// Datos del curso
 		// Nombre
 		[Display(Name = "nombre")]
 		[Required(ErrorMessage = "El {0} es requerido.")]
@@ -42,7 +43,50 @@ namespace ClassNotes.API.Dtos.Courses
 
 		// Id de la configuración
 		[Display(Name = "id de la configuración")]
+		// [Required(ErrorMessage = "El {0} es requerido.")] Ya no es requerido
+		public Guid? SettingId { get; set; }
+
+
+		
+
+		// Datos de la configuración del curso
+		// Nombre de la configuración
+		[Display(Name = "nombre de la configuración")]
+        [StringLength(25, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
+        public string SettingName { get; set; }
+
+		// Tipo de puntuación
+		[Display(Name = "tipo de puntuación")]
 		[Required(ErrorMessage = "El {0} es requerido.")]
-		public Guid SettingId { get; set; }
+		[StringLength(15, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
+		public string ScoreType { get; set; }
+
+		// Fecha de inicio del periodo
+		[Display(Name = "fecha de inicio")]
+		[Required(ErrorMessage = "La {0} es requerida.")]
+		public DateTime StartDate { get; set; }
+
+		// Fecha de finalización del periodo
+		[Display(Name = "fecha de fin")]
+		[Required(ErrorMessage = "La {0} es requerida.")]
+		public DateTime EndDate { get; set; }
+
+		// Nota minima
+		[Display(Name = "nota minima")]
+		[Range(0, 100)]
+		[Required(ErrorMessage = "La {0} es requerida.")]
+		public float MinimumGrade { get; set; }
+
+		// Nota maxima
+		[Display(Name = "nota maxima")]
+		[Range(0, 100)]
+		[Required(ErrorMessage = "La {0} es requerida.")]
+		public float MaximumGrade { get; set; }
+
+		// Tiempo para enviar la asistencia
+		[Display(Name = "tiempo maximo para enviar la asistencia")]
+		[Range(5, 59)]
+		[Required(ErrorMessage = "El {0} es requerido.")]
+		public int MinimumAttendanceTime { get; set; }
 	}
 }

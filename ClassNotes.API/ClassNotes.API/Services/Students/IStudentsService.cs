@@ -6,7 +6,7 @@ namespace ClassNotes.API.Services.Students
 {
 	public interface IStudentsService
 	{
-        Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int page = 1);
+        Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int? pageSize = null ,int page = 1);
         Task<ResponseDto<StudentDto>> GetStudentByIdAsync(Guid id);
         Task<ResponseDto<StudentDto>> CreateStudentAsync(StudentCreateDto studentCreateDto);
         Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto);

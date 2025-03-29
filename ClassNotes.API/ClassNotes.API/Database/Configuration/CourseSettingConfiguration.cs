@@ -21,6 +21,7 @@ namespace ClassNotes.API.Database.Configuration
             builder.HasOne(cs => cs.Course)
                 .WithOne(c => c.CourseSetting) // relación uno a uno
                 .HasForeignKey<CourseEntity>(c => c.SettingId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

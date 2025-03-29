@@ -24,12 +24,13 @@ namespace ClassNotes.API.Controllers
 
         public async Task<ActionResult<ResponseDto<CourseDto>>> GetAll(
             string searchTerm = "",
-            int page = 1
+            int page = 1,
+            int? pageSize = null
             )
-            {
-            var response = await _coursesService.GetCoursesListAsync(searchTerm, page);
+        {
+            var response = await _coursesService.GetCoursesListAsync(searchTerm, page, pageSize);
             return StatusCode(response.StatusCode, response);
-            }
+        }
 
         // Traer un curso mediante su id
         [HttpGet("{id}")]
@@ -57,7 +58,6 @@ namespace ClassNotes.API.Controllers
             var response = await _coursesService.EditAsync(dto, id);
             return StatusCode(response.StatusCode, response);
         }
-
 
         // Eliminar un curso
         [HttpDelete("{id}")]

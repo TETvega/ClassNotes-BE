@@ -14,25 +14,45 @@ using ClassNotes.API.Services.Audit;
 
 namespace ClassNotes.API.Helpers.Automapper
 {
-	public class AutoMapperProfile : Profile
-	{
-		public AutoMapperProfile()
-		{
-			MapsForActivities();
-			MapsForAttendances();
-			MapsForCenters();
-			MapsForCourses();
-			MapsForStudents();
-			MapsForCourseNotes();
-			MapsForCourseSettings();
-			MapsForUsers();
-			MapsForTagsActivities();
-		}
+    public class AutoMapperProfile : Profile
+    {
+        public AutoMapperProfile()
+        {
+            MapsForActivities();
+            MapsForAttendances();
+            MapsForCenters();
+            MapsForCourses();
+            MapsForStudents();
+            MapsForCourseNotes();
+            MapsForCourseSettings();
+            MapsForUsers();
+            MapsForTagsActivities();
+        }
 
-        // Si escala a mas de 3 y son complejos se escalara a archvivos individuales  TIPO [Carpeta] Maps/[Entidad].cs
         private void MapsForActivities()
         {
-            CreateMap<ActivityEntity, ActivityDto>();
+            // Mapeo para el get all (ActivitySummaryDto)
+            CreateMap<ActivityEntity, ActivitySummaryDto>()
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => new ActivitySummaryDto.CourseInfo
+                {
+                    Id = src.Unit.Course.Id, // Se le pasan el id del curso al que pertenece la actividad
+                    Name = src.Unit.Course.Name // Se pasa el nombre del curso al que pertenece la actividad
+                }))
+                .ForMember(dest => dest.CenterId, opt => opt.MapFrom(src => src.Unit.Course.CenterId)); // Se pasa el id del centro al que pertenece
+
+            // Mapeo para el get by id (ActivityDto)
+            CreateMap<ActivityEntity, ActivityDto>()
+                .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => new ActivityDto.UnitInfo
+                {
+                    Id = src.Unit.Id, // El id de la unidad a la que pertenece
+                    Number = src.Unit.UnitNumber // El numero de esa unidad
+                }))
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => new ActivityDto.CourseInfo
+                {
+                    Id = src.Unit.Course.Id, // El id del curso al que pertenece
+                    Name = src.Unit.Course.Name // El nombre del curso
+                }));
+
             CreateMap<ActivityCreateDto, ActivityEntity>();
             CreateMap<ActivityEditDto, ActivityEntity>();
         }
@@ -62,7 +82,15 @@ namespace ClassNotes.API.Helpers.Automapper
 
         private void MapsForCourses()
         {
-            CreateMap<CourseEntity, CourseDto>();
+            CreateMap<CourseEntity, CourseDto>()
+                .ForMember(dest => dest.SettingName, opt => opt.MapFrom(src => src.CourseSetting.Name)) // Mapear el nombre de la configuración
+                .ForMember(dest => dest.ScoreType, opt => opt.MapFrom(src => src.CourseSetting.ScoreType)) // Mapear el tipo de puntuación
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.CourseSetting.StartDate)) // Mapear la fecha de inicio
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.CourseSetting.EndDate)) // Mapear la fecha de fin
+                .ForMember(dest => dest.MinimumGrade, opt => opt.MapFrom(src => src.CourseSetting.MinimumGrade)) // Mapear la nota mínima
+                .ForMember(dest => dest.MaximumGrade, opt => opt.MapFrom(src => src.CourseSetting.MaximumGrade)) // Mapear la nota máxima
+                .ForMember(dest => dest.MinimumAttendanceTime, opt => opt.MapFrom(src => src.CourseSetting.MinimumAttendanceTime)) // Mapear el tiempo mínimo de asistencia
+                .ForMember(dest => dest.IsOriginal, opt => opt.MapFrom(src => src.CourseSetting.IsOriginal)); // Mapear si es original;
             CreateMap<CourseCreateDto, CourseEntity>();
             CreateMap<CourseEditDto, CourseEntity>();
         }
@@ -95,12 +123,12 @@ namespace ClassNotes.API.Helpers.Automapper
         }
 
 
-		private void MapsForTagsActivities()
-		{
-			CreateMap<TagActivityEntity, TagActivityDto>();
-			CreateMap<TagActivityCreateDto, TagActivityEntity>();
-			CreateMap<TagActivityEditDto, TagActivityEntity>();
-		}
+        private void MapsForTagsActivities()
+        {
+            CreateMap<TagActivityEntity, TagActivityDto>();
+            CreateMap<TagActivityCreateDto, TagActivityEntity>();
+            CreateMap<TagActivityEditDto, TagActivityEntity>();
+        }
         // Mapeo del dashboard de cursos
         private void MapsForDashboardCourses()
         {
