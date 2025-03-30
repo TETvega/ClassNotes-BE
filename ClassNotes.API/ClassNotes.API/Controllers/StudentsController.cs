@@ -34,8 +34,7 @@ namespace ClassNotes.API.Controllers
 
         }
 
-
-        // EG -> Controller de obtener estudiante por id
+        // EG -> Controlador de obtener estudiante por id
         [HttpGet("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<StudentDto>>> GetById(Guid id) 
@@ -44,25 +43,30 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-
+        //EG -> Controlador de Create aplicando el modo estricto 
         [HttpPost]
-        public async Task<ActionResult<ResponseDto<StudentDto>>> Create(StudentCreateDto studentCreateDto)
+        public async Task<ActionResult<ResponseDto<StudentDto>>> Create(
+        [FromBody] StudentCreateDto studentCreateDto,
+        [FromHeader(Name = "Strict-Mode")] bool strictMode = false)
         {
-            var response = await _studentsService.CreateStudentAsync(studentCreateDto);
+            var response = await _studentsService.CreateStudentAsync(studentCreateDto, strictMode);
             return StatusCode(response.StatusCode, response);
         }
+
         [HttpPut("{id}")]
         public async Task<ActionResult<ResponseDto<StudentDto>>> UpdateStudent(Guid id, StudentEditDto studentEditDto)
         {
             var response = await _studentsService.UpdateStudentAsync(id, studentEditDto);
-            // Retornar una respuesta exitosa
             return StatusCode(response.StatusCode, response);
         }
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<ResponseDto<StudentDto>>> Delete(Guid id)
+     
+        //EG -> Controlador de elimar estudiantes por arreglo o individual 
+        [HttpDelete("batch")]
+        public async Task<ActionResult<ResponseDto<List<Guid>>>> DeleteStudentsInBatch([FromBody] List<Guid> studentIds)
         {
-            var response = await _studentsService.DeleteStudentAsync(id);
+            var response = await _studentsService.DeleteStudentsInBatchAsync(studentIds);
             return StatusCode(response.StatusCode, response);
         }
+
     }
 }

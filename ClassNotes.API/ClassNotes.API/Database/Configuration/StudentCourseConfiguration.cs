@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Database.Entities;
-
 namespace ClassNotes.API.Database.Configuration
 {
     public class StudentCourseConfiguration : IEntityTypeConfiguration<StudentCourseEntity>
