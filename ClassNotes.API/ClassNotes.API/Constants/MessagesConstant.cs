@@ -102,7 +102,8 @@ namespace ClassNotes.API.Constants
         public const string CRS_INVALID_COURSE_DATA = "CRS-9078: Los datos del curso proporcionados no son válidos.";
         public const string CRS_INSUFFICIENT_COURSE_DATA = "CRS-9079: No se proporcionaron todos los datos necesarios para crear el curso.";
         public const string CRS_PAGINATION_ERROR = "CRS-9010: Error al calcular la paginación.";
-		    public const string CRS_RECORD_FOUND = "CRS-9011: El curso fue encontrado exitosamente.";
+		public const string CRS_RECORD_FOUND = "CRS-9011: El curso fue encontrado exitosamente.";
+        public const string CRS_RECORDS_FOUND = "CRS-9012: Los cursos fueron encontrados exitosamente";
         public const string CRS_INVALID_SETTING = "CRS-9020: La configuración seleccionada no existe o no pertenece al usuario." ;
 
 		// Manejo Notas de Curso (CNS-XXX)
@@ -126,6 +127,7 @@ namespace ClassNotes.API.Constants
         public const string CP_INVALID_GRADES = "CP-246: Las puntuaciones mínima y máxima deben ser mayores a 0, y la máxima no puede ser menor a la mínima.";
         public const string CONFIGURATION_ALREADY_EXISTS = "CP-247: Ya existe la configuración";
         public const string CP_SETTING_NAME_REQUIRED = "CP-248: El nombre de la configuración es requerido";
+
 
         // Manewjo Emails (EM-XXX)
         public const string EMAIL_CREATE_SUCCESS = "EM-311: Correo electrónico creado exitosamente.";
