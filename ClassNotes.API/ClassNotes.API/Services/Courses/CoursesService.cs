@@ -6,6 +6,7 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Services.Audit;
+using iText.Kernel.Geom;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassNotes.API.Services.Courses
@@ -32,33 +33,48 @@ namespace ClassNotes.API.Services.Courses
 
         // EG -> Enlistar todos los cursos, paginacion
 
-        public async Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(string searchTerm = "", int page = 1)
+        public async Task<ResponseDto<PaginationDto<List<CourseDto>>>> GetCoursesListAsync(
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = null
+            )
         {
-            int startIndex = (page - 1) * PAGE_SIZE;
+            /** HR
+             * Si pageSize es -1, se devuelve int.MaxValue
+             * -1 significa "obtener todos los elementos", por lo que usamos int.MaxValue 
+             *  int.MaxValue es 2,147,483,647, que es el valor máximo que puede tener un int en C#.
+             *  Math.Max(1, valor) garantiza que currentPageSize nunca sea menor que 1 excepto el -1 al inicio
+             *  si pageSize es nulo toma el valor de PAGE_SIZE
+             */
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = ( page   - 1) * currentPageSize;
 
             var userId = _auditService.GetUserId();
 
+            // Query base con filtro por usuario
             var coursesQuery = _context.Courses
-                .Where(c => c.CreatedBy == userId) // Para mostrar unicamente los cursos que pertenecen al usuario que hace la petición
-                .AsQueryable();
+                .Include(c => c.CourseSetting)
+                .Where(c => c.CreatedBy == userId);
 
-            // buscar por nombre o codigo del curso 
+            // Filtro por búsqueda es lo mismo aplicado a courses
+            // HR
             if (!string.IsNullOrEmpty(searchTerm))
             {
+                string pattern = $"%{searchTerm}%";
                 coursesQuery = coursesQuery.Where(c =>
-               c.Name.ToLower().Contains(searchTerm.ToLower()) ||
-               c.Code.ToLower().Contains(searchTerm.ToLower()));
+                    EF.Functions.Like(c.Name, pattern) ||
+                    EF.Functions.Like(c.Code, pattern));
             }
 
             int totalItems = await coursesQuery.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+            int totalPages = (int)Math.Ceiling((double)totalItems / currentPageSize);
 
             // aplicar paginacion 
 
             var courseEntities = await coursesQuery
                 .OrderByDescending(n => n.Section) //Ordenara por seccion   
                 .Skip(startIndex)
-                .Take(PAGE_SIZE)
+                .Take(currentPageSize)
                 .ToListAsync();
 
             var coursesDto = _mapper.Map<List<CourseDto>>(courseEntities);
@@ -71,7 +87,7 @@ namespace ClassNotes.API.Services.Courses
                 Data = new PaginationDto<List<CourseDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = currentPageSize,
                     TotalItems = totalItems,
                     TotalPages = totalPages,
                     Items = coursesDto,
@@ -88,6 +104,7 @@ namespace ClassNotes.API.Services.Courses
             var userId = _auditService.GetUserId();
 
             var courseEntity = await _context.Courses
+                .Include(c => c.CourseSetting) // Para incluir la información de la configuración del curso
                 .FirstOrDefaultAsync(a => a.Id == id && a.CreatedBy == userId); // Unicamente aprecera el curso si lo creo quien hace la petición
             if (courseEntity == null)
             {
@@ -114,7 +131,7 @@ namespace ClassNotes.API.Services.Courses
             var userId = _auditService.GetUserId();
 
             // Validar que la hora de fin no sea menor a la de inicio
-            if (dto.FinishTime < dto.StartTime)
+            if (dto.FinishTime <= dto.StartTime)
             {
                 return new ResponseDto<CourseDto>
                 {
@@ -124,8 +141,29 @@ namespace ClassNotes.API.Services.Courses
                 };
             }
 
+            // Validar que la fecha de fin no sea menor a la de inicio
+            if (dto.EndDate <= dto.StartDate)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = MessagesConstant.CP_INVALID_DATES
+                };
+            }
+
+            // Validar que las notas sean válidas
+            if (dto.MinimumGrade <= 0 || dto.MaximumGrade <= 0 || dto.MaximumGrade < dto.MinimumGrade)
+            {
+                return new ResponseDto<CourseDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = MessagesConstant.CP_INVALID_GRADES
+                };
+            }
+
             // Verificar si ya existe una clase con el mismo nombre, sección, codigo y hora de inicio
-            // También se verifica si una persona ya creo la sección ya que las clases no se comparten entre docentes
             var existingCourse = await _context.Courses
                 .FirstOrDefaultAsync(c =>
                     c.CreatedBy == userId &&
@@ -134,7 +172,6 @@ namespace ClassNotes.API.Services.Courses
                     c.Code.ToLower() == dto.Code.ToLower() &&
                     c.StartTime == dto.StartTime
                 );
-
             if (existingCourse != null)
             {
                 return new ResponseDto<CourseDto>
@@ -145,11 +182,119 @@ namespace ClassNotes.API.Services.Courses
                 };
             }
 
-            // Pasa las validaciones y se crea la clase
-            var courseEntity = _mapper.Map<CourseEntity>(dto);
+
+            // Crear o duplicar la configuración del curso
+            CourseSettingEntity originalSettingEntity;
+            CourseSettingEntity duplicatedSettingEntity;
+
+            if (dto.SettingId.HasValue && dto.SettingId != Guid.Empty) // Caso 1: Duplicar una configuración existente
+            {
+                var existingSetting = await _context.CoursesSettings
+                    .FirstOrDefaultAsync(cs => cs.Id == dto.SettingId && cs.CreatedBy == userId);
+
+                if (existingSetting == null)
+                {
+                    return new ResponseDto<CourseDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = MessagesConstant.CRS_INVALID_SETTING
+                    };
+                }
+
+                // La configuración original es la existente
+                originalSettingEntity = existingSetting;
+
+                // Duplicar el course_setting
+                duplicatedSettingEntity = new CourseSettingEntity
+                {
+                    Name = existingSetting.Name,
+                    ScoreType = existingSetting.ScoreType,
+                    StartDate = existingSetting.StartDate,
+                    EndDate = existingSetting.EndDate,
+                    MinimumGrade = existingSetting.MinimumGrade,
+                    MaximumGrade = existingSetting.MaximumGrade,
+                    MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
+                    CreatedBy = userId,
+                    UpdatedBy = userId,
+                    IsOriginal = false // Marcamos como copia
+                };
+            }
+            else // Caso 2: Crear una configuración original
+            {
+                // Validar que el nombre de la configuración esté presente
+                if (string.IsNullOrEmpty(dto.SettingName))
+                {
+                    return new ResponseDto<CourseDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = MessagesConstant.CP_SETTING_NAME_REQUIRED
+                    };
+                }
+
+                // Crear la configuración original
+                originalSettingEntity = new CourseSettingEntity
+                {
+                    Name = dto.SettingName,
+                    ScoreType = dto.ScoreType,
+                    StartDate = dto.StartDate,
+                    EndDate = dto.EndDate,
+                    MinimumGrade = dto.MinimumGrade,
+                    MaximumGrade = dto.MaximumGrade,
+                    MinimumAttendanceTime = dto.MinimumAttendanceTime,
+                    CreatedBy = userId,
+                    UpdatedBy = userId,
+                    IsOriginal = true // Marcamos como configuración original
+                };
+
+                // Guardar la configuración original en la base de datos
+                _context.CoursesSettings.Add(originalSettingEntity);
+                await _context.SaveChangesAsync();
+
+                // Siempre duplicar la configuración antes de asignarla al curso
+                duplicatedSettingEntity = new CourseSettingEntity
+                {
+                    Name = originalSettingEntity.Name,
+                    ScoreType = originalSettingEntity.ScoreType,
+                    StartDate = originalSettingEntity.StartDate,
+                    EndDate = originalSettingEntity.EndDate,
+                    MinimumGrade = originalSettingEntity.MinimumGrade,
+                    MaximumGrade = originalSettingEntity.MaximumGrade,
+                    MinimumAttendanceTime = originalSettingEntity.MinimumAttendanceTime,
+                    CreatedBy = userId,
+                    UpdatedBy = userId,
+                    IsOriginal = false // La copia siempre es marcada como no original
+                };
+            }
+
+            // Guardar la copia en la base de datos
+            _context.CoursesSettings.Add(duplicatedSettingEntity);
+            await _context.SaveChangesAsync();
+
+            // Crear el curso y asociarlo con la configuración
+            var courseEntity = new CourseEntity
+            {
+                Name = dto.Name,
+                Section = dto.Section,
+                StartTime = dto.StartTime,
+                FinishTime = dto.FinishTime,
+                Code = dto.Code,
+                IsActive = dto.IsActive,
+                CenterId = dto.CenterId,
+                CreatedBy = userId,
+                UpdatedBy = userId,
+                CourseSetting = duplicatedSettingEntity, // Asociamos la configuración
+                SettingId = duplicatedSettingEntity.Id // Asignamos el ID de la configuración
+            };
+
+            // Guardar el curso en la base de datos
             _context.Courses.Add(courseEntity);
             await _context.SaveChangesAsync();
+
+            // Mapear a DTO para la respuesta
             var courseDto = _mapper.Map<CourseDto>(courseEntity);
+
             return new ResponseDto<CourseDto>
             {
                 StatusCode = 201,

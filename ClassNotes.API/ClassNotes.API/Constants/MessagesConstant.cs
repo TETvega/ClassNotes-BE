@@ -74,7 +74,9 @@ namespace ClassNotes.API.Constants
         // Manejo Estudiantes (STU-XXX)
         public const string STU_RECORD_NOT_FOUND = "STU-7001: El registro no fue encontrado.";
         public const string STU_RECORD_FOUND = "STU-7001: El registro fue encontrado.";
-        public const string STU_CREATE_SUCCESS = "STU-7002: Estudiante creado exitosamente.";
+		public const string STU_RECORDS_FOUND = "STU-7028: Estudiantes encontrados correctamente.";
+		public const string STU_RECORDS_NOT_FOUND = "STU-7029: No se encontrarón estudiantes.";
+		public const string STU_CREATE_SUCCESS = "STU-7002: Estudiante creado exitosamente.";
         public const string STU_UPDATE_SUCCESS = "STU-7013: Estudiante actualizado exitosamente.";
         public const string STU_DELETE_SUCCESS = "STU-7014: Estudiante eliminado exitosamente.";
         public const string EMAIL_ALREADY_REGISTERED = "STU-7025: El correo electrónico ya está registrado con otro estudiante.";
@@ -100,16 +102,18 @@ namespace ClassNotes.API.Constants
         public const string CRS_INVALID_COURSE_DATA = "CRS-9078: Los datos del curso proporcionados no son válidos.";
         public const string CRS_INSUFFICIENT_COURSE_DATA = "CRS-9079: No se proporcionaron todos los datos necesarios para crear el curso.";
         public const string CRS_PAGINATION_ERROR = "CRS-9010: Error al calcular la paginación.";
+		    public const string CRS_RECORD_FOUND = "CRS-9011: El curso fue encontrado exitosamente.";
+        public const string CRS_INVALID_SETTING = "CRS-9020: La configuración seleccionada no existe o no pertenece al usuario." ;
 
-        // Manejo Notas de Curso (CNS-XXX)
-        public const string CNS_RECORD_NOT_FOUND = "CNS-101: La nota de curso no fue encontrada.";
+		// Manejo Notas de Curso (CNS-XXX)
+		public const string CNS_RECORD_NOT_FOUND = "CNS-101: La nota de curso no fue encontrada.";
         public const string CNS_CREATE_SUCCESS = "CNS-112: Nota de curso creada exitosamente.";
         public const string CNS_UPDATE_SUCCESS = "CNS-113: Nota de curso actualizada exitosamente.";
         public const string CNS_DELETE_SUCCESS = "CNS-114: Nota de curso eliminada exitosamente.";
         public const string CNS_RECORDS_FOUND = "CNS-125: Se encontraron las notas de curso.";
         public const string CNS_EDIT_PERMISSION_DENIED = "CNS-126: No puede editar una nota que no le pertenece.";
         public const string CNS_DELETE_PERMISSION_DENIED = "CNS-127: No puede eliminar una nota que no le pertenece.";
-        public const string CNS_END_TIME_BEFORE_START_TIME = "CNS-128 :La hora de finalización no puede ser menor a la hora de inicio.";
+        public const string CNS_END_TIME_BEFORE_START_TIME = "CNS-128 :La hora de finalización no puede ser menor o igual a la hora de inicio.";
         public const string CNS_CLASS_ALREADY_EXISTS = "CNS-129: Ya existe la clase.";
 
         // Manejo Configuracion Curso (CP-XXX)
@@ -118,9 +122,10 @@ namespace ClassNotes.API.Constants
         public const string CP_DELETE_SUCCESS = "CP-233: Configuración de curso eliminada exitosamente.";
         public const string CP_RECORD_NOT_FOUND = "CP-244: La configuración de curso no fue encontrada.";
         public const string CP_RECORD_FOUND = "CP-244: La configuración de curso fue encontrada.";
-        public const string CP_INVALID_DATES = "CP-245: La fecha de finalización no puede ser menor a la de inicio.";
+        public const string CP_INVALID_DATES = "CP-245: La fecha de finalización no puede ser menor o igual a la de inicio.";
         public const string CP_INVALID_GRADES = "CP-246: Las puntuaciones mínima y máxima deben ser mayores a 0, y la máxima no puede ser menor a la mínima.";
         public const string CONFIGURATION_ALREADY_EXISTS = "CP-247: Ya existe la configuración";
+        public const string CP_SETTING_NAME_REQUIRED = "CP-248: El nombre de la configuración es requerido";
 
         // Manewjo Emails (EM-XXX)
         public const string EMAIL_CREATE_SUCCESS = "EM-311: Correo electrónico creado exitosamente.";
@@ -159,18 +164,30 @@ namespace ClassNotes.API.Constants
         public const string CD_INVALID_IMAGE_FORMAT = "CD-511: El archivo no es una imagen válida. Formatos permitidos: .png, .jpg, .jpeg, .gif, .bmp, .tiff, .webp";
 
 		// Manejo de Etiquetas de Actividades (TA-XXX)
-		public const string TA_RECORDS_FOUND = "TA-601: Etiquetas de actividad encontradas correctamente.";
-		public const string TA_RECORDS_NOT_FOUND = "TA-602: No se encontraron etiquetas de actividad.";
-		public const string TA_RECORD_FOUND = "TA-603: Etiqueta de actividad encontrada correctamente.";
-		public const string TA_RECORD_NOT_FOUND = "TA-604: La etiqueta de actividad no fue encontrada.";
-		public const string TA_CREATE_SUCCESS = "TA-605: Etiqueta de actividad creada exitosamente.";
-		public const string TA_CREATE_ERROR = "TA-606: No se pudo crear la etiqueta de actividad.";
-		public const string TA_UPDATE_SUCCESS = "TA-607: Etiqueta de actividad actualizada exitosamente.";
-		public const string TA_UPDATE_ERROR = "TA-608: No se pudo actualizar la etiqueta de actividad.";
-		public const string TA_DELETE_SUCCESS = "TA-609: Etiqueta de actividad eliminada exitosamente.";
-		public const string TA_DELETE_ERROR = "TA-610: No se pudo eliminar la etiqueta de actividad.";
-		public const string TA_IS_USED = "TA-611: La etiqueta no puede ser eliminada porque está asociada a una o más actividades.";
+		public const string TA_RECORDS_FOUND = "TA-001: Etiquetas de actividad encontradas correctamente.";
+		public const string TA_RECORDS_NOT_FOUND = "TA-002: No se encontraron etiquetas de actividad.";
+		public const string TA_RECORD_FOUND = "TA-003: Etiqueta de actividad encontrada correctamente.";
+		public const string TA_RECORD_NOT_FOUND = "TA-004: La etiqueta de actividad no fue encontrada.";
+		public const string TA_CREATE_SUCCESS = "TA-005: Etiqueta de actividad creada exitosamente.";
+		public const string TA_CREATE_ERROR = "TA-006: No se pudo crear la etiqueta de actividad.";
+		public const string TA_UPDATE_SUCCESS = "TA-007: Etiqueta de actividad actualizada exitosamente.";
+		public const string TA_UPDATE_ERROR = "TA-008: No se pudo actualizar la etiqueta de actividad.";
+		public const string TA_DELETE_SUCCESS = "TA-009: Etiqueta de actividad eliminada exitosamente.";
+		public const string TA_DELETE_ERROR = "TA-010: No se pudo eliminar la etiqueta de actividad.";
+		public const string TA_IS_USED = "TA-011: La etiqueta no puede ser eliminada porque está asociada a una o más actividades.";
 
+		// Manejo de asistencias (ATT-XXX)
+		public const string ATT_RECORDS_FOUND = "ATT-001: Asistencias encontradas correctamente.";
+		public const string ATT_RECORDS_NOT_FOUND = "ATT-002: No se encontrarón asistencias.";
+		public const string ATT_RECORD_FOUND = "ATT-003: Asistencia encontrada correctamente.";
+		public const string ATT_RECORD_NOT_FOUND = "ATT-004: La asistencia no fue encontrada.";
+		public const string ATT_CREATE_SUCCESS = "ATT-005: Asistencia registrada exitosamente.";
+		public const string ATT_CREATE_ERROR = "ATT-006: No se pudo registrar la asistencia.";
+		public const string ATT_UPDATE_SUCCESS = "ATT-007: Asistencia actualizada exitosamente.";
+		public const string ATT_UPDATE_ERROR = "ATT-008: No se pudo actualizar la asistencia.";
+		public const string ATT_DELETE_SUCCESS = "ATT-009: Asistencia eliminada exitosamente.";
+		public const string ATT_DELETE_ERROR = "ATT-010: No se pudo eliminar asistencia.";
+        public const string ATT_STUDENT_NOT_ENROLLED = "ATT-011: El estudiante no está registrado en el curso.";
 
 	}
 }

@@ -27,7 +27,10 @@ namespace ClassNotes.API.Database.Entities
         [Column("use_date")]
         public DateTime UseDate { get; set; }
 
-       [Required]
+        [Column("is_view")] // HR -> Para manejar en conjunto si una nota es marcada como vista o no
+        public bool isView { get; set; } = false; // Valor por defecto de Toda nota 
+
+        [Required]
        [Column("course_id")]
        public Guid CourseId { get; set; }
        [ForeignKey(nameof(CourseId))]

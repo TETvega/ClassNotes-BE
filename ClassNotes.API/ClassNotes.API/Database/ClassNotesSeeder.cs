@@ -17,18 +17,18 @@ namespace ClassNotes.API.Database
             try
             {
                 await LoadUsersAndRolesAsync(userManager, roleManager, loggerFactory);
-                await LoadCourseSenttingsAsync(loggerFactory, context);
-                await LoadCenterAsync(loggerFactory, context);
-                await LoadCourseAsync(loggerFactory, context);
+                await LoadCoursesSettingsAsync(loggerFactory, context);
+                await LoadCentersAsync(loggerFactory, context);
+                await LoadCoursesAsync(loggerFactory, context);
                 await LoadCourseNotesAsync(loggerFactory, context);
-                await LoadTagActivityAsync(loggerFactory, context);
-                await LoadUnitAsync(loggerFactory, context);
+                await LoadTagsActivitiesAsync(loggerFactory, context);
+                await LoadUnitsAsync(loggerFactory, context);
                 await LoadActivitiesAsync(loggerFactory, context);
                 await LoadStudentsAsync(loggerFactory, context);
-                await LoadAttendanceAsync(loggerFactory, context);
-                await LoadStudentCourseAsync(loggerFactory, context);
-                await LoadStudentsActivitesNotesAsync(loggerFactory, context);
-                await LoadStudentUnitAsync(loggerFactory, context);
+                await LoadAttendancesAsync(loggerFactory, context);
+                await LoadStudentsCoursesAsync(loggerFactory, context);
+                await LoadStudentsActivitiesNotesAsync(loggerFactory, context);
+                await LoadStudentsUnitsAsync(loggerFactory, context);
             }
             catch (Exception ex)
             {
@@ -37,10 +37,8 @@ namespace ClassNotes.API.Database
             }
         }
 
-		public static async Task LoadUsersAndRolesAsync(
-			UserManager<UserEntity> userManager,
-			RoleManager<IdentityRole> roleManager,
-			ILoggerFactory loggerFactory)
+        // AM: Cargar usuarios desde users.json
+		public static async Task LoadUsersAndRolesAsync(UserManager<UserEntity> userManager, RoleManager<IdentityRole> roleManager, ILoggerFactory loggerFactory)
 		{
 			try
 			{
@@ -91,7 +89,7 @@ namespace ClassNotes.API.Database
 			}
 		}
 	
-        // AM: Aqui se llama el json para cargar los Estudiantes 
+        // AM: Cargar estudiantes desde students.json
         public static async Task LoadStudentsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
@@ -100,10 +98,10 @@ namespace ClassNotes.API.Database
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var students = JsonConvert.DeserializeObject<List<StudentEntity>>(jsonContent);
 
-                // Verificar si los estudiantes son null o vacíos
                 foreach (var student in students)
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
+					// AM: Asignar a Juan Perez 
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
                     bool exists = await context.Students.AnyAsync(s => s.Id == student.Id);
                     if (!exists)
                     {
@@ -124,8 +122,8 @@ namespace ClassNotes.API.Database
             }
         }
 
-		// AM: Cargar las notas de unidades de estudiantes (StudentsUnits)
-		public static async Task LoadStudentUnitAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// AM: Cargar unidades de estudiantes desde students_units.json
+		public static async Task LoadStudentsUnitsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
 		{
 			try
 			{
@@ -135,7 +133,8 @@ namespace ClassNotes.API.Database
 
 				foreach (var studentUnit in studentsUnits)
 				{
-					var user = await context.Users.FirstOrDefaultAsync();
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7"); 
 					bool exists = await context.StudentsUnits.AnyAsync(t => t.Id == studentUnit.Id);
 					if (!exists)
 					{
@@ -156,29 +155,29 @@ namespace ClassNotes.API.Database
 			}
 		}
 
-		// JA: Cargamos las TagasActivity
-		public static async Task LoadTagActivityAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// JA: Cargar etiquetas desde tags_activities.json
+		public static async Task LoadTagsActivitiesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
-                var jsonFilePath = "SeedData/tag_activity.json";
+                var jsonFilePath = "SeedData/tags_activities.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var tags = JsonConvert.DeserializeObject<List<TagActivityEntity>>(jsonContent);
                 
-                    foreach (var tag in tags)
+                foreach (var tag in tags)
+                {
+                    // AM: Asignar a Juan Perez
+                    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");  
+                    // JA: Verificar si la TagActivity ya existe
+                    bool exists = await context.TagsActivities.AnyAsync(t => t.Id == tag.Id);
+                    if (!exists)
                     {
-                        // JA: Asignamos el usuario creador, en este caso el primero en la lista
-                        var user = await context.Users.FirstOrDefaultAsync();
-                            // JA: Verificar si la TagActivity ya existe
-                            bool exists = await context.TagsActivities.AnyAsync(t => t.Id == tag.Id);
-                            if (!exists)
-                            {
-                                tag.CreatedDate = DateTime.Now;
-                                tag.UpdatedDate = DateTime.Now;
-                                tag.CreatedBy = user.Id;
-                                tag.UpdatedBy = user.Id;
-                                await context.TagsActivities.AddAsync(tag);
-                        }
+                        tag.CreatedDate = DateTime.Now;
+                        tag.UpdatedDate = DateTime.Now;
+                        tag.CreatedBy = user.Id;
+                        tag.UpdatedBy = user.Id;
+                        await context.TagsActivities.AddAsync(tag);
+                    }
                    
                     await context.SaveChangesWithoutAuditAsync();
                 }
@@ -190,29 +189,29 @@ namespace ClassNotes.API.Database
             }
         }
 
-        // JA: Cargamos la unidad
-        public static async Task LoadUnitAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// JA: Cargar unidades desde units.json
+		public static async Task LoadUnitsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
-                var jsonFilePath = "SeedData/unit.json";
+                var jsonFilePath = "SeedData/units.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var units = JsonConvert.DeserializeObject<List<UnitEntity>>(jsonContent);
 
-                    foreach (var unit in units)
+                foreach (var unit in units)
+                {
+                    // AM: Asignar a Juan Perez
+                    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7"); 
+                    // JA: Verificar si la unidad ya existe
+                    bool exists = await context.Units.AnyAsync(t => t.Id == unit.Id);
+                    if (!exists)
                     {
-                        // JA: Asignamos el usuario creador, en este caso el primero en la lista
-                        var user = await context.Users.FirstOrDefaultAsync();
-                            // JA: Verificar si la unidad ya existe
-                            bool exists = await context.Units.AnyAsync(t => t.Id == unit.Id);
-                            if (!exists)
-                            {
-                                unit.CreatedDate = DateTime.Now;
-                                unit.UpdatedDate = DateTime.Now;
-                                unit.CreatedBy = user.Id;
-                                unit.UpdatedBy = user.Id;
-                                await context.Units.AddAsync(unit);
-                            }
+                        unit.CreatedDate = DateTime.Now;
+                        unit.UpdatedDate = DateTime.Now;
+                        unit.CreatedBy = user.Id;
+                        unit.UpdatedBy = user.Id;
+                        await context.Units.AddAsync(unit);
+                    }
 
                     await context.SaveChangesWithoutAuditAsync();
                 }
@@ -224,19 +223,20 @@ namespace ClassNotes.API.Database
             }
         }
 
-
-        // DD : Aqui se llama el json de Actividades 
-        public static async Task LoadActivitiesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// DD: Cargar actividades desde activities.json
+		public static async Task LoadActivitiesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
                 var jsonFilePath = "SeedData/activities.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var Activities = JsonConvert.DeserializeObject<List<ActivityEntity>>(jsonContent);
-              foreach (var activity in Activities) 
+
+                foreach (var activity in Activities) 
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
-                    bool exists = await context.Activities.AnyAsync(s => s.Id == activity.Id);
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					bool exists = await context.Activities.AnyAsync(s => s.Id == activity.Id);
                     if (!exists) 
                     {
                         activity.CreatedBy = user.Id;
@@ -246,7 +246,8 @@ namespace ClassNotes.API.Database
                         await context.Activities.AddAsync(activity);
                     }
                 }
-              await context.SaveChangesWithoutAuditAsync();
+
+                await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
             {
@@ -254,8 +255,9 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Actividades");
             }
         }
-        // DD: Aqui se llama el json de Center
-        public static async Task LoadCenterAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+
+		// DD: Cargar centros desde centers.json
+		public static async Task LoadCentersAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
@@ -264,9 +266,10 @@ namespace ClassNotes.API.Database
                 var center = JsonConvert.DeserializeObject<List<CenterEntity>>(jsonContent);
                 if (!await context.Centers.AnyAsync())
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
 
-                    for (int i = 0; i < center.Count; i++)
+					for (int i = 0; i < center.Count; i++)
                     {
                         center[i].CreatedBy = user.Id;
                         center[i].CreatedDate = DateTime.Now;
@@ -284,18 +287,21 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seed de Centros");
             }
         }
-        //DD: Aqui se llama el json de Cursos 
-        public static async Task LoadCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+
+		// DD: Cargar clases desde courses.json
+		public static async Task LoadCoursesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
                 var jsonFilePath = "SeedData/courses.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var courses = JsonConvert.DeserializeObject<List<CourseEntity>>(jsonContent);
+
                 foreach (var course in courses) 
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
-                    bool exist = await context.Courses.AnyAsync(s => s.Id == course.Id);
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					bool exist = await context.Courses.AnyAsync(s => s.Id == course.Id);
                     if (!exist) { 
                       course.CreatedBy = user.Id;
                         course.CreatedDate = DateTime.Now;
@@ -304,6 +310,7 @@ namespace ClassNotes.API.Database
                         await context.Courses.AddAsync(course);
                     }
                 }
+
                 await context.SaveChangesWithoutAuditAsync();
             }
 
@@ -314,18 +321,20 @@ namespace ClassNotes.API.Database
             }
         }
 
-        //DD: Aqui se llama el json de Asistencias 
-        public static async Task LoadAttendanceAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// DD: Cargar asistencias desde attendances.json
+		public static async Task LoadAttendancesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
-                var jsonFilePath = "SeedData/attendance.json";
+                var jsonFilePath = "SeedData/attendances.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var attendances = JsonConvert.DeserializeObject<List<AttendanceEntity>>(jsonContent);
-              foreach(var attendace in attendances)
+                
+                foreach(var attendace in attendances)
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
-                    bool exist = await context.Attendances.AnyAsync(s =>s.Id == attendace.Id);
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					bool exist = await context.Attendances.AnyAsync(s =>s.Id == attendace.Id);
                     if (!exist) 
                     {
                         attendace.CreatedBy = user.Id;
@@ -335,6 +344,7 @@ namespace ClassNotes.API.Database
                         await context.Attendances.AddAsync(attendace);
                     }
                 }
+
                 await context.SaveChangesWithoutAuditAsync();
 
             }
@@ -345,19 +355,20 @@ namespace ClassNotes.API.Database
             }
         }
 
-        // DD: Aqui se llama el json de Notas de Cursos 
-        public static async Task LoadCourseNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// DD: Cargar notas de curso desde course_notes.json
+		public static async Task LoadCourseNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
                 var jsonFilePath = "SeedData/course_notes.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var course_notes = JsonConvert.DeserializeObject<List<CourseNoteEntity>>(jsonContent);
+
                 foreach (var courseNote in course_notes)  
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
-                    
-                    bool exist = await context.CoursesNotes.AnyAsync(s => s.Id == courseNote.Id);
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					bool exist = await context.CoursesNotes.AnyAsync(s => s.Id == courseNote.Id);
                     if (!exist) 
                     {
                         courseNote.CreatedBy = user.Id;
@@ -367,6 +378,7 @@ namespace ClassNotes.API.Database
                         await context.CoursesNotes.AddAsync(courseNote);
                     }
                 }
+
                 await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
@@ -376,9 +388,8 @@ namespace ClassNotes.API.Database
             }
         }
 
-        //DD: Aqui se llama el json de Ajustes de los Cursos 
-
-        public static async Task LoadCourseSenttingsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// DD: Cargar configuraciones de curso desde courses_settings.json
+		public static async Task LoadCoursesSettingsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
@@ -388,8 +399,9 @@ namespace ClassNotes.API.Database
 
                 foreach( var courseSetting in courseSettings) 
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
-                    bool exists = await context.CoursesSettings.AnyAsync(s => s.Id == courseSetting.Id);
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					bool exists = await context.CoursesSettings.AnyAsync(s => s.Id == courseSetting.Id);
                     if (!exists) 
                     {
                         courseSetting.CreatedBy = user.Id;
@@ -399,27 +411,30 @@ namespace ClassNotes.API.Database
                        await context.CoursesSettings.AddAsync(courseSetting);
                     }
                 }
+
                 await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
             {
                 var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
-                logger.LogError(e, $"Error al ejecutar el Seed de Configuraciones de Curso: {e.Message}\n{e.StackTrace}");
+                logger.LogError(e, "Error al ejecutar el Seed de Configuraciones de Curso");
             }
         }
 
-        // DD: Aqui se llama el json de Notas de Actividades 
-        public static async Task LoadStudentsActivitesNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// DD: Cargar notas de actividades desde students_activities_notes.json
+		public static async Task LoadStudentsActivitiesNotesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
                 var jsonFilePath = "SeedData/students_activities_notes.json";
                 var jsonContent = await File.ReadAllTextAsync(jsonFilePath);
                 var students_activities_notes = JsonConvert.DeserializeObject<List<StudentActivityNoteEntity>>(jsonContent);
+
                 foreach (var students_activities_note in students_activities_notes) 
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
-                    bool exists = await context.StudentsActivitiesNotes.AnyAsync(s => s.Id == students_activities_note.Id);
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					bool exists = await context.StudentsActivitiesNotes.AnyAsync(s => s.Id == students_activities_note.Id);
                     if (!exists) 
                     {
                         students_activities_note.CreatedBy = user.Id;
@@ -428,8 +443,8 @@ namespace ClassNotes.API.Database
                         students_activities_note.UpdatedDate = DateTime.Now;
                         await context.StudentsActivitiesNotes.AddAsync(students_activities_note);
                     }
-
                 }
+
                 await context.SaveChangesWithoutAuditAsync();
             }
             catch (Exception e)
@@ -439,8 +454,8 @@ namespace ClassNotes.API.Database
             }
         }
 
-        //DD: Aqui se llama el json de Curso de Estudiantes 
-        public static async Task LoadStudentCourseAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
+		// JA: Cargar tabla de relación entre estudiantes y cursos desde students_courses.json
+		public static async Task LoadStudentsCoursesAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
         {
             try
             {
@@ -450,8 +465,9 @@ namespace ClassNotes.API.Database
 
                 foreach (var student_course in student_courses)
                 {
-                    var user = await context.Users.FirstOrDefaultAsync();
-                    bool exists = await context.StudentsCourses.AnyAsync(s => s.Id == student_course.Id);
+					// AM: Asignar a Juan Perez
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					bool exists = await context.StudentsCourses.AnyAsync(s => s.Id == student_course.Id);
 
                     if (!exists)
                     {
@@ -481,6 +497,5 @@ namespace ClassNotes.API.Database
                 logger.LogError(e, "Error al ejecutar el Seeder de Cursos de Estudiantes");
             }
         }
-
     }
 }

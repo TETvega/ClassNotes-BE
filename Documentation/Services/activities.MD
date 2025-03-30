@@ -189,31 +189,40 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y de
 ```json
 {
   "data": {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "name": "string",
-    "isExtra": true,
-    "maxScore": 100,
-    "qualificationDate": "2025-03-15T07:23:44.850Z",
-    "tagActivityId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "unitId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    "hasNextPage": false,
+    "hasPreviousPage": false,
+    "currentPage": 1,
+    "pageSize": 10,
+    "totalItems": 6,
+    "totalPages": 1,
+    "items": [
+      {
+        "id": "e5f6a7b8-9e2d-4c63-b56f-219803a9d0c5",
+        "name": "Proyecto de Geografía",
+        "isExtra": false,
+        "maxScore": 90,
+        "qualificationDate": "2025-06-01T00:00:00",
+        "tagActivityId": "25bb94dc-b13b-4649-b562-f1af741aeaf3",
+        "unitId": "01dd6027-2e73-4a83-9b43-5e752727e93c"
+      }
+    ]
   },
-  "message": "ACT-8072: Actividad creada exitosamente.",
-  "statusCode": 201,
+  "message": "ACT-8085: Actividad encontrada correctamente.",
+  "statusCode": 200,
   "status": true
 }
-
 ```
 ### 🔄 Explicación de los campos Retornados
 
 | Campo | Tipo | Descripción |
 |--------|------|-------------|
-| `id` | `string (UUID)` | Identificador único de la actividad. |
-| `name` | `string` | Nombre de la actividad. |
-| `isExtra` | `boolean` | Identificador de una actividad es Extra o no.
-| `qualificationDate` | `string (ISO 8601)` | Fecha en la que se calificará la actividad. |
-| `tagActivityId` | `string (UUID)` | Identificador de la etiqueta asociada a la actividad. |
-| `unitId` | `string (UUID)` | Identificador de la unidad a la que pertenece la actividad. |
-| `class.id` | `string (UUID)` | Identificador unico de la Clase a la cual pertenece |
+| `data.items[].id` | `string (UUID)` | Identificador único de la actividad. |
+| `data.items[].name` | `string` | Nombre de la actividad. |
+| `data.items[].isExtra` | `boolean` | Identificador de una actividad es Extra o no.
+| `data.items[].qualificationDate` | `string (ISO 8601)` | Fecha en la que se calificará la actividad. |
+| `data.items[].tagActivityId` | `string (UUID)` | Identificador de la etiqueta asociada a la actividad. |
+| `data.items[].unitId` | `string (UUID)` | Identificador de la unidad a la que pertenece la actividad. |
+| `data.items[].class.id` | `string (UUID)` | Identificador unico de la Clase a la cual pertenece |
 
 
 

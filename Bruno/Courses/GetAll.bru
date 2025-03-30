@@ -5,9 +5,15 @@ meta {
 }
 
 get {
-  url: {{PATH}}/courses
+  url: {{PATH}}/courses?pageSize=7&page=1&searchTerm=j
   body: none
   auth: bearer
+}
+
+params:query {
+  pageSize: 7
+  page: 1
+  searchTerm: j
 }
 
 auth:bearer {

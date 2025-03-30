@@ -8,7 +8,7 @@ namespace ClassNotes.API.Services.Activities
 	public interface IActivitiesService
 	{
 		// Listar todas las actividades
-		Task<ResponseDto<PaginationDto<List<ActivityDto>>>> GetActivitiesListAsync(
+		Task<ResponseDto<PaginationDto<List<ActivitySummaryDto>>>> GetActivitiesListAsync(
 			string searchTerm = "", 
 			int page = 1
 		);

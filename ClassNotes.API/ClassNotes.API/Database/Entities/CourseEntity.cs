@@ -38,9 +38,9 @@ namespace ClassNotes.API.Database.Entities
         public virtual CenterEntity Center { get; set; }
 
 
-        [Required]
+        // [Required] Ya no deberia de ser requerida porque cuando no se pasa un id de configuración se crea una config por defecto
         [Column("setting_id")]
-        public Guid SettingId { get; set; }
+        public Guid? SettingId { get; set; }
         [ForeignKey(nameof(SettingId))]
 
         public virtual CourseSettingEntity CourseSetting { get; set;}
