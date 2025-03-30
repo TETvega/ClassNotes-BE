@@ -6,7 +6,8 @@
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public Guid StudentId { get; set; }
-
+        public string StudentName { get; set; } 
+        public string StudentEmail { get; set; }
         public string TeacherId { get; set; }
         public Guid CourseId { get; set; }
         public DateTime ExpirationDate { get; set; }
