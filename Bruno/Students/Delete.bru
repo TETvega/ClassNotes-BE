@@ -5,11 +5,25 @@ meta {
 }
 
 delete {
-  url: {{PATH}}/students/DDD11CC7-FF17-4551-8D62-0A58EB909EF8
-  body: none
+  url: {{PATH}}/students/batch
+  body: json
   auth: bearer
+}
+
+headers {
+  Authorization:   {{TOKEN}}
 }
 
 auth:bearer {
   token: {{TOKEN}}
+}
+
+body:json {
+   
+       [
+          "FDE9CF6B-A969-405F-C94E-08DD6F448B81",
+         "701F32F8-0905-4A04-C94D-08DD6F448B81",
+         "361CF5C7-FC7F-4670-C94C-08DD6F448B81"
+      ]
+   
 }

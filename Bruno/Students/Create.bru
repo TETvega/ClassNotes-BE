@@ -10,16 +10,21 @@ post {
   auth: bearer
 }
 
+headers {
+  Strict-Mode: false
+}
+
 auth:bearer {
   token: {{TOKEN}}
 }
 
 body:json {
+  
   {
-    "teacherId": "593ea85b-6a0c-48ef-b592-f2b01bac4b96",
-    "firstName": "Josue3",
-    "lastName": "Garcia3",
-    "email": "ever@gmail.com",
-    "courseId": "B941094A-2646-470F-A18B-5BD75F9B067C"
+      "teacherId": "0f142536-4567-89ab-cdef-0123456789fe",
+      "firstName":"Jeison Arita",
+      "lastName": "nose 2",
+      "email": "jeison+4@gmail.com",
+      "courseId": "B941094A-2646-470F-A18B-5BD75F9B067C"
   }
 }
