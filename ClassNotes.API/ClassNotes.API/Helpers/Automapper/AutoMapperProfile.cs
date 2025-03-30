@@ -83,17 +83,13 @@ namespace ClassNotes.API.Helpers.Automapper
 
         private void MapsForCourses()
         {
-            CreateMap<CourseEntity, CourseDto>()
-                .ForMember(dest => dest.SettingName, opt => opt.MapFrom(src => src.CourseSetting.Name)) // Mapear el nombre de la configuración
-                .ForMember(dest => dest.ScoreType, opt => opt.MapFrom(src => src.CourseSetting.ScoreType)) // Mapear el tipo de puntuación
-                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.CourseSetting.StartDate)) // Mapear la fecha de inicio
-                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.CourseSetting.EndDate)) // Mapear la fecha de fin
-                .ForMember(dest => dest.MinimumGrade, opt => opt.MapFrom(src => src.CourseSetting.MinimumGrade)) // Mapear la nota mínima
-                .ForMember(dest => dest.MaximumGrade, opt => opt.MapFrom(src => src.CourseSetting.MaximumGrade)) // Mapear la nota máxima
-                .ForMember(dest => dest.MinimumAttendanceTime, opt => opt.MapFrom(src => src.CourseSetting.MinimumAttendanceTime)) // Mapear el tiempo mínimo de asistencia
-                .ForMember(dest => dest.IsOriginal, opt => opt.MapFrom(src => src.CourseSetting.IsOriginal)); // Mapear si es original;
+            CreateMap<CourseEntity, CourseDto>();
             CreateMap<CourseCreateDto, CourseEntity>();
             CreateMap<CourseEditDto, CourseEntity>();
+
+            CreateMap<CourseEntity, CourseWithSettingDto>()
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src)) // Mapeamos el curso
+                .ForMember(dest => dest.CourseSetting, opt => opt.MapFrom(src => src.CourseSetting)); // Mapeamos la configuración
         }
 
         private void MapsForStudents()

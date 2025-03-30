@@ -20,7 +20,7 @@ namespace ClassNotes.API.Database.Entities
 		public TimeSpan StartTime { get; set; } // Se cambio a TimeSpan para poder enviar la hora en formato hora:minutos
 
         [Column("finish_time")]
-		public TimeSpan FinishTime { get; set; }
+		public TimeSpan? FinishTime { get; set; }
 
 		[StringLength(15)]
         [Column("code")]

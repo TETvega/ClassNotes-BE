@@ -26,7 +26,7 @@ namespace ClassNotes.API.Database.Entities
 
 
         [Column("end_date")]
-        public DateTime EndDate { get; set; } // Fecha de fin de periodo
+        public DateTime? EndDate { get; set; } // Fecha de fin de periodo
 
 
         // Kenn

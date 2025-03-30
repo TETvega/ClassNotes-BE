@@ -5,7 +5,7 @@
     "section": "1600",
     "code": "DQ-101",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "settingId": "f47c3c99-d52d-4f33-95f1-63e4cd07ab39",
     "isActive": false,
     "start_time": "08:00:00",
     "finish_time": "09:00:00"
@@ -16,7 +16,7 @@
     "section": "1000",
     "code": "FS-100",
     "centerId": "72ed66eb-6396-4788-a337-eb40174dd756",
-    "settingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "settingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
     "isActive": true,
     "start_time": "09:00:00",
     "finish_time": "10:00:00"
@@ -27,7 +27,7 @@
     "section": "1100",
     "code": "MM-110",
     "centerId": "3f471eaa-2cb9-404b-bbc7-5173c45d2083",
-    "settingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2774",
     "isActive": true,
     "startTime": "10:00:00",
     "finishTime": "11:00:00"
@@ -38,7 +38,7 @@
     "section": "1200",
     "code": "QG-120",
     "centerId": "9106f197-3996-4213-95fe-db492c10c1f3",
-    "settingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2775",
     "isActive": true,
     "startTime": "11:00:00",
     "finishTime": "12:00:00"
@@ -49,7 +49,7 @@
     "section": "1300",
     "code": "BG-130",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2776",
     "isActive": true,
     "startTime": "12:00:00",
     "finishTime": "13:00:00"
@@ -60,7 +60,7 @@
     "section": "1400",
     "code": "PI-140",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2777",
     "isActive": true,
     "startTime": "13:00:00",
     "finishTime": "14:00:00"
@@ -71,7 +71,7 @@
     "section": "1500",
     "code": "IT-150",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2778",
     "isActive": false,
     "startTime": "14:00:00",
     "finishTime": "15:00:00"
@@ -82,7 +82,7 @@
     "section": "1700",
     "code": "ES-170",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2779",
     "isActive": true,
     "startTime": "15:00:00",
     "finishTime": "16:00:00"
@@ -93,7 +93,7 @@
     "section": "1800",
     "code": "CI-180",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2780",
     "isActive": true,
     "startTime": "16:00:00",
     "finishTime": "17:00:00"
@@ -104,7 +104,7 @@
     "section": "1900",
     "code": "HH-190",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2781",
     "isActive": false,
     "startTime": "17:00:00",
     "finishTime": "18:00:00"
@@ -115,7 +115,7 @@
     "section": "2000",
     "code": "FL-200",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2782",
     "isActive": true,
     "startTime": "08:00:00",
     "finishTime": "09:00:00"
@@ -126,7 +126,7 @@
     "section": "2100",
     "code": "EC-210",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "a29dbbc9-06e7-4dff-a5e0-f1e4f5b5154d",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2783",
     "isActive": true,
     "startTime": "09:00:00",
     "finishTime": "10:00:00"
@@ -137,7 +137,7 @@
     "section": "2200",
     "code": "DC-220",
     "centerId": "550e8400-e29b-41d4-a716-446655440000",
-    "settingId": "F47C3C99-D52D-4F33-95F1-63E4CD07AB39",
+    "settingId": "aa48af7c-783d-496c-a16c-59be000b2784",
     "isActive": false,
     "startTime": "10:00:00",
     "finishTime": "11:00:00"

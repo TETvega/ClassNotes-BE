@@ -22,7 +22,7 @@ namespace ClassNotes.API.Controllers
         [HttpGet]
         [Authorize(Roles = $"{RolesConstant.USER}")]
 
-        public async Task<ActionResult<ResponseDto<CourseDto>>> GetAll(
+        public async Task<ActionResult<ResponseDto<CourseWithSettingDto>>> GetAll(
             string searchTerm = "",
             int page = 1,
             int? pageSize = null
@@ -35,7 +35,7 @@ namespace ClassNotes.API.Controllers
         // Traer un curso mediante su id
         [HttpGet("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<CourseDto>>> Get(Guid id)
+        public async Task<ActionResult<ResponseDto<CourseWithSettingDto>>> Get(Guid id)
         {
             var response = await _coursesService.GetCourseByIdAsync(id);
             return StatusCode(response.StatusCode, response);
@@ -44,7 +44,7 @@ namespace ClassNotes.API.Controllers
         // Crear un curso
         [HttpPost]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<CourseDto>>> Create(CourseCreateDto dto)
+        public async Task<ActionResult<ResponseDto<CourseWithSettingDto>>> Create(CourseWithSettingCreateDto dto)
         {
             var response = await _coursesService.CreateAsync(dto);
             return StatusCode(response.StatusCode, response);
@@ -62,7 +62,7 @@ namespace ClassNotes.API.Controllers
         // Eliminar un curso
         [HttpDelete("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<CourseDto>>> Delete(Guid id)
+        public async Task<ActionResult<ResponseDto<CourseWithSettingDto>>> Delete(Guid id)
         {
             var response = await _coursesService.DeleteAsync(id);
             return StatusCode(response.StatusCode, response);
