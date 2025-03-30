@@ -28,8 +28,10 @@ namespace ClassNotes.API.Helpers.Automapper
             MapsForUsers();
             MapsForTagsActivities();
             MapsForDashboardCourses();
+            MapsForActivityNotes();
+            MapsForUnitNotes();
+            MapsForTotalNotes();
         }
-
         private void MapsForActivities()
         {
             // Mapeo para el get all (ActivitySummaryDto)
@@ -64,17 +66,35 @@ namespace ClassNotes.API.Helpers.Automapper
             CreateMap<AttendanceCreateDto, AttendanceEntity>();
             CreateMap<AttendanceEditDto, AttendanceEntity>();
         }
+        private void MapsForActivityNotes()
+        {
+            CreateMap<StudentActivityNoteEntity, StudentActivityNoteDto>();
+            CreateMap<StudentActivityNoteCreateDto, StudentActivityNoteEntity>();
+          //  CreateMap<StudentActivityNoteEditDto, StudentActivityNoteEntity>();
+        }
+
+        private void MapsForUnitNotes()
+        {
+            CreateMap<StudentUnitEntity, StudentUnitNoteDto>();
+        }
+
+        private void MapsForTotalNotes()
+        {
+            CreateMap<StudentCourseEntity, StudentTotalNoteDto>();
+        }
+
 
         private void MapsForCenters()
-        {
-            //(Ken)
-            //Aparentemente no se puede hacer con ForAllMembers esto, ya vere como simplificar...
-            CreateMap<CenterEntity, CenterDto>();
-            CreateMap<CenterCreateDto, CenterEntity>()
-                .ForMember(dest => dest.IsArchived, opt => opt.MapFrom(src => false))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
-                //.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
+		{
+			//(Ken)
+			//Aparentemente no se puede hacer con ForAllMembers esto, ya vere como simplificar...
+			CreateMap<CenterEntity, CenterDto>();
+			CreateMap<CenterCreateDto, CenterEntity>()
+				.ForMember(dest => dest.IsArchived, opt => opt.MapFrom(src => false))
+				.ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
+				//.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
                 .ForMember(dest => dest.Abbreviation, opt => opt.MapFrom(src => src.Abbreviation.Trim()));
+                
             CreateMap<CenterEditDto, CenterEntity>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
                 //.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))

@@ -1,6 +1,7 @@
 ﻿using Azure;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseNotes;
 
 namespace ClassNotes.API.Services.Activities
 {
@@ -24,5 +25,7 @@ namespace ClassNotes.API.Services.Activities
 
 		// Eliminar una actividad
 		Task<ResponseDto<ActivityDto>> DeleteAsync(Guid id);
-	}
+
+        Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId);
+    }
 }

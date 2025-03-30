@@ -84,7 +84,7 @@ namespace ClassNotes.API.Database
                     //El usuario esta creando 
                     if (entry.State == EntityState.Added)
                     {
-                        entity.CreatedBy = _auditService.GetUserId();
+                        entity.CreatedBy = "0f142536-4567-89ab-cdef-0123456789fe";
                         entity.CreatedDate = DateTime.Now;
                     }
                     //El usuario esta editando 
