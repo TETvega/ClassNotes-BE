@@ -68,9 +68,20 @@ namespace ClassNotes.API.Services
                 {
                     throw new ArgumentException("El tiempo de expiración del OTP debe estar entre 1 y 30 minutos.");
                 }
-                var centroValido = await _context.Centers.AnyAsync(
-                    c => c.Id == request.CentroId && c.TeacherId == request.ProfesorId
-                    );
+                // Validación profesor-centro-clase en UNA SOLA consulta
+                var claseValida = await _context.Courses
+                    .Include(c => c.Students)
+                        .ThenInclude(sc => sc.Student)
+                    .Include(c => c.Center) // Necesario para validar
+                    .Where(c => c.Id == request.ClaseId
+                           && c.CenterId == request.CentroId
+                           && c.Center.TeacherId == request.ProfesorId)
+                    .FirstOrDefaultAsync();
+
+                if (claseValida == null)
+                {
+                    throw new ArgumentException("No tienes permisos para esta clase o no existe.");
+                }
 
                 // Obtener la clase con los estudiantes asociados
                 var clase = await _context.Courses
