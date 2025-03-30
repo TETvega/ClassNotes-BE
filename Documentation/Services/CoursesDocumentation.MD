@@ -210,7 +210,6 @@ El cuerpo de la solicitud debe contener los siguientes campos:
     "startTime": "string",
     "finishTime": "string",
     "code": "string",
-    "isActive": true,
     "centerId": "string",
     "settingId": "string"
   },
@@ -234,13 +233,12 @@ El cuerpo de la solicitud debe contener los siguientes campos:
 | `course.startTime` | `string (HH:mm:ss)` | ✅ | Hora de inicio del curso. |
 | `course.finishTime` | `string (HH:mm:ss)` | ❌ | Hora de fin del curso. |
 | `course.code` | `string` | ❌ | Codigo de la clase (máximo 15 carácteres). |
-| `course.isActive` | `bool` | ✅ | Estado del curso (Enviar como `true` para que la clase quede activa despues de crearse). |
 | `course.centerId` | `string (UUID)` | ✅ | Identificador del curso al que pertenece el curso. |
 | `course.settingId` | `string (UUID)` | ❌ | Identificador de la configuración del curso que se le aplicará (si no se seleccionó una configuración existente, enviar el valor como `null`). |
 | `courseSetting.name` | `string` | ✅ | Nombre de la configuración del curso. |
 | `courseSetting.scoreType` | `string` | ✅ | Indica el tipo de puntaje que tiene la configuración del curso. |
 | `courseSetting.startDate` | `string (ISO 8601)` | ✅ | Fecha de inicio en la es aplicable la configuración del curso. |
-| `courseSetting.endDate` | `string (ISO 8601)` | ✅ | Fecha de fin en la es aplicable la configuración del curso. |
+| `courseSetting.endDate` | `string (ISO 8601)` | ❌ | Fecha de fin en la es aplicable la configuración del curso. |
 | `courseSetting.minimumGrade` | `float` | ✅ | Puntaje mínimo que tendrá la configuración del curso. |
 | `courseSetting.maximumGrade` | `float` | ✅ | Puntaje màximo que tendrá la configuración del curso. |
 | `courseSetting.minimumAttendanceTime` | `integer` | ✅ | Tiempo (en minutos) que tendrá un estudiante para marcar asistencia. |
@@ -468,8 +466,7 @@ Este endpoint permite actualizar un curso existente mediante su `id`. Se debe en
   "startTime": "string",
   "finishTime": "string",
   "code": "string",
-  "isActive": true,
-  "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf"
+  "isActive": true
 }
 ```
 
@@ -482,7 +479,6 @@ Este endpoint permite actualizar un curso existente mediante su `id`. Se debe en
 | `finishTime` | `string (HH:mm:ss)` | Hora de fin del curso. |
 | `code` | `string` |  Codigo del curso. |
 | `isActive` | `bool` |  Estado del curso. |
-| `centerId` | `(string UUID)` |  Identificador unico del centro al que pertenece el curso (Se debe enviar el mismo centerId que se envió en la respuesta al obtener el curso que se quiera editar). |
 
 ### 📤 Respuesta esperada
 Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y devolverá el Course editado.
