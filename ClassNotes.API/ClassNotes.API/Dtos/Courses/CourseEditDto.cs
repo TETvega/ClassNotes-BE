@@ -35,10 +35,5 @@ namespace ClassNotes.API.Dtos.Courses
 		[Display(Name = "es activo")]
 		[Required(ErrorMessage = "El campo {0} es requerido.")]
 		public bool IsActive { get; set; }
-
-		// Id del centro
-		[Display(Name = "id del centro")]
-		[Required(ErrorMessage = "El {0} es requerido.")]
-		public Guid CenterId { get; set; }
 	}
 }

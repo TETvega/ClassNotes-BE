@@ -31,11 +31,6 @@ namespace ClassNotes.API.Dtos.Courses
 		[StringLength(15, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
 		public string Code { get; set; }
 
-		// Activo?
-		[Display(Name = "es activo")]
-		[Required(ErrorMessage = "El campo {0} es requerido.")]
-		public bool IsActive { get; set; }
-
 		// Id del centro
 		[Display(Name = "id del centro")]
 		[Required(ErrorMessage = "El {0} es requerido.")]
