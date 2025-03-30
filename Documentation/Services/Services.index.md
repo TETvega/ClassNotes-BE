@@ -17,7 +17,7 @@ Aquí se encuentran organizados por módulos para facilitar la navegación y com
 - ☁️ [Cloudinary](#cloudinary)  
 - 📘 [Course Notes](#course-notes)  
 - 📚 [Courses](#courses)  
-- ⚙️ [Courses Settings](#courses-settings)  
+- ⚙️ [Courses Settings](./CourseSettingsDocumentation.MD)  
 - 🏛️ [Dashboard Courses](#dashboard-courses)  
 - 🏠 [Dashboard Home](#dashboard-home)  
 - ✉️ [Email](#email)  

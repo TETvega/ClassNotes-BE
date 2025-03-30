@@ -210,7 +210,7 @@ const CategoriaItem = ({ categoria }) => {
 ```
 
 
-# :bookmark: Crear una nueva Tag
+## :bookmark: Crear una nueva Tag
 
 Este endpoint permite la creación de una nueva Tag dentro del sistema.
 
@@ -362,7 +362,7 @@ Si la actualización es exitosa, el servidor responderá con un código `200 OK`
   "data": {
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "name": "string",
-    "colorHex": "#dae4fb",
+    "colorHex": "dae4fb",
     "icon": "string",
     "teacherId": "string"
   },
