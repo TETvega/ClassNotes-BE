@@ -53,10 +53,11 @@ GET /api/courses
 |-------------|----------------|-------------|
 | `searchTerm` | `string` | (Opcional) Permite buscar Courses por nombre o codigo del mismo. Valor por defecto: "" |
 | `page` | `integer` | (Opcional) Indica el número de página para la paginación. Valor por defecto: `1`. |
+| `pageSize` | `integer` | (Opcional) Indica el tamaño de número de página de los elementos que se retornarán por página. Valor por defecto: `10`. |
 
 📌 **Ejemplo de solicitud con parámetros:**  
 ```http
-GET api/courses?searchTerm&page=1
+GET api/courses?pageSize=7&page=1&searchTerm
 ```
 
 ### 📤 Respuesta
@@ -65,76 +66,67 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y un
 #### ✅ Ejemplo de respuesta (200 OK)
 ```json
 {
-  "data": {
-    "hasNextPage": false,
-    "hasPreviousPage": false,
-    "currentPage": 1,
-    "pageSize": 10,
-    "totalItems": 3,
-    "totalPages": 1,
-    "items": [
-      {
-        "id": "4b28cfd7-c7e0-4e6a-6fab-08dd6cb606a8",
-        "name": "Alemane",
-        "section": "C",
-        "startTime": "10:00:00",
-        "finishTime": "11:00:00",
-        "code": "AL-102",
-        "isActive": true,
-        "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
-        "settingId": "e1dcb64b-63c9-4d9a-d4db-08dd6cb60694",
-        "settingName": "Config 6",
-        "scoreType": "gold_pts",
-        "startDate": "2025-04-26T04:28:54.137",
-        "endDate": "2025-05-26T04:28:54.137",
-        "minimumGrade": 50,
-        "maximumGrade": 100,
-        "minimumAttendanceTime": 10,
-        "isOriginal": false
-      },
-      {
-        "id": "a2b3c4d5-6e7f-3a8b-9c0d-1e2f3a4b5c6d",
-        "name": "Derecho Civil",
-        "section": "2200",
-        "startTime": "00:00:00",
-        "finishTime": "00:00:00",
-        "code": "DC-220",
-        "isActive": true,
-        "centerId": "550e8400-e29b-41d4-a716-446655440000",
-        "settingId": "f47c3c99-d52d-4f33-95f1-63e4cd07ab39",
-        "settingName": "Configuración 1",
-        "scoreType": "weighted_pts",
-        "startDate": "2025-01-01T00:00:00",
-        "endDate": "0001-01-01T00:00:00",
-        "minimumGrade": 65,
-        "maximumGrade": 0,
-        "minimumAttendanceTime": 80,
-        "isOriginal": true
-      },
-      {
-        "id": "e0f1a2b3-4c5d-1e6f-7a8b-9c0d1e2f3a4b",
-        "name": "Filosofía",
-        "section": "2000",
-        "startTime": "00:00:00",
-        "finishTime": "00:00:00",
-        "code": "FL-200",
-        "isActive": false,
-        "centerId": "550e8400-e29b-41d4-a716-446655440000",
-        "settingId": "00000000-0000-0000-0000-000000000000",
-        "settingName": null,
-        "scoreType": null,
-        "startDate": "0001-01-01T00:00:00",
-        "endDate": "0001-01-01T00:00:00",
-        "minimumGrade": 0,
-        "maximumGrade": 0,
-        "minimumAttendanceTime": 0,
-        "isOriginal": false
-      },
-    ]
-  },
-  "message": "Cursos encontrados correctamente",
-  "statusCode": 200,
-  "status": true
+	"data": {
+		"hasNextPage": true,
+		"hasPreviousPage": false,
+		"currentPage": 1,
+		"pageSize": 3,
+		"totalItems": 15,
+		"totalPages": 5,
+		"items": [
+			{
+				"course": {
+				  "id": "9cab2766-cb36-4b75-ebec-08dd6f92e2f9",
+				  "name": "PruebaEdit",
+				  "section": "A",
+				  "startTime": "10:00:00",
+				  "finishTime": "11:00:00",
+				  "code": null,
+				  "isActive": true,
+				  "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
+				  "settingId": "d58d9c3f-0769-4ce5-a317-08dd6f92e2df"
+				},
+				"courseSetting": {
+				  "id": "d58d9c3f-0769-4ce5-a317-08dd6f92e2df",
+				  "name": "Configuración Prueba",
+				  "scoreType": "weight_pts",
+				  "startDate": "2025-01-01T00:00:00",
+				  "endDate": "2025-02-02T00:00:00",
+				  "minimumGrade": 60,
+				  "maximumGrade": 100,
+				  "minimumAttendanceTime": 15,
+				  "isOriginal": false
+				}
+			},
+			{
+				"course": {
+				  "id": "a2b3c4d5-6e7f-3a8b-9c0d-1e2f3a4b5c6d",
+				  "name": "Derecho Civil",
+				  "section": "2200",
+				  "startTime": "10:00:00",
+				  "finishTime": "11:00:00",
+				  "code": "DC-220",
+				  "isActive": false,
+				  "centerId": "550e8400-e29b-41d4-a716-446655440000",
+				  "settingId": "aa48af7c-783d-496c-a16c-59be000b2784"
+				},
+				"courseSetting": {
+				  "id": "aa48af7c-783d-496c-a16c-59be000b2784",
+				  "name": "Configuración 13",
+				  "scoreType": "Oro",
+				  "startDate": "2025-02-01T00:00:00",
+				  "endDate": "2025-11-30T00:00:00",
+				  "minimumGrade": 70,
+				  "maximumGrade": 0,
+				  "minimumAttendanceTime": 80,
+				  "isOriginal": true
+				}
+			},
+		]
+	},
+	"message": "CRS-9012: Los cursos fueron encontrados exitosamente",
+	"statusCode": 200,
+	"status": true
 }
 ```
 
@@ -150,23 +142,24 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y un
 | `data.totalItems` | `integer` | Número total de elementos disponibles. |
 | `data.totalPages` | `integer` | Número total de páginas disponibles. |
 | `data.items` | `array` | Lista de cursos disponibles. |
-| `data.items[n].id` | `string (UUID)` | Identificador único del curso. |
-| `data.items[n].name` | `string` | Nombre del curso. |
-| `data.items[n].section` | `string` | Sección del curso. |
-| `data.items[n].startTime` | `string (HH:mm:ss)` | Hora de inicio de la clase. |
-| `data.items[n].finishTime` | `string (HH:mm:ss)` | Hora de fin de la clase. |
-| `data.items[n].code` | `string` | Código del curso. |
-| `data.items[n].isActive` | `bool` | Estado del curso. |
-| `data.items[n].centerId` | `string (UUID)` | Identificador único del centro al que pertenece la clase. |
-| `data.items[n].settingId` | `string (UUID)` | Identificador único de la configuración del curso. |
-| `data.items[n].settingName` | `string` | Nombre de la configuración del curso. |
-| `data.items[n].scoreType` | `string` | Modo/Tipo de puntaje de la clase. |
-| `data.items[n].startDate` | `string (ISO 8601)` | Fecha de inicio del curso. |
-| `data.items[n].endDate` | `string (ISO 8601)` | Fecha de fin del curso. |
-| `data.items[n].minimumGrade` | `float` | Puntaje mínimo que tiene el curso. |
-| `data.items[n].maximumGrade` | `float` | Puntaje máximo que tiene el curso. |
-| `data.items[n].minimumAttendanceTime` | `integer` | Tiempo mínimo (en minutos) para que un estudiante pueda marcar asistencia. |
-| `data.items[n].isOriginal` | `bool` | Indica si la configuración del curso es original o copia. |
+| `data.items[n].course.id` | `string (UUID)` | Identificador único del curso. |
+| `data.items[n].course.name` | `string` | Nombre del curso. |
+| `data.items[n].course.section` | `string` | Sección del curso. |
+| `data.items[n].course.startTime` | `string (HH:mm:ss)` | Hora de inicio de la clase. |
+| `data.items[n].course.finishTime` | `string (HH:mm:ss)` | Hora de fin de la clase. |
+| `data.items[n].course.code` | `string` | Código del curso. |
+| `data.items[n].course.isActive` | `bool` | Estado del curso. |
+| `data.items[n].course.centerId` | `string (UUID)` | Identificador único del centro al que pertenece la clase. |
+| `data.items[n].course.settingId` | `string (UUID)` | Identificador único de la configuración del curso. |
+| `data.items[n].courseSetting.id` | `string (UUID)` | Identificador único de la configuración del curso. |
+| `data.items[n].courseSetting.name` | `string` | Nombre de la configuración del curso. |
+| `data.items[n].courseSetting.scoreType` | `string` | Modo/Tipo de puntaje de la clase. |
+| `data.items[n].courseSetting.startDate` | `string (ISO 8601)` | Fecha de inicio del curso. |
+| `data.items[n].courseSetting.endDate` | `string (ISO 8601)` | Fecha de fin del curso. |
+| `data.items[n].courseSetting.minimumGrade` | `float` | Puntaje mínimo que tiene el curso. |
+| `data.items[n].courseSetting.maximumGrade` | `float` | Puntaje máximo que tiene el curso. |
+| `data.items[n].courseSetting.minimumAttendanceTime` | `integer` | Tiempo mínimo (en minutos) para que un estudiante pueda marcar asistencia. |
+| `data.items[n].courseSetting.isOriginal` | `bool` | Indica si la configuración del curso es original o copia. |
 | `message` | `string` | Mensaje de respuesta del servidor. |
 | `statusCode` | `integer` | Código de estado HTTP de la respuesta. |
 | `status` | `boolean` | Indica si la respuesta fue exitosa (`true`) o no (`false`). |
@@ -211,42 +204,46 @@ El cuerpo de la solicitud debe contener los siguientes campos:
 
 ```json
 {
-  "name": "string",
-  "section": "string",
-  "startTime": "string",
-  "finishTime": "string",
-  "code": "string",
-  "isActive": true,
-  "centerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "settingId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "settingName": "string",
-  "scoreType": "string",
-  "startDate": "2025-03-27T22:31:58.615Z",
-  "endDate": "2025-03-27T22:31:58.615Z",
-  "minimumGrade": 100,
-  "maximumGrade": 100,
-  "minimumAttendanceTime": 59
+  "course": {  
+    "name": "string",
+    "section": "string",
+    "startTime": "string",
+    "finishTime": "string",
+    "code": "string",
+    "isActive": true,
+    "centerId": "string",
+    "settingId": "string"
+  },
+  "courseSetting": {
+    "name": "string",
+    "scoreType": "string",
+    "startDate": "2025-02-28T00:00:00Z",
+    "endDate": "2025-03-28T00:00:00Z",
+    "minimumGrade": 70,
+    "maximumGrade": 100,
+    "minimumAttendanceTime": 10
+  },
 }
 ```
 
 ### 📖 Descripción de los campos
 | Campo | Tipo | Requerido | Descripción |
 |--------|------|----------|-------------|
-| `name` | `string` | ✅ | Nombre del curso. |
-| `section` | `string` | ❌ | Nombre de la sección (máximo 4 carácteres). |
-| `startTime` | `string (HH:mm:ss)` | ✅ | Hora de inicio del curso. |
-| `finishTime` | `string (HH:mm:ss)` | ✅ | Hora de fin del curso. |
-| `code` | `string` | ❌ | Codigo de la clase (máximo 15 carácteres). |
-| `isActive` | `bool` | ✅ | Estado del curso. |
-| `centerId` | `string (UUID)` | ✅ | Identificador del curso al que pertenece el curso. |
-| `SettingId` | `string (UUID)` | ❌ | Identificador de la configuración del curso que se le aplicará (si no se seleccionó una configuración existente, enviar el valor como `null`). |
-| `settingName` | `string` | ✅ | Nombre de la configuración del curso. |
-| `scoreType` | `string` | ✅ | Indica el tipo de puntaje que tiene la configuración del curso. |
-| `startDate` | `string (ISO 8601)` | ✅ | Fecha de inicio en la es aplicable la configuración del curso. |
-| `endDate` | `string (ISO 8601)` | ✅ | Fecha de fin en la es aplicable la configuración del curso. |
-| `minimumGrade` | `float` | ✅ | Puntaje mínimo que tendrá la configuración del curso. |
-| `maximumGrade` | `float` | ✅ | Puntaje màximo que tendrá la configuración del curso. |
-| `minimumAttendanceTime` | `integer` | ✅ | Tiempo (en minutos) que tendrá un estudiante para marcar asistencia. |
+| `course.name` | `string` | ✅ | Nombre del curso. |
+| `course.section` | `string` | ❌ | Nombre de la sección (máximo 4 carácteres). |
+| `course.startTime` | `string (HH:mm:ss)` | ✅ | Hora de inicio del curso. |
+| `course.finishTime` | `string (HH:mm:ss)` | ❌ | Hora de fin del curso. |
+| `course.code` | `string` | ❌ | Codigo de la clase (máximo 15 carácteres). |
+| `course.isActive` | `bool` | ✅ | Estado del curso (Enviar como `true` para que la clase quede activa despues de crearse). |
+| `course.centerId` | `string (UUID)` | ✅ | Identificador del curso al que pertenece el curso. |
+| `course.settingId` | `string (UUID)` | ❌ | Identificador de la configuración del curso que se le aplicará (si no se seleccionó una configuración existente, enviar el valor como `null`). |
+| `courseSetting.name` | `string` | ✅ | Nombre de la configuración del curso. |
+| `courseSetting.scoreType` | `string` | ✅ | Indica el tipo de puntaje que tiene la configuración del curso. |
+| `courseSetting.startDate` | `string (ISO 8601)` | ✅ | Fecha de inicio en la es aplicable la configuración del curso. |
+| `courseSetting.endDate` | `string (ISO 8601)` | ✅ | Fecha de fin en la es aplicable la configuración del curso. |
+| `courseSetting.minimumGrade` | `float` | ✅ | Puntaje mínimo que tendrá la configuración del curso. |
+| `courseSetting.maximumGrade` | `float` | ✅ | Puntaje màximo que tendrá la configuración del curso. |
+| `courseSetting.minimumAttendanceTime` | `integer` | ✅ | Tiempo (en minutos) que tendrá un estudiante para marcar asistencia. |
 
 ---
 
@@ -257,25 +254,30 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y de
 ```json
 {
   "data": {
-    "id": "e1e663a2-5eee-4d28-aa29-08dd6d803382",
-    "name": "Curso Prueba",
-    "section": "2D",
-    "startTime": "13:00:00",
-    "finishTime": "14:00:00",
-    "code": "DH-AS",
-    "isActive": true,
-    "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
-    "settingId": "4e542f6b-2dc1-42e9-5b81-08dd6d803376",
-    "settingName": "Config Prueba",
-    "scoreType": "gold_pts",
-    "startDate": "2025-01-26T04:28:54.137Z",
-    "endDate": "2025-03-26T04:28:54.137Z",
-    "minimumGrade": 70,
-    "maximumGrade": 100,
-    "minimumAttendanceTime": 10,
-    "isOriginal": false
+    "course": {
+      "id": "9cab2766-cb36-4b75-ebec-08dd6f92e2f9",
+      "name": "Prueba",
+      "section": null,
+      "startTime": "10:00:00",
+      "finishTime": null,
+      "code": null,
+      "isActive": true,
+      "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
+      "settingId": "d58d9c3f-0769-4ce5-a317-08dd6f92e2df"
+    },
+    "courseSetting": {
+      "id": "d58d9c3f-0769-4ce5-a317-08dd6f92e2df",
+      "name": "Configuración Prueba",
+      "scoreType": "weight_pts",
+      "startDate": "2025-01-01T00:00:00",
+      "endDate": "2025-02-02T00:00:00",
+      "minimumGrade": 60,
+      "maximumGrade": 100,
+      "minimumAttendanceTime": 15,
+      "isOriginal": false
+    }
   },
-  "message": "CNS-112: Nota de curso creada exitosamente.",
+  "message": "CRS-9052: Curso creado exitosamente.",
   "statusCode": 201,
   "status": true
 }
@@ -284,22 +286,24 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y de
 ### 🔄 Explicación de los campos Retornados
 | Campo | Tipo | Descripción |
 |--------|------|-------------|
-| `data.id` | `string (UUID)` |  Identificador del curso. |
-| `data.name` | `string` |  Nombre del curso. |
-| `data.section` | `string` |  Sección del curso. |
-| `data.startTime` | `string (HH:mm:ss)` |  Hora de inicio del curso. |
-| `data.finishTime` | `string (HH:mm:ss)` |  Hora de fin del curso. |
-| `data.code` | `string` |  Código del curso. |
-| `data.isActive` | `bool` |  Estado del curso. |
-| `data.centerId` | `string (UUID)` |  Identificador del centro al que pertenece el curso.
-| `data.settingId` | `string (UUID)` |  Identificador de la configuración del curso.
-| `data.settingName` | `string` |  Nombre de la configuración del curso. |
-| `data.scoreType` | `string` |  Indica el tipo de puntaje que tiene la configuración del curso. |
-| `data.startDate` | `string (ISO 8601)` |  Fecha de inicio en la es aplicable la configuración del curso. |
-| `data.endDate` | `string (ISO 8601)` |  Fecha de fin en la es aplicable la configuración del curso. |
-| `data.minimumGrade` | `float` |  Puntaje mínimo que tendrá la configuración del curso. |
-| `data.maximumGrade` | `float` |  Puntaje màximo que tendrá la configuración del curso. |
-| `data.minimumAttendanceTime` | `integer` |  Tiempo (en minutos) que tendrá un estudiante para marcar asistencia.
+| `data.course.id` | `string (UUID)` |  Identificador del curso. |
+| `data.course.name` | `string` |  Nombre del curso. |
+| `data.course.section` | `string` |  Sección del curso. |
+| `data.course.startTime` | `string (HH:mm:ss)` |  Hora de inicio del curso. |
+| `data.course.finishTime` | `string (HH:mm:ss)` |  Hora de fin del curso. |
+| `data.course.code` | `string` |  Código del curso. |
+| `data.course.isActive` | `bool` |  Estado del curso. |
+| `data.course.centerId` | `string (UUID)` |  Identificador del centro al que pertenece el curso.
+| `data.course.settingId` | `string (UUID)` |  Identificador de la configuración del curso.
+| `data.courseSetting.id` | `string (UUID)` |  Identificador de la configuración del curso.
+| `data.courseSetting.name` | `string` |  Nombre de la configuración del curso. |
+| `data.courseSetting.scoreType` | `string` |  Indica el tipo de puntaje que tiene la configuración del curso. |
+| `data.courseSetting.startDate` | `string (ISO 8601)` |  Fecha de inicio en la es aplicable la configuración del curso. |
+| `data.courseSetting.endDate` | `string (ISO 8601)` |  Fecha de fin en la es aplicable la configuración del curso. |
+| `data.courseSetting.minimumGrade` | `float` |  Puntaje mínimo que tendrá la configuración del curso. |
+| `data.courseSetting.maximumGrade` | `float` |  Puntaje màximo que tendrá la configuración del curso. |
+| `data.courseSetting.minimumAttendanceTime` | `integer` |  Tiempo (en minutos) que tendrá un estudiante para marcar asistencia.
+| `data.courseSetting.isOriginal` | `integer` |  Configuración original (deberá retornar false).
 | `message` | `string` | Mensaje de respuesta del servidor. |
 | `statusCode` | `integer` | Código de estado HTTP de la respuesta. |
 | `status` | `boolean` | Indica si la respuesta fue exitosa (`true`) o no (`false`). |
@@ -339,6 +343,7 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y de
 
 > De parte de FE considerar los siguientes casos para el settingId: si el usuario seleccionó un settingId a aplicar, los campos de la configuración deberan ser bloqueados ya que se seleccionó una configuración existente, y solo estaran habilidados cuando no se haya seleccionado ningun settingId, es decir este valor sera null a la hora de enviar la petición
 
+> Si se seleccionó un settingId la data de la configuración del curso se tiene que copiar tal cual para que se cree el duplicado de forma correcta. O sea la previsualización debe contener los datos de la configuración original seleccionada
 
 ---
 
@@ -366,25 +371,30 @@ Si la actualización es exitosa, el servidor responderá con un código `200 OK`
 ```json
 {
   "data": {
-    "id": "4b28cfd7-c7e0-4e6a-6fab-08dd6cb606a8",
-    "name": "Curso",
-    "section": "C",
-    "startTime": "10:00:00",
-    "finishTime": "11:00:00",
-    "code": "AL102",
-    "isActive": true,
-    "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
-    "settingId": "e1dcb64b-63c9-4d9a-d4db-08dd6cb60694",
-    "settingName": "Configuracion",
-    "scoreType": "weighted_pts",
-    "startDate": "2025-04-26T04:28:54.137",
-    "endDate": "2025-05-26T04:28:54.137",
-    "minimumGrade": 50,
-    "maximumGrade": 100,
-    "minimumAttendanceTime": 10,
-    "isOriginal": false
+    "course": {
+      "id": "9cab2766-cb36-4b75-ebec-08dd6f92e2f9",
+      "name": "PruebaEdit",
+      "section": "A",
+      "startTime": "10:00:00",
+      "finishTime": "11:00:00",
+      "code": null,
+      "isActive": true,
+      "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
+      "settingId": "d58d9c3f-0769-4ce5-a317-08dd6f92e2df"
+    },
+    "courseSetting": {
+      "id": "d58d9c3f-0769-4ce5-a317-08dd6f92e2df",
+      "name": "Configuración Prueba",
+      "scoreType": "weight_pts",
+      "startDate": "2025-01-01T00:00:00",
+      "endDate": "2025-02-02T00:00:00",
+      "minimumGrade": 60,
+      "maximumGrade": 100,
+      "minimumAttendanceTime": 15,
+      "isOriginal": false
+    }
   },
-  "message": "CNS-125: Se encontraron las notas de curso.",
+  "message": "CRS-9011: El curso fue encontrado exitosamente.",
   "statusCode": 200,
   "status": true
 }
@@ -394,23 +404,24 @@ Si la actualización es exitosa, el servidor responderá con un código `200 OK`
 
 | Campo | Tipo | Descripción | 
 |--------|------|-------------|
-| `data.id` | `string (UUID)` | Identificador único del curso. |
-| `data.name` | `string` | Nombre del curso. |
-| `data.section` | `string` | Sección del curso. |
-| `data.startTime` | `string (HH:mm:ss)` | Hora de inicio de la clase. |
-| `data.finishTime` | `string (HH:mm:ss)` | Hora de fin de la clase. |
-| `data.code` | `string` | Código del curso. |
-| `data.isActive` | `bool` | Estado del curso. |
-| `data.centerId` | `string (UUID)` | Identificador único del centro al que pertenece la clase. |
-| `data.settingId` | `string (UUID)` | Identificador único de la configuración del curso. |
-| `data.settingName` | `string` | Nombre de la configuración del curso. |
-| `data.scoreType` | `string` | Modo/Tipo de calificación de la clase. |
-| `data.StartDate` | `string (ISO 8601)` | Fecha de inicio del curso. |
-| `data.EndDate` | `string (ISO 8601)` | Fecha de fin del curso. |
-| `data.minimumGrade` | `float` | Puntaje mínimo que tiene el curso. |
-| `data.maximumGrade` | `float` | Puntaje máximo que tiene el curso. |
-| `data.minimumAttendanceTime` | `integer` | Tiempo mínimo (en minutos) para que un estudiante pueda marcar asistencia. |
-| `data.isOriginal` | `bool` | Indica si la configuración del curso es original o copia. |
+| `data.course.id` | `string (UUID)` | Identificador único del curso. |
+| `data.course.name` | `string` | Nombre del curso. |
+| `data.course.section` | `string` | Sección del curso. |
+| `data.course.startTime` | `string (HH:mm:ss)` | Hora de inicio de la clase. |
+| `data.course.finishTime` | `string (HH:mm:ss)` | Hora de fin de la clase. |
+| `data.course.code` | `string` | Código del curso. |
+| `data.course.isActive` | `bool` | Estado del curso. |
+| `data.course.centerId` | `string (UUID)` | Identificador único del centro al que pertenece la clase. |
+| `data.course.settingId` | `string (UUID)` | Identificador único de la configuración del curso. |
+| `data.courseSetting.id` | `string (UUID)` | Identificador único de la configuración del curso. |
+| `data.courseSetting.name` | `string` | Nombre de la configuración del curso. |
+| `data.courseSetting.scoreType` | `string` | Modo/Tipo de calificación de la clase. |
+| `data.courseSetting.StartDate` | `string (ISO 8601)` | Fecha de inicio del curso. |
+| `data.courseSetting.EndDate` | `string (ISO 8601)` | Fecha de fin del curso. |
+| `data.courseSetting.minimumGrade` | `float` | Puntaje mínimo que tiene el curso. |
+| `data.courseSetting.maximumGrade` | `float` | Puntaje máximo que tiene el curso. |
+| `data.courseSetting.minimumAttendanceTime` | `integer` | Tiempo mínimo (en minutos) para que un estudiante pueda marcar asistencia. |
+| `data.courseSetting.isOriginal` | `bool` | Indica si la configuración del curso es original o copia. |
 | `message` | `string` | Mensaje de respuesta del servidor. |
 | `statusCode` | `integer` | Código de estado HTTP de la respuesta. |
 | `status` | `boolean` | Indica si la respuesta fue exitosa (`true`) o no (`false`). |
@@ -458,19 +469,20 @@ Este endpoint permite actualizar un curso existente mediante su `id`. Se debe en
   "finishTime": "string",
   "code": "string",
   "isActive": true,
+  "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf"
 }
 ```
 
 ### 📖 Descripción de los campos
 | Campo | Tipo | Descripción |
 |--------|------|-------------|
-| `data.id` | `string (UUID)` |  Identificador único del curso. |
-| `data.name` | `string` |  Nombre del curso. |
-| `data.section` | `string` |  Sección del curso. |
-| `data.startTime` | `string (HH:mm:ss)` |  Hora de inició del curso. |
-| `data.finishTime` | `string (HH:mm:ss)` | Hora de fin del curso. |
-| `data.code` | `string` |  Codigo del curso. |
-| `data.isActive` | `bool` |  Estado del curso. |
+| `name` | `string` |  Nombre del curso. |
+| `section` | `string` |  Sección del curso. |
+| `startTime` | `string (HH:mm:ss)` |  Hora de inició del curso. |
+| `finishTime` | `string (HH:mm:ss)` | Hora de fin del curso. |
+| `code` | `string` |  Codigo del curso. |
+| `isActive` | `bool` |  Estado del curso. |
+| `centerId` | `(string UUID)` |  Identificador unico del centro al que pertenece el curso (Se debe enviar el mismo centerId que se envió en la respuesta al obtener el curso que se quiera editar). |
 
 ### 📤 Respuesta esperada
 Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y devolverá el Course editado.
@@ -478,25 +490,17 @@ Si la solicitud es exitosa, el servidor responderá con un código `200 OK` y de
 ```json
 {
   "data": {
-    "id": "e1e663a2-5eee-4d28-aa29-08dd6d803382",
-    "name": "Prueba2Edit",
+    "id": "9cab2766-cb36-4b75-ebec-08dd6f92e2f9",
+    "name": "PruebaEdit",
     "section": "V0",
-    "startTime": "12:00:00",
-    "finishTime": "13:00:00",
+    "startTime": "10:00:00",
+    "finishTime": "11:00:00",
     "code": null,
-    "isActive": false,
+    "isActive": true,
     "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
-    "settingId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "settingName": "string",
-    "scoreType": "string",
-    "startDate": "2025-03-27T23:20:31.432Z",
-    "endDate": "2025-03-27T23:20:31.432Z",
-    "minimumGrade": 60,
-    "maximumGrade": 100,
-    "minimumAttendanceTime": 10,
-    "isOriginal": false
+    "settingId": "d58d9c3f-0769-4ce5-a317-08dd6f92e2df"
   },
-  "message": "CNS-113: Nota de curso actualizada exitosamente.",
+  "message": "CRS-9053: Curso actualizado exitosamente.",
   "statusCode": 200,
   "status": true
 }
