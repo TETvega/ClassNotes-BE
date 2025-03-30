@@ -1,0 +1,33 @@
+meta {
+  name: Review
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{PATH}}/activities/review/2e102451-2170-4e13-6252-08dd6045204b
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  [{
+    "StudentId": "41D61E79-05DE-48AA-88A3-3F0A2128FD0A",
+    "Note": 30
+    ,
+    "Feedback": "ok"
+  },
+   
+   {
+    "StudentId": "41D61E79-05DE-48AA-88A3-3F0A2128FD0A",
+    "Note": 20
+    ,
+    "Feedback": "ok"
+  }
+  
+  ]
+}

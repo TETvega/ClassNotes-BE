@@ -16,20 +16,23 @@ auth:bearer {
 
 body:json {
   {
-    "name": "Prueba2",
-    "section": "B",
-    "startTime": "13:00:00",
-    "finishTime": "14:00:00",
-    "code": "DH-AS",
-    "isActive": true,
-    "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
-    "scoreType": "Puntos oro",
-    "startDate": "2025-01-26T04:28:54.137Z",
-    "endDate": "2025-03-26T04:28:54.137Z",
-    "minimumGrade": 70,
-    "maximumGrade": 100,
-    "minimumAttendanceTime": 10,
-    "settingId": null,
-    "settingName": "ConfigPruebaDocCourse"
+    "course": {  
+      "name": "Aleman",
+      "section": "B",
+      "startTime": "10:00:00",
+      "finishTime": "11:00:00",
+      "code": "A-100",
+      "centerId": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
+      "settingId": null
+    },
+    "courseSetting": {
+      "name": "Configuración Estándar",
+      "scoreType": "Ponderado",
+      "startDate": "2025-01-01T00:00:00Z",
+      "endDate": "2025-02-02T00:00:00Z",
+      "minimumGrade": 60,
+      "maximumGrade": 100,
+      "minimumAttendanceTime": 15
+    }
   }
 }

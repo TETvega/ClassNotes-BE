@@ -23,9 +23,7 @@ namespace ClassNotes.API.Dtos.CourseSettings
 		public DateTime StartDate { get; set; }
 
 		// Fecha de finalización del periodo
-		[Display(Name = "fecha de fin")]
-		[Required(ErrorMessage = "La {0} es requerida.")]
-		public DateTime EndDate { get; set; }
+		public DateTime? EndDate { get; set; }
 
 		// Nota minima
 		[Display(Name = "nota minima")]

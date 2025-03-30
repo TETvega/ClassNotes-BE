@@ -53,6 +53,8 @@ namespace ClassNotes.API.Database.Configuration
                 .WithOne(a => a.Course)
                 .HasForeignKey(a => a.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+           
         }
     }
 }

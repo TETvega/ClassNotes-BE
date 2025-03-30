@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +25,11 @@ using ClassNotes.API.Services.DashboardHome;
 using ClassNotes.API.Services.DashboarCenter;
 using ClassNotes.API.Services.TagsActivities;
 using ClassNotes.API.Services.DashboardCourses;
+using ClassNotes.API.Services.Date;
+using ClassNotes.API.Services.Distance;
+using ClassNotes.API.Services;
+using ClassNotes.API.Services.Notes;
+
 
 namespace ClassNotes.API;
 
@@ -43,6 +48,7 @@ public class Startup
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
+        services.AddSignalR();
 
         // Contexto de la base de datos
         services.AddDbContext<ClassNotesContext>(options =>
@@ -51,7 +57,7 @@ public class Startup
 		// Servicios personalizados
 		services.AddTransient<IActivitiesService, ActivitiesService>();
 		services.AddTransient<IAttendancesService, AttendancesService>();
-		services.AddTransient<ICentersService, CentersService>();
+		services.AddTransient<INotesService, NotesService>();
 		services.AddTransient<ICourseNotesService, CourseNotesService>();
 		services.AddTransient<ICourseSettingsService, CourseSettingsService>();
 		services.AddTransient<ICoursesService, CoursesService>();
@@ -61,11 +67,22 @@ public class Startup
 		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
 		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
-    services.AddTransient<IDashboardCenterService, DashboardCenterService>();
+    	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
 
-		// Servicios de seguridad
+
+        services.AddSingleton<DistanceService>(); //
+        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
+        services.AddScoped<QRService>();
+        services.AddHostedService<QRService>();
+        services.AddSingleton<OTPCleanupService>(); // 
+        services.AddHostedService(provider => provider.GetRequiredService<OTPCleanupService>()); //
+        services.AddSingleton<EmailScheduleService>();
+        services.AddHostedService<ScheduledEmailSender>();
+        services.AddSingleton<IDateTimeService, DateTimeService>();
+
+        // Servicios de seguridad
+        services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IAuthService, AuthService>();
-		services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IOtpService, OtpService>();
 
 		// Servicio para el envio de correos (SMTP)

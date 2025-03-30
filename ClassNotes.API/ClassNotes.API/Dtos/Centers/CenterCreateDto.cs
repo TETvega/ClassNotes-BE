@@ -18,10 +18,5 @@ namespace ClassNotes.API.Dtos.Centers
         public string Abbreviation { get; set; }
 
 
-        //[Display(Name = "Logo")]
-        //[StringLength(250,MinimumLength = 1, ErrorMessage = "El {0} debe tener menos de {1} caracteres y al menos de {2}.")]
-        //public string Logo { get; set; }
-
-
     }
 }

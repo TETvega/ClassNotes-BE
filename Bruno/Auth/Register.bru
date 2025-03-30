@@ -1,21 +1,21 @@
 meta {
   name: Register
   type: http
-  seq: 1
+  seq: 3
 }
 
 post {
   url: {{PATH}}/auth/register
   body: json
-  auth: bearer
+  auth: inherit
 }
 
 body:json {
   {
-    "firstName": "Anthony",
-    "lastName": "Miranda",
-    "email": "anthonyaemf@gmail.com",
-    "password": "Temporal01*",
-    "confirmPassword": "Temporal01*"
+    "firstName": "aa",
+    "lastName": "ssd",
+    "email": "user@example.com",
+    "password": "POBwpNqA*j6j!p@vd78swanb1XpM!cnt0PJwd",
+    "confirmPassword": "POBwpNqA*j6j!p@vd78swanb1XpM!cnt0PJwd"
   }
 }

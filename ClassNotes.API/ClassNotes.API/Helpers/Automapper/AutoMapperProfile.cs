@@ -27,8 +27,11 @@ namespace ClassNotes.API.Helpers.Automapper
             MapsForCourseSettings();
             MapsForUsers();
             MapsForTagsActivities();
+            MapsForDashboardCourses();
+            MapsForActivityNotes();
+            MapsForUnitNotes();
+            MapsForTotalNotes();
         }
-
         private void MapsForActivities()
         {
             // Mapeo para el get all (ActivitySummaryDto)
@@ -63,17 +66,35 @@ namespace ClassNotes.API.Helpers.Automapper
             CreateMap<AttendanceCreateDto, AttendanceEntity>();
             CreateMap<AttendanceEditDto, AttendanceEntity>();
         }
+        private void MapsForActivityNotes()
+        {
+            CreateMap<StudentActivityNoteEntity, StudentActivityNoteDto>();
+            CreateMap<StudentActivityNoteCreateDto, StudentActivityNoteEntity>();
+          //  CreateMap<StudentActivityNoteEditDto, StudentActivityNoteEntity>();
+        }
+
+        private void MapsForUnitNotes()
+        {
+            CreateMap<StudentUnitEntity, StudentUnitNoteDto>();
+        }
+
+        private void MapsForTotalNotes()
+        {
+            CreateMap<StudentCourseEntity, StudentTotalNoteDto>();
+        }
+
 
         private void MapsForCenters()
-        {
-            //(Ken)
-            //Aparentemente no se puede hacer con ForAllMembers esto, ya vere como simplificar...
-            CreateMap<CenterEntity, CenterDto>();
-            CreateMap<CenterCreateDto, CenterEntity>()
-                .ForMember(dest => dest.IsArchived, opt => opt.MapFrom(src => false))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
-                //.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
+		{
+			//(Ken)
+			//Aparentemente no se puede hacer con ForAllMembers esto, ya vere como simplificar...
+			CreateMap<CenterEntity, CenterDto>();
+			CreateMap<CenterCreateDto, CenterEntity>()
+				.ForMember(dest => dest.IsArchived, opt => opt.MapFrom(src => false))
+				.ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
+				//.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
                 .ForMember(dest => dest.Abbreviation, opt => opt.MapFrom(src => src.Abbreviation.Trim()));
+                
             CreateMap<CenterEditDto, CenterEntity>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.Trim()))
                 //.ForMember(dest => dest.Logo, opt => opt.MapFrom(src => src.Logo.Trim()))
@@ -82,17 +103,13 @@ namespace ClassNotes.API.Helpers.Automapper
 
         private void MapsForCourses()
         {
-            CreateMap<CourseEntity, CourseDto>()
-                .ForMember(dest => dest.SettingName, opt => opt.MapFrom(src => src.CourseSetting.Name)) // Mapear el nombre de la configuración
-                .ForMember(dest => dest.ScoreType, opt => opt.MapFrom(src => src.CourseSetting.ScoreType)) // Mapear el tipo de puntuación
-                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.CourseSetting.StartDate)) // Mapear la fecha de inicio
-                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.CourseSetting.EndDate)) // Mapear la fecha de fin
-                .ForMember(dest => dest.MinimumGrade, opt => opt.MapFrom(src => src.CourseSetting.MinimumGrade)) // Mapear la nota mínima
-                .ForMember(dest => dest.MaximumGrade, opt => opt.MapFrom(src => src.CourseSetting.MaximumGrade)) // Mapear la nota máxima
-                .ForMember(dest => dest.MinimumAttendanceTime, opt => opt.MapFrom(src => src.CourseSetting.MinimumAttendanceTime)) // Mapear el tiempo mínimo de asistencia
-                .ForMember(dest => dest.IsOriginal, opt => opt.MapFrom(src => src.CourseSetting.IsOriginal)); // Mapear si es original;
+            CreateMap<CourseEntity, CourseDto>();
             CreateMap<CourseCreateDto, CourseEntity>();
             CreateMap<CourseEditDto, CourseEntity>();
+
+            CreateMap<CourseEntity, CourseWithSettingDto>()
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src)) // Mapeamos el curso
+                .ForMember(dest => dest.CourseSetting, opt => opt.MapFrom(src => src.CourseSetting)); // Mapeamos la configuración
         }
 
         private void MapsForStudents()

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
@@ -28,13 +29,27 @@ namespace ClassNotes.API.Services.CourseNotes
             PAGE_SIZE = configuration.GetValue<int>("PageSize:CourseNotes");
         }
 
-        public async Task<ResponseDto<PaginationDto<List<CourseNoteDto>>>> GetAllCourseNotesAsync(string searchTerm = "",
-            int page = 1)
+        public async Task<ResponseDto<PaginationDto<List<CourseNoteDto>>>> GetAllCourseNotesAsync(
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = null
+            )
 
         {
-            var userId = _auditService.GetUserId(); // Id de quien hace la petición
 
-            int startIndex = (page - 1) * PAGE_SIZE;
+
+            /** HR
+            * Si pageSize es -1, se devuelve int.MaxValue
+            * -1 significa "obtener todos los elementos", por lo que usamos int.MaxValue 
+            *  int.MaxValue es 2,147,483,647, que es el valor máximo que puede tener un int en C#.
+            *  Math.Max(1, valor) garantiza que currentPageSize nunca sea menor que 1 excepto el -1 al inicio
+            *  si pageSize es nulo toma el valor de PAGE_SIZE
+            */
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+            var userId = _auditService.GetUserId();
+
             var courseNoteQuery = _context.CoursesNotes
                 .Where(c => c.CreatedBy == userId) // El docente solo puede ver las notas de su curso
                 .AsQueryable();
@@ -48,17 +63,18 @@ namespace ClassNotes.API.Services.CourseNotes
             }
 
             int totalItems = await courseNoteQuery.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+            int totalPages = (int)Math.Ceiling((double)totalItems / currentPageSize);
 
             // aplicar paginacion 
 
-            var courseNoteEntities = await courseNoteQuery
-                .OrderByDescending(n => n.RegistrationDate)  // esto lo ordenara por fecha 
-                .Skip(startIndex)
-                .Take(PAGE_SIZE)
+            // HR 
+            // optimizacion directa aplicando el mapeo directamente
+            var courseNoteDtos = await courseNoteQuery
+                .OrderByDescending(n => n.RegistrationDate)  // Ordenar por fecha de registro
+                .Skip(startIndex)                           // Omitir los registros anteriores a la página actual
+                .Take(currentPageSize)                      // Tomar el tamaño actual de la página
+                .ProjectTo<CourseNoteDto>(_mapper.ConfigurationProvider)  // Usamos ProjectTo para realizar el mapeo directamente 
                 .ToListAsync();
-
-            var courseNoteDtos = _mapper.Map<List<CourseNoteDto>>(courseNoteEntities);
 
             return new ResponseDto<PaginationDto<List<CourseNoteDto>>>
             {
@@ -68,7 +84,7 @@ namespace ClassNotes.API.Services.CourseNotes
                 Data = new PaginationDto<List<CourseNoteDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = currentPageSize,
                     TotalItems = totalItems,
                     TotalPages = totalPages,
                     Items = courseNoteDtos,
