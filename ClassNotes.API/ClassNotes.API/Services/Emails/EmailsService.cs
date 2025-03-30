@@ -48,7 +48,8 @@ namespace ClassNotes.API.Services.Emails
 			// AM: Contenido del correo
 			email.Body = new TextPart(MimeKit.Text.TextFormat.Html)
 			{
-				Text = dto.Content,
+				Text = dto.Content
+				,
 			};
 
 			// AM: Configuración del servidor Smtp para enviar el correo

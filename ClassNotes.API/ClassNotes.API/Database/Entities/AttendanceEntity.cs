@@ -10,6 +10,8 @@ namespace ClassNotes.API.Database.Entities
         [Column("attended")]
         public bool Attended { get; set; }
 
+        [Column("status")]
+        public string Status { get; set; }
 
         [Required]
         [Column("registration_date")]

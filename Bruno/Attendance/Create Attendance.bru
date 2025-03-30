@@ -1,0 +1,26 @@
+meta {
+  name: Create Attendance
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{PATH}}/Attendance
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "attended": true,
+    "registrationDate": "2025-03-26T20:29:46.414Z",
+    "status": "Presente",
+    "courseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
+    "studentId": "09e11a03-9267-4a88-a4b5-bf102da835b6",
+     "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+  }
+}

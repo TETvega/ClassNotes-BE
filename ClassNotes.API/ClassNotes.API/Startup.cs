@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +25,9 @@ using ClassNotes.API.Services.DashboardHome;
 using ClassNotes.API.Services.DashboarCenter;
 using ClassNotes.API.Services.TagsActivities;
 using ClassNotes.API.Services.DashboardCourses;
+using ClassNotes.API.Services.Date;
+using ClassNotes.API.Services.Distance;
+using ClassNotes.API.Services;
 
 namespace ClassNotes.API;
 
@@ -43,6 +46,7 @@ public class Startup
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
+        services.AddSignalR();
 
         // Contexto de la base de datos
         services.AddDbContext<ClassNotesContext>(options =>
@@ -63,8 +67,24 @@ public class Startup
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
     	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
 
-		// Servicios de seguridad
-		services.AddTransient<IAuthService, AuthService>();
+
+        services.AddSingleton<DistanceService>(); //
+        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
+        services.AddScoped<QRService>();
+        services.AddHostedService<QRService>();
+        services.AddSingleton<OTPCleanupService>(); // 
+        services.AddHostedService(provider => provider.GetRequiredService<OTPCleanupService>()); //
+        services.AddSingleton<EmailScheduleService>();
+        services.AddHostedService<ScheduledEmailSender>();
+        services.AddSingleton<IDateTimeService, DateTimeService>();
+
+
+
+
+
+
+        // Servicios de seguridad
+        services.AddTransient<IAuthService, AuthService>();
 		services.AddTransient<IAuditService, AuditService>();
 		services.AddTransient<IOtpService, OtpService>();
 
