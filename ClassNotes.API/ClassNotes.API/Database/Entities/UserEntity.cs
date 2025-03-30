@@ -35,7 +35,7 @@ namespace ClassNotes.API.Database.Entities
         // CG: se eliminaron los atributos relacionados a lo del OTP porque se maneja a traves de memoria
 
 		public virtual ICollection<CenterEntity> Centers { get; set; }
-        public virtual ICollection<CourseEntity> Courses { get; set; }
+        
         public virtual ICollection<StudentEntity> Students { get; set; }
     }
 }

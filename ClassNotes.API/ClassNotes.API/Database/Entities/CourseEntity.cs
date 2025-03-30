@@ -45,14 +45,8 @@ namespace ClassNotes.API.Database.Entities
 
         public virtual CourseSettingEntity CourseSetting { get; set;}
 
-
-        public virtual ICollection<ActivityEntity> Activities { get; set; }
-        public virtual ICollection<AttendanceEntity> Attendances { get; set; }
-        //DD: se Agreco esta linea para poder navegar student course 
-        public virtual ICollection<StudentCourseEntity> StudentsCourses { get; set; }
-        // Cambio
-
-        public virtual ICollection<UnitEntity> Units { get; set; }
+		public virtual ICollection<UnitEntity> Units { get; set; }
+		public virtual ICollection<AttendanceEntity> Attendances { get; set; }
         public virtual ICollection<StudentCourseEntity> Students { get; set; }
         public virtual ICollection<CourseNoteEntity> CourseNotes { get; set; }
 

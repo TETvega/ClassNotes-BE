@@ -2,6 +2,6 @@
 {
 	public interface IAuditService
 	{
-        string GetUserId();
-    }
+		string GetUserId();
+	}
 }
