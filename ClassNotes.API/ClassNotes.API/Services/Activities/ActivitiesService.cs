@@ -18,7 +18,6 @@ namespace ClassNotes.API.Services.Activities
         private readonly IMapper _mapper;
         private readonly IAuditService _auditService;
         private readonly int PAGE_SIZE;
-        private readonly IAuditService _auditService;
 
         public ActivitiesService(
             ClassNotesContext context,
