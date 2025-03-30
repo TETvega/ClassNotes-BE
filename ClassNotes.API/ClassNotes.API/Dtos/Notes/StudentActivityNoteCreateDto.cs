@@ -10,9 +10,7 @@ namespace ClassNotes.API.Dtos.CourseNotes
         [Required(ErrorMessage = "El {0} es requerido.")]
         public Guid StudentId { get; set; }
 
-        [Display(Name = "id de actividad")]
-        [Required(ErrorMessage = "El {0} es requerido.")]
-        public Guid ActivityId { get; set; }
+
 
         [Display(Name = "Nota")]
         [Required(ErrorMessage = "La {0} es requerida.")]

@@ -26,6 +26,6 @@ namespace ClassNotes.API.Services.Activities
 		// Eliminar una actividad
 		Task<ResponseDto<ActivityDto>> DeleteAsync(Guid id);
 
-        Task<ResponseDto<StudentActivityNoteDto>> ReviewActivityAsync(StudentActivityNoteCreateDto dto);
+        Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId);
     }
 }

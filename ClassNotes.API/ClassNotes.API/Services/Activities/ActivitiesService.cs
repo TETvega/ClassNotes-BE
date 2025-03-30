@@ -78,22 +78,22 @@ namespace ClassNotes.API.Services.Activities
             };
         }
 
-        public async Task<ResponseDto<StudentActivityNoteDto>> ReviewActivityAsync(StudentActivityNoteCreateDto dto)
+        public async Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId)
         {
-            var studentActivityEntity = _mapper.Map<StudentActivityNoteEntity>(dto);
+            //(Ken)
+            //Obtenemos la propia actividad especificada...
+            var activityEntity = await _context.Activities.Include(a => a.Unit).FirstOrDefaultAsync(a => a.Id == ActivityId);
+            
+            //Transformacion de las reviciones proporcionadas en forma de StudentActivityNoteCreateDto a entities
+            var studentActivityEntity = _mapper.Map<List<StudentActivityNoteEntity>>(dto);
+            
+            //Busqueda de las studentUnits de ese curso, para calcular promedios...
+            var studentsUnits = _context.StudentsUnits.Include(a => a.StudentCourse).Where(x => x.StudentCourse.CourseId == activityEntity.Unit.CourseId);
 
-            var activityEntity = await _context.Activities
-                .FirstOrDefaultAsync(a => a.Id == dto.ActivityId );
-
-            var studentUnits =  _context.StudentsUnits.Include(a => a.StudentCourse).Where(x => x.StudentCourse.StudentId == studentActivityEntity.StudentId);
-
-            var studentUnitEntity = await studentUnits.FirstOrDefaultAsync(a => a.UnitId == activityEntity.UnitId);
-
-         
-
-            if (studentUnitEntity == null || activityEntity == null)
+            //Verificacion de existencia...
+            if (activityEntity == null)
             {
-                return new ResponseDto<StudentActivityNoteDto>
+                return new ResponseDto<List<StudentActivityNoteDto>>
                 {
                     StatusCode = 404,
                     Status = false,
@@ -101,59 +101,135 @@ namespace ClassNotes.API.Services.Activities
                 };
             }
 
-
-            if (dto.Note > activityEntity.MaxScore  || dto.Note < 0)
+            //Por cada actividad revisada enviada por el usuario...
+            foreach (var activity in studentActivityEntity)
             {
-                return new ResponseDto<StudentActivityNoteDto>
+                //Se le incorpora a la entidad su activity id
+                activity.ActivityId = ActivityId;
+
+
+
+
+                //Se filtran las studentUnits para tener solo las del estudiante asociado a la actividad revisada actual,
+                //para questiones de promedio...
+                var studentUnitEntity = studentsUnits.Include(a => a.StudentCourse).Where(a => a.StudentCourse.StudentId == activity.StudentId);
+
+
+
+
+                //De las filtradas, se busca la de la misma unidad que esta actividad, para cambiar su nota...
+                var individualStudentUnit = studentUnitEntity.Include(a => a.StudentCourse).FirstOrDefault(x => x.UnitId == activityEntity.UnitId);
+                //Busqueda de ntidad de cstudentCourse para confirmar que s esta en la clase el estudiante
+                var testStudentCourse = _context.StudentsCourses.FirstOrDefault(x => x.StudentId == activity.StudentId && x.CourseId == activityEntity.Unit.CourseId);
+               
+                if (testStudentCourse == null)
                 {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = "Se ingresó una calificación no valida."
-                };
-            }
+                    return new ResponseDto<List<StudentActivityNoteDto>>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = MessagesConstant.RECORD_NOT_FOUND
+                    };
+                }
 
-            var activityCount = await _context.Activities.Where(x => x.UnitId == studentUnitEntity.UnitId && x.IsExtra == false).CountAsync();
-           
-            if (activityCount == 0)
-            {
-                return new ResponseDto<StudentActivityNoteDto>
+
+                //Si esta en la clase pero no tiene studentUnit, se crea un studentUnit...
+                if (individualStudentUnit == null)
                 {
-                    StatusCode = 404,
-                    Status = false,
-                    Message = MessagesConstant.RECORD_NOT_FOUND
-                };
-            }
+
+                    var newStudentUnit = new StudentUnitEntity
+                    {
+                        UnitNote = 0,
+                        UnitNumber = activityEntity.Unit.UnitNumber,
+                        UnitId = activityEntity.UnitId,
+                        StudentCourseId = testStudentCourse.Id
+                    };
+                    _context.StudentsUnits.Add(newStudentUnit);
+                    await _context.SaveChangesAsync();
+
+                    individualStudentUnit = newStudentUnit;
+                }
+
+                //Se verifica que la calificacion sea valida...
+                if (activity.Note > activityEntity.MaxScore || activity.Note < 0)
+                {
+                    return new ResponseDto<List<StudentActivityNoteDto>>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "Se ingresó una calificación no valida."
+                    };
+                }
+
+                //Se buscan las otras actividades en la unidad del estudiate
+                var studentActivities =   _context.StudentsActivitiesNotes.Where(x => x.Activity.UnitId == activityEntity.UnitId && x.StudentId == activity.StudentId);
+
+                //En esta lista se almacenaran los puntajes de estas actividades, para asi recalcular el promedio del parcial...
+                var totalUnitPoints = new List<float>();
+
+                //Si no hay otras actividades, la lista solo tendra la nota de esta actividad...
+                if (studentActivities.Count() == 0)
+                {
+                    totalUnitPoints.Add(activity.Note);
+                }
+                else
+                {
+
+                    foreach (var revisedActivity in studentActivities)
+                    {
+                        totalUnitPoints.Add(revisedActivity.Note);
+                    }
+                    totalUnitPoints.Add(activity.Note);
+
+                }
 
 
-            if(!activityEntity.IsExtra){
+                //Calculo del promedio de la unidad para almacenar en la entidad
+                var newUnitScore = totalUnitPoints.Sum()/totalUnitPoints.Count();
+                individualStudentUnit.UnitNote = newUnitScore;
 
-                var newUnitScore = studentUnitEntity.UnitNote+((dto.Note - studentUnitEntity.UnitNote) / activityCount);
+                _context.StudentsUnits.Update(individualStudentUnit);
+                await _context.SaveChangesAsync();
 
+                //Procedimiento similar pero para el curso del estudiante...
+
+                //En esa lista se almacenan los puntajes de unidad del estudiante...
                 var totalPoints = new List<float>();
-
-                foreach (var unit in studentUnits)
+                foreach (var unit in studentUnitEntity)
                 {
                     totalPoints.Add(unit.UnitNote);
                 }
 
-                studentUnitEntity.StudentCourse.FinalNote = totalPoints.Sum() /totalPoints.Count();
-                studentUnitEntity.UnitNote = newUnitScore;
-
-                _context.StudentsCourses.Update(studentUnitEntity.StudentCourse);
-                await _context.SaveChangesAsync(); //cambiaaaaaaaaaaaaaaaaaaar
-
-                _context.StudentsUnits.Update(studentUnitEntity);
-                await _context.SaveChangesAsync();
-            }
+                //Se actualiza la nota en el curso del estudiante usando los valores almacenados...
+                individualStudentUnit.StudentCourse.FinalNote = totalPoints.Sum() / totalPoints.Count();
 
 
-            _context.StudentsActivitiesNotes.Add(studentActivityEntity);
-            await _context.SaveChangesAsync();
+                _context.StudentsCourses.Update(individualStudentUnit.StudentCourse);
+                await _context.SaveChangesAsync(); 
 
+                //Se busca la relacion actividad a estudiante para confirmar su existencia...
+                var existingStudentActivity = _context.StudentsActivitiesNotes.FirstOrDefault(x => x.ActivityId == ActivityId && x.StudentId == activity.StudentId);
+               
 
+                //Si existe, se actualizan sus datos, sino, se crea...
+                if (existingStudentActivity != null)
+                {
+                    existingStudentActivity.Note = activity.Note;
+                    existingStudentActivity.Feedback = activity.Feedback;
 
-            var studentActivityDto = _mapper.Map<StudentActivityNoteDto>(studentActivityEntity);
-            return new ResponseDto<StudentActivityNoteDto>
+                    _context.StudentsActivitiesNotes.Update(existingStudentActivity);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _context.StudentsActivitiesNotes.Add(activity);
+                    await _context.SaveChangesAsync();
+                }
+
+            };
+
+            var studentActivityDto = _mapper.Map<List<StudentActivityNoteDto>>(studentActivityEntity);
+            return new ResponseDto<List<StudentActivityNoteDto>>
             {
                 StatusCode = 201,
                 Status = true,
@@ -239,6 +315,7 @@ namespace ClassNotes.API.Services.Activities
                     Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
+
             _mapper.Map(dto, activityEntity);
             _context.Activities.Update(activityEntity);
             await _context.SaveChangesAsync();

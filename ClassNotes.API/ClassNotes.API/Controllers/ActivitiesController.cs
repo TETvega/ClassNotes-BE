@@ -54,11 +54,11 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        [HttpPost("review")]
+        [HttpPost("review/{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<ActivityDto>>> Review(StudentActivityNoteCreateDto dto)
+        public async Task<ActionResult<ResponseDto<ActivityDto>>> Review(List<StudentActivityNoteCreateDto> dto, Guid id)
         {
-            var response = await _activitiesService.ReviewActivityAsync(dto);
+            var response = await _activitiesService.ReviewActivityAsync(dto, id);
             return StatusCode(response.StatusCode, response);
         }
 
