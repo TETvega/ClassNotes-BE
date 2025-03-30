@@ -278,7 +278,7 @@ namespace ClassNotes.API.Services.Courses
                 StartTime = dto.Course.StartTime,
                 FinishTime = dto.Course.FinishTime,
                 Code = dto.Course.Code,
-                IsActive = dto.Course.IsActive,
+                IsActive = true, // Por defecto el curso se deja activo
                 CenterId = dto.Course.CenterId,
                 CreatedBy = userId,
                 UpdatedBy = userId,
