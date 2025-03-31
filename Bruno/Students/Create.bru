@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: https://localhost:7047/api/students
+  url: https://localhost:7047/api/students/bulk-create
   body: json
   auth: bearer
 }
@@ -22,9 +22,19 @@ body:json {
   
   {
     "teacherId": "0f142536-4567-89ab-cdef-0123456789fe",
-    "firstName": "Everr",
-    "lastName": "Perez",
-    "email": "",
-    "courseId": "B941094A-2646-470F-A18B-5BD75F9B067C"
+    "courseId": "B941094A-2646-470F-A18B-5BD75F9B067C",
+    "students" : [
+      {
+      "firstName": "Everr",
+      "lastName": "Perez",
+      "email": "" 
+     },
+      {
+      "firstName": "Everr",
+      "lastName": "Perez",
+      "email": "" 
+     }
+      
+      ]
   }
 }

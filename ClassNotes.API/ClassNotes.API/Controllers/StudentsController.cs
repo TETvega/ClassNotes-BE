@@ -44,12 +44,12 @@ namespace ClassNotes.API.Controllers
         }
 
         //EG -> Controlador de Create aplicando el modo estricto 
-        [HttpPost]
-        public async Task<ActionResult<ResponseDto<StudentDto>>> Create(
-        [FromBody] StudentCreateDto studentCreateDto,
-        [FromHeader(Name = "Strict-Mode")] bool strictMode = false)
+        [HttpPost("bulk-create")]
+        public async Task<ActionResult<ResponseDto<StudentResultDto>>> CreateBulkStudents(
+       [FromBody] BulkStudentCreateDto bulkStudentCreateDto,
+       [FromHeader(Name = "Strict-Mode")] bool strictMode = false)
         {
-            var response = await _studentsService.CreateStudentAsync(studentCreateDto, strictMode);
+            var response = await _studentsService.CreateStudentAsync(bulkStudentCreateDto, strictMode);
             return StatusCode(response.StatusCode, response);
         }
 
@@ -59,12 +59,14 @@ namespace ClassNotes.API.Controllers
             var response = await _studentsService.UpdateStudentAsync(id, studentEditDto);
             return StatusCode(response.StatusCode, response);
         }
-     
-        //EG -> Controlador de elimar estudiantes por arreglo o individual 
-        [HttpDelete("batch")]
-        public async Task<ActionResult<ResponseDto<List<Guid>>>> DeleteStudentsInBatch([FromBody] List<Guid> studentIds)
+
+        //EG -> Controlador de elimar estudiantes por arreglo o individual
+        [HttpDelete("batch/{courseId}")]
+        public async Task<ActionResult<ResponseDto<List<Guid>>>> DeleteStudentsInBatch(
+       [FromBody] List<Guid> studentIds,
+       [FromRoute] Guid courseId)
         {
-            var response = await _studentsService.DeleteStudentsInBatchAsync(studentIds);
+            var response = await _studentsService.DeleteStudentsInBatchAsync(studentIds, courseId);
             return StatusCode(response.StatusCode, response);
         }
 
