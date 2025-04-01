@@ -12,11 +12,11 @@ namespace ClassNotes.API.Services.Attendances
 		// AM: Mostrar paginación de estudiantes por Id del curso
 		Task<ResponseDto<PaginationDto<List<CourseAttendancesStudentDto>>>> GetStudentsAttendancesPaginationAsync(Guid courseId, bool? isActive = null, string searchTerm = "", int page = 1);
 
-		// AM: Obtener stats de las asistencias por estudiante
-		Task<ResponseDto<StudentAttendancesDto>> GetStudentAttendancesStatsAsync(StudentIdCourseIdDto dto);
+        // AM: Obtener stats de las asistencias por estudiante
+        Task<ResponseDto<StudentAttendancesDto>> GetStudentAttendancesStatsAsync(StudentIdCourseIdDto dto, bool isCurrentMonth = false);
 
-		// AM: Mostrar paginación de asistencias por estudiante
-		Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1);
+        // AM: Mostrar paginación de asistencias por estudiante
+        Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1, bool isCurrentMonth = false, int pageSize = 10);
         Task<AttendanceDto> CreateAttendanceAsync(AttendanceCreateDto attendanceCreateDto);
         Task<AttendanceDto> EditAttendanceAsync(Guid attendanceId, AttendanceEditDto attendanceEditDto);
         Task<List<AttendanceDto>> ListAttendancesAsync();
