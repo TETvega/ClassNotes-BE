@@ -8,9 +8,9 @@ namespace ClassNotes.API.Services.Students
 	{
         Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int? pageSize = null ,int page = 1);
         Task<ResponseDto<StudentDto>> GetStudentByIdAsync(Guid id);
-        Task<ResponseDto<StudentResultDto>> CreateStudentAsync(StudentCreateDto studentCreateDto, bool strictMode);
+        Task<ResponseDto<StudentResultDto>> CreateStudentAsync(BulkStudentCreateDto bulkStudentCreateDto, bool strictMode);
         Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto);
-        Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds);
+        Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds, Guid courseId);
 
     }
 }

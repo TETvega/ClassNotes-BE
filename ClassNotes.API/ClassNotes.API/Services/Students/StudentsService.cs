@@ -144,115 +144,115 @@ namespace ClassNotes.API.Services.Students
 
         }
 
-        public async Task<ResponseDto<StudentResultDto>> CreateStudentAsync(StudentCreateDto studentCreateDto, bool strictMode)
+        public async Task<ResponseDto<StudentResultDto>> CreateStudentAsync(BulkStudentCreateDto bulkStudentCreateDto, bool strictMode)
         {
-            // Declarar las listas
-            var successfulStudents = new List<StudentDto>();      // Lista de estudiantes registrados correctamente
-            var duplicateStudents = new List<StudentDto>();       // Lista de estudiantes no ingresados por duplicación
-            var modifiedEmailStudents = new List<StudentDto>();   // Lista de estudiantes cuyo correo fue modificado
+            // Listas para almacenar los resultados del proceso
+            var successfulStudents = new List<StudentDto>(); // Alumnos que fueron registrados con éxito
+            var duplicateStudents = new List<StudentDto>();  // Alumnos que ya existían y no se pudieron registrar
+            var modifiedEmailStudents = new List<StudentDto>(); // Alumnos cuyo email fue modificado para evitar duplicados
 
-            // Validar si el correo ya existe en la base de datos
-            var existingStudent = await classNotesContext_.Students
-                .FirstOrDefaultAsync(s => s.Email == studentCreateDto.Email);
-
-            if (existingStudent != null)
-            {
-                // Si los nombres coinciden, retornar el estudiante existente
-                if (existingStudent.FirstName == studentCreateDto.FirstName &&
-                    existingStudent.LastName == studentCreateDto.LastName)
-                {
-                    duplicateStudents.Add(mapper_.Map<StudentDto>(existingStudent));
-                    return new ResponseDto<StudentResultDto>
-                    {
-                        StatusCode = 200,
-                        Status = true,
-                        Message = MessagesConstant.STUDENT_EXISTS,
-                        Data = new StudentResultDto
-                        {
-                            SuccessfulStudents = successfulStudents,
-                            DuplicateStudents = duplicateStudents,
-                            ModifiedEmailStudents = modifiedEmailStudents
-                        }
-                    };
-                }
-
-                // Si strictMode está activado, no se permite modificar el correo y se devuelve un error
-                if (strictMode)
-                {
-                    duplicateStudents.Add(mapper_.Map<StudentDto>(existingStudent)); // Agregar a la lista de duplicados
-                    return new ResponseDto<StudentResultDto>
-                    {
-                        StatusCode = 400,
-                        Status = false,
-                        Message = MessagesConstant.EMAIL_DIFFERENT_NAMES,
-                        Data = new StudentResultDto
-                        {
-                            SuccessfulStudents = successfulStudents,
-                            DuplicateStudents = duplicateStudents,
-                            ModifiedEmailStudents = modifiedEmailStudents
-                        }
-                    };
-                }
-
-                // Si strictMode es false, se genera un nuevo correo electrónico para evitar duplicados agregando +m
-                string baseEmail = studentCreateDto.Email.Split('@')[0];
-                string domain = studentCreateDto.Email.Split('@')[1];
-                int counter = 1;
-                string newEmail = studentCreateDto.Email;
-
-                while (await classNotesContext_.Students.AnyAsync(s => s.Email == newEmail))
-                {
-                    newEmail = $"{baseEmail}+{counter}@{domain}";
-                    counter++;
-                }
-
-                studentCreateDto.Email = newEmail;
-                modifiedEmailStudents.Add(mapper_.Map<StudentDto>(existingStudent));
-            }
-
-            // Crear la entidad del estudiante y guardarla en la base de datos
-            var studentEntity = mapper_.Map<StudentEntity>(studentCreateDto);
-            classNotesContext_.Students.Add(studentEntity);
-            await classNotesContext_.SaveChangesAsync();
-
-            // Asignar el curso al estudiante
-            var course = await classNotesContext_.Courses.FindAsync(studentCreateDto.CourseId);
-            if (course == null || string.IsNullOrEmpty(course.Name) || string.IsNullOrEmpty(course.Section) || course.StartTime == null)
+            // Verificar si hay estudiantes en el dto
+            if (bulkStudentCreateDto?.Students == null || !bulkStudentCreateDto.Students.Any())
             {
                 return new ResponseDto<StudentResultDto>
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = $"El curso con ID {studentCreateDto.CourseId} no existe o tiene datos incompletos.",
+                    Message = MessagesConstant.STU_RECORDS_NOT_FOUND,
                     Data = null
                 };
             }
 
-            var studentCourse = new StudentCourseEntity
+            // Iterar sobre cada estudiante que se intenta agregar
+            foreach (var studentDto in bulkStudentCreateDto.Students)
             {
-                StudentId = studentEntity.Id,
-                CourseId = studentCreateDto.CourseId
-            };
-            classNotesContext_.StudentsCourses.Add(studentCourse);
-            await classNotesContext_.SaveChangesAsync();
+                // Verificar si el correo ya existe en la base de datos
+                var existingStudent = await classNotesContext_.Students
+                    .FirstOrDefaultAsync(s => s.Email == studentDto.Email);
 
-            // Enviar notificación por correo
-            string emailContent = $"Hola {studentEntity.FirstName},\n\n" +
-                                  $"Has sido inscrito en el curso {course.Name}.\n" +
-                                  $"Sección: {course.Section}\n" +
-                                  $"Inicio: {course.StartTime}\n\n" +
-                                  "¡Bienvenido!";
-            await _emailsService.SendEmailAsync(new EmailDto
+                if (existingStudent != null)
+                {
+                    // Si ya existe un estudiante con el mismo correo, y además tiene el mismo nombre y apellido
+                    if (existingStudent.FirstName == studentDto.FirstName &&
+                        existingStudent.LastName == studentDto.LastName)
+                    {
+                        duplicateStudents.Add(mapper_.Map<StudentDto>(existingStudent));
+                        continue; // Pasar al siguiente estudiante sin agregarlo
+                    }
+
+                    // Si estamos en modo estricto, no se permite la modificación del correo, solo se marca como duplicado
+                    if (strictMode)
+                    {
+                        duplicateStudents.Add(mapper_.Map<StudentDto>(existingStudent));
+                        continue;
+                    }
+
+                    // Si strictMode es falso, modificar el email para evitar duplicados
+                    string baseEmail = studentDto.Email.Split('@')[0];
+                    string domain = studentDto.Email.Split('@')[1];
+                    int counter = 1;
+                    string newEmail = studentDto.Email;
+
+                    while (await classNotesContext_.Students.AnyAsync(s => s.Email == newEmail))
+                    {
+                        newEmail = $"{baseEmail}+{counter}@{domain}";
+                        counter++;
+                    }
+
+                    studentDto.Email = newEmail;
+                    modifiedEmailStudents.Add(mapper_.Map<StudentDto>(existingStudent));
+                }
+
+                // TODO : establecer la relacion con el id del curso por medio de la trabla intermedia
+                // Probablemente sea porque quite el CourseID en el CreateDto, se lo agregue BulkDto, no estoy seguro pero pueda que tenga que ver en algo con ese error 
+                // Mapear y agregar el estudiante a la base de datos
+                var studentEntity = mapper_.Map<StudentEntity>(studentDto);
+                studentEntity.TeacherId = bulkStudentCreateDto.TeacherId;
+                studentEntity.CourseId = bulkStudentCreateDto.CourseId;
+
+                classNotesContext_.Students.Add(studentEntity);
+                await classNotesContext_.SaveChangesAsync();
+
+                // Asociar el estudiante al curso
+                var studentCourse = new StudentCourseEntity
+                {
+                    StudentId = studentEntity.Id,
+                    CourseId = bulkStudentCreateDto.CourseId
+                };
+                classNotesContext_.StudentsCourses.Add(studentCourse);
+                await classNotesContext_.SaveChangesAsync();
+
+                // Enviar correo de bienvenida
+                string emailContent = $"Hola {studentEntity.FirstName},\\n\\n" +
+                                       $"Has sido inscrito en el curso{studentEntity.Courses}.\\n\\n" +
+                                       "¡Bienvenido!";
+                await _emailsService.SendEmailAsync(new EmailDto
+                {
+                    To = studentEntity.Email,
+                    Subject = "Inscripción en curso",
+                    Content = emailContent
+                });
+
+                successfulStudents.Add(mapper_.Map<StudentDto>(studentEntity));
+            }
+
+            // Si no hubo estudiantes exitosos retornar un error
+            if (!successfulStudents.Any())
             {
-                To = studentEntity.Email,
-                Subject = "Inscripción en curso",
-                Content = emailContent
-            });
+                return new ResponseDto<StudentResultDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = MessagesConstant.OPERATION_FAILED,
+                    Data = new StudentResultDto
+                    {
+                        SuccessfulStudents = successfulStudents,
+                        DuplicateStudents = duplicateStudents,
+                        ModifiedEmailStudents = modifiedEmailStudents
+                    }
+                };
+            }
 
-            // Agregar al listado de estudiantes ingresados correctamente
-            successfulStudents.Add(mapper_.Map<StudentDto>(studentEntity));
-
-            // Retornar los estudiantes procesados al frontend
             return new ResponseDto<StudentResultDto>
             {
                 StatusCode = 201,
@@ -266,6 +266,7 @@ namespace ClassNotes.API.Services.Students
                 }
             };
         }
+
 
         public async Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto)
         {
@@ -326,7 +327,7 @@ namespace ClassNotes.API.Services.Students
             };
         }
 
-        public async Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds)
+        public async Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds, Guid courseId)
         {
             // Obtener el ID del usuario que realiza la petición
             var userId = _auditService.GetUserId();
@@ -336,8 +337,8 @@ namespace ClassNotes.API.Services.Students
                 .Where(s => studentIds.Contains(s.Id) && s.TeacherId == userId)
                 .ToListAsync();
 
-            // Si no se encuentra ningún estudiante
-            if (studentsToDelete.Count == 0)
+            // Si no se encuentra ningún estudiante, devolver un error
+            if (!studentsToDelete.Any())
             {
                 return new ResponseDto<List<Guid>>
                 {
@@ -347,25 +348,47 @@ namespace ClassNotes.API.Services.Students
                 };
             }
 
-            // Eliminar registros relacionados en students_courses
-            var relatedRecords = await classNotesContext_.StudentsCourses
+            // Obtener la cantidad de cursos en los que están inscritos los estudiantes
+            var studentCourseRelations = await classNotesContext_.StudentsCourses
                 .Where(sc => studentIds.Contains(sc.StudentId))
+                .GroupBy(sc => sc.StudentId)
+                .Select(g => new { StudentId = g.Key, CourseCount = g.Count() })
+                .ToListAsync();
+
+            // Eliminar los registros en StudentsCourses SOLO del curso específico
+            var relatedRecords = await classNotesContext_.StudentsCourses
+                .Where(sc => studentIds.Contains(sc.StudentId) && sc.CourseId == courseId)
                 .ToListAsync();
             classNotesContext_.StudentsCourses.RemoveRange(relatedRecords);
 
-            // Eliminar estudiantes
-            classNotesContext_.Students.RemoveRange(studentsToDelete);
+            // Determinar qué estudiantes pueden eliminarse de la tabla Students
+            var studentsToKeep = studentCourseRelations
+                .Where(sc => sc.CourseCount > 1) // Están inscritos en más de un curso
+                .Select(sc => sc.StudentId)
+                .ToHashSet();
+
+            var studentsToRemoveFromStudents = studentsToDelete
+                .Where(s => !studentsToKeep.Contains(s.Id))
+                .ToList();
+
+            // Eliminar de la tabla Students solo los que no tienen más cursos
+            if (studentsToRemoveFromStudents.Any())
+            {
+                classNotesContext_.Students.RemoveRange(studentsToRemoveFromStudents);
+            }
+
             await classNotesContext_.SaveChangesAsync();
 
-            // Retornar una respuesta exitosa con los IDs eliminados
+            // Retornar respuesta con los IDs eliminados de StudentsCourses y Students
             return new ResponseDto<List<Guid>>
             {
                 StatusCode = 200,
                 Status = true,
                 Message = MessagesConstant.STU_DELETE_SUCCESS,
-                Data = studentsToDelete.Select(s => s.Id).ToList()
+                Data = studentsToRemoveFromStudents.Select(s => s.Id).ToList()
             };
         }
+
 
 
     }
