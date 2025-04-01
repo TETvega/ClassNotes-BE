@@ -28,7 +28,7 @@ namespace ClassNotes.API.Database.Entities
 
         [Required]
         [Column("is_active")]
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
 
         public virtual UserEntity CreatedByUser { get; set; }

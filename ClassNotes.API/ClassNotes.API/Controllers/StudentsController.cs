@@ -45,11 +45,10 @@ namespace ClassNotes.API.Controllers
 
         //EG -> Controlador de Create aplicando el modo estricto 
         [HttpPost("bulk-create")]
-        public async Task<ActionResult<ResponseDto<StudentResultDto>>> CreateBulkStudents(
-       [FromBody] BulkStudentCreateDto bulkStudentCreateDto,
-       [FromHeader(Name = "Strict-Mode")] bool strictMode = false)
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<StudentResultDto>>> CreateBulkStudents(BulkStudentCreateDto bulkStudentCreateDto)
         {
-            var response = await _studentsService.CreateStudentAsync(bulkStudentCreateDto, strictMode);
+            var response = await _studentsService.CreateStudentAsync(bulkStudentCreateDto);
             return StatusCode(response.StatusCode, response);
         }
 
@@ -62,6 +61,7 @@ namespace ClassNotes.API.Controllers
 
         //EG -> Controlador de elimar estudiantes por arreglo o individual
         [HttpDelete("batch/{courseId}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<List<Guid>>>> DeleteStudentsInBatch(
        [FromBody] List<Guid> studentIds,
        [FromRoute] Guid courseId)

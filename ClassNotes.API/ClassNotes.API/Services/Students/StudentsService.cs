@@ -21,20 +21,24 @@ namespace ClassNotes.API.Services.Students
 {
     public class StudentsService : IStudentsService
     {
-        private readonly ClassNotesContext classNotesContext_;
-        private readonly IMapper mapper_;
+        private readonly ClassNotesContext _context;
+        private readonly IMapper _mapper;
         private readonly IEmailSender email;
         private readonly IAuditService _auditService;
         private readonly int PAGE_SIZE;
         private readonly IEmailsService _emailsService;
 
+        // NOTA :
+        // EL correo de Vienvenida Esta DESACTIVADO
+        // No trabaja Con hilos
+
         public StudentsService(ClassNotesContext classNotesContext, IAuditService auditService, IMapper mapper, IConfiguration configuration, IEmailsService emailsService)
         {
-            classNotesContext_ = classNotesContext;
-            mapper_ = mapper;
+            _context = classNotesContext;
+            _mapper = mapper;
             _auditService = auditService;
             PAGE_SIZE = configuration.GetValue<int>("PageSize:Students");
-            this._emailsService = emailsService;
+            _emailsService = emailsService;
 
         }
 
@@ -62,7 +66,7 @@ namespace ClassNotes.API.Services.Students
             var userId = _auditService.GetUserId();
 
             // Consulta base con filtrado por TeacherId
-            var studentEntityQuery = classNotesContext_.Students
+            var studentEntityQuery = _context.Students
                 .Where(x => x.TeacherId == userId);
 
             // Aplicar búsqueda si hay un término
@@ -88,7 +92,7 @@ namespace ClassNotes.API.Services.Students
                 .OrderByDescending(x => x.CreatedDate)
                 .Skip(startIndex)
                 .Take(currentPageSize)
-                .ProjectTo<StudentDto>(mapper_.ConfigurationProvider) // Directamente mapeamos en la misma consulta
+                .ProjectTo<StudentDto>(_mapper.ConfigurationProvider) // Directamente mapeamos en la misma consulta
                 .ToListAsync();
 
             // Calcular total de páginas
@@ -120,7 +124,7 @@ namespace ClassNotes.API.Services.Students
             // Necesitamos obtener el i de quien hace la petición
             var userId = _auditService.GetUserId();
 
-            var studentEntity = await classNotesContext_.Students.FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == userId);
+            var studentEntity = await _context.Students.FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == userId);
 
             if (studentEntity == null)
             {
@@ -132,7 +136,7 @@ namespace ClassNotes.API.Services.Students
                 };
             }
 
-            var studentDto = mapper_.Map<StudentDto>(studentEntity);
+            var studentDto = _mapper.Map<StudentDto>(studentEntity);
 
             return new ResponseDto<StudentDto>
             {
@@ -144,14 +148,59 @@ namespace ClassNotes.API.Services.Students
 
         }
 
-        public async Task<ResponseDto<StudentResultDto>> CreateStudentAsync(BulkStudentCreateDto bulkStudentCreateDto, bool strictMode)
+        public async Task<ResponseDto<StudentResultDto>> CreateStudentAsync(BulkStudentCreateDto bulkStudentCreateDto)
         {
-            // Listas para almacenar los resultados del proceso
-            var successfulStudents = new List<StudentDto>(); // Alumnos que fueron registrados con éxito
-            var duplicateStudents = new List<StudentDto>();  // Alumnos que ya existían y no se pudieron registrar
-            var modifiedEmailStudents = new List<StudentDto>(); // Alumnos cuyo email fue modificado para evitar duplicados
+            // Validación inicial
+            var validationResult = ValidateBulkCreateRequest(bulkStudentCreateDto);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
 
-            // Verificar si hay estudiantes en el dto
+
+            var userId = _auditService.GetUserId();
+            var courseEntity = await _context.Courses
+                .AsNoTracking()
+                .Include(c => c.Center) 
+                .FirstOrDefaultAsync(c => c.Id == bulkStudentCreateDto.CourseId && c.Center.TeacherId == userId);
+
+            if (courseEntity == null)
+            {
+                return new ResponseDto<StudentResultDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El curso no existe o no está asignado a este docente.",
+                    Data = null
+                };
+            }
+
+            var result = new StudentResultDto
+            {
+                SuccessfulStudents = new List<StudentDto>(),
+                DuplicateStudents = new List<StudentDto>(),
+                ModifiedEmailStudents = new List<StudentDto>()
+            };
+
+
+            foreach (var studentDto in bulkStudentCreateDto.Students)
+            {
+                await ProcessStudentCreation(bulkStudentCreateDto, studentDto, userId, result ,courseEntity);
+            }
+
+            return BuildFinalResponse(result);
+        }
+
+        // HR
+        /// <summary>
+        /// Esta funcion valida que se tengan datos para procesar y limita el numero de datos a 50
+        /// </summary>
+        /// <param name="bulkStudentCreateDto">
+        /// La lista cruda de los estudiantes a crear. se encuentran en la prop de bulkStudentCreateDto.Students
+        /// </param>
+        /// <returns></returns>
+        private  ResponseDto<StudentResultDto>? ValidateBulkCreateRequest(BulkStudentCreateDto bulkStudentCreateDto)
+        {
             if (bulkStudentCreateDto?.Students == null || !bulkStudentCreateDto.Students.Any())
             {
                 return new ResponseDto<StudentResultDto>
@@ -163,118 +212,234 @@ namespace ClassNotes.API.Services.Students
                 };
             }
 
-            // Iterar sobre cada estudiante que se intenta agregar
-            foreach (var studentDto in bulkStudentCreateDto.Students)
-            {
-                // Verificar si el correo ya existe en la base de datos
-                var existingStudent = await classNotesContext_.Students
-                    .FirstOrDefaultAsync(s => s.Email == studentDto.Email);
-
-                if (existingStudent != null)
-                {
-                    // Si ya existe un estudiante con el mismo correo, y además tiene el mismo nombre y apellido
-                    if (existingStudent.FirstName == studentDto.FirstName &&
-                        existingStudent.LastName == studentDto.LastName)
-                    {
-                        duplicateStudents.Add(mapper_.Map<StudentDto>(existingStudent));
-                        continue; // Pasar al siguiente estudiante sin agregarlo
-                    }
-
-                    // Si estamos en modo estricto, no se permite la modificación del correo, solo se marca como duplicado
-                    if (strictMode)
-                    {
-                        duplicateStudents.Add(mapper_.Map<StudentDto>(existingStudent));
-                        continue;
-                    }
-
-                    // Si strictMode es falso, modificar el email para evitar duplicados
-                    string baseEmail = studentDto.Email.Split('@')[0];
-                    string domain = studentDto.Email.Split('@')[1];
-                    int counter = 1;
-                    string newEmail = studentDto.Email;
-
-                    while (await classNotesContext_.Students.AnyAsync(s => s.Email == newEmail))
-                    {
-                        newEmail = $"{baseEmail}+{counter}@{domain}";
-                        counter++;
-                    }
-
-                    studentDto.Email = newEmail;
-                    modifiedEmailStudents.Add(mapper_.Map<StudentDto>(existingStudent));
-                }
-
-                // TODO : establecer la relacion con el id del curso por medio de la trabla intermedia
-                // Probablemente sea porque quite el CourseID en el CreateDto, se lo agregue BulkDto, no estoy seguro pero pueda que tenga que ver en algo con ese error 
-                // Mapear y agregar el estudiante a la base de datos
-                var studentEntity = mapper_.Map<StudentEntity>(studentDto);
-                studentEntity.TeacherId = bulkStudentCreateDto.TeacherId;
-                studentEntity.CourseId = bulkStudentCreateDto.CourseId;
-
-                classNotesContext_.Students.Add(studentEntity);
-                await classNotesContext_.SaveChangesAsync();
-
-                // Asociar el estudiante al curso
-                var studentCourse = new StudentCourseEntity
-                {
-                    StudentId = studentEntity.Id,
-                    CourseId = bulkStudentCreateDto.CourseId
-                };
-                classNotesContext_.StudentsCourses.Add(studentCourse);
-                await classNotesContext_.SaveChangesAsync();
-
-                // Enviar correo de bienvenida
-                string emailContent = $"Hola {studentEntity.FirstName},\\n\\n" +
-                                       $"Has sido inscrito en el curso{studentEntity.Courses}.\\n\\n" +
-                                       "¡Bienvenido!";
-                await _emailsService.SendEmailAsync(new EmailDto
-                {
-                    To = studentEntity.Email,
-                    Subject = "Inscripción en curso",
-                    Content = emailContent
-                });
-
-                successfulStudents.Add(mapper_.Map<StudentDto>(studentEntity));
-            }
-
-            // Si no hubo estudiantes exitosos retornar un error
-            if (!successfulStudents.Any())
+            if (bulkStudentCreateDto.Students.Count() > 50)
             {
                 return new ResponseDto<StudentResultDto>
                 {
                     StatusCode = 400,
                     Status = false,
-                    Message = MessagesConstant.OPERATION_FAILED,
-                    Data = new StudentResultDto
-                    {
-                        SuccessfulStudents = successfulStudents,
-                        DuplicateStudents = duplicateStudents,
-                        ModifiedEmailStudents = modifiedEmailStudents
-                    }
+                    Message = MessagesConstant.STU_MAX_CREATE_LIMIT,
+                    Data = null
                 };
             }
+            return null;
+        }
 
-            return new ResponseDto<StudentResultDto>
+        private async Task ProcessStudentCreation(
+            BulkStudentCreateDto bulkStudentCreateDto,
+            StudentCreateDto studentDto,
+            string userId,
+            StudentResultDto result,
+            CourseEntity courseEntity
+            )
+        {
+
+            var existingStudent = await _context.Students
+                .FirstOrDefaultAsync(s => s.Email == studentDto.Email);
+
+            if (existingStudent != null)
             {
-                StatusCode = 201,
-                Status = true,
-                Message = MessagesConstant.STU_CREATE_SUCCESS,
-                Data = new StudentResultDto
+                await HandleExistingStudent(bulkStudentCreateDto, studentDto, existingStudent, result , userId, courseEntity);
+                return;
+            }
+
+            await CreateNewStudent(bulkStudentCreateDto, studentDto, userId, result , courseEntity);
+        }
+
+        private async Task HandleExistingStudent(
+            BulkStudentCreateDto bulkStudentCreateDto,
+            StudentCreateDto studentDto,
+            StudentEntity existingStudent,
+            StudentResultDto result,
+            string userId,
+            CourseEntity courseEntity
+            )
+        {
+            // Si ya existe un estudiante con el mismo correo, nombre y apellido
+            //no procesamos más este estudiante ya que independiente del modo estricto es un duplicado exacto 
+            if (
+                existingStudent.FirstName == studentDto.FirstName &&
+                existingStudent.LastName == studentDto.LastName)
+            {
+                var mappedStudent = new StudentDto
                 {
-                    SuccessfulStudents = successfulStudents,
-                    DuplicateStudents = duplicateStudents,
-                    ModifiedEmailStudents = modifiedEmailStudents
-                }
+                    Id = existingStudent.Id,
+                    FirstName = existingStudent.FirstName,
+                    LastName = existingStudent.LastName,
+                    Email = existingStudent.Email
+                };
+                result.DuplicateStudents.Add(mappedStudent);
+                return;
+            }
+
+
+            // Si estamos en modo estricto
+            if (bulkStudentCreateDto.StrictMode)
+            {
+                //Cualquier coincidencia de email se considera duplicado, sin importar los nombres
+                result.DuplicateStudents.Add(_mapper.Map<StudentDto>(existingStudent));
+                return;
+            }
+
+            //Si el modo estricto está desactivado modificamos el correo
+            studentDto.Email = await GenerateUniqueEmail(studentDto.Email);
+
+            // Guardamos el estudiante original en la lista de duplicados antes de modificar
+            result.DuplicateStudents.Add(_mapper.Map<StudentDto>(existingStudent));
+
+            // Agregamos el estudiante con email modificado a la lista de modificados
+            result.ModifiedEmailStudents.Add(new StudentDto
+            {
+                Id = existingStudent.Id,
+                FirstName = studentDto.FirstName,
+                LastName = studentDto.LastName,
+                Email = studentDto.Email // Ahora tiene el email único generado
+            });
+
+            await CreateNewStudent(bulkStudentCreateDto, studentDto, userId, result, courseEntity);
+
+        }
+
+        /// <summary>
+        /// Esta funcion genera un Email valido para almacenar en la Bd metodo partiendo de {base email}+{n}@{dominio}
+        /// </summary>
+        /// <param name="originalEmail"></param>
+        /// <returns></returns>
+        private async Task<string> GenerateUniqueEmail(string originalEmail)
+        {
+            string baseEmail = originalEmail.Split('@')[0]; 
+            string domain = originalEmail.Split('@')[1]; // gamil.com y Outlook en Yahoo da error hacer esto
+            int counter = 1;
+            string newEmail = originalEmail;
+
+            // hasta encontrar un Email Valido
+            while (await _context.Students.AnyAsync(s => s.Email == newEmail))
+            {
+                newEmail = $"{baseEmail}+{counter}@{domain}";
+                counter++;
+            }
+
+            return newEmail;
+        }
+
+        private async Task CreateNewStudent(
+            BulkStudentCreateDto bulkStudentCreateDto,
+            StudentCreateDto studentDto,
+            string userId,
+            StudentResultDto result,
+            CourseEntity courseEntity
+            )
+        {
+            var studentEntity = _mapper.Map<StudentEntity>(studentDto);
+            studentEntity.TeacherId = userId;
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.Students.Add(studentEntity);
+                await _context.SaveChangesAsync();
+
+                await CreateStudentCourseRelation(studentEntity.Id, bulkStudentCreateDto.CourseId);
+
+                //await SendWelcomeEmail(studentEntity , courseEntity);
+
+                await transaction.CommitAsync();
+
+                result.SuccessfulStudents.Add(_mapper.Map<StudentDto>(studentEntity));
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw new Exception("Error al crear el estudiante");
+            }
+        }
+
+        /// <summary>
+        /// Funcion que agrega el Estudiante a una clase 
+        /// LO MATRICULA EN LA CLASE
+        /// </summary>
+        /// <param name="studentId"></param>
+        /// <param name="courseId"></param>
+        /// <returns></returns>
+        private async Task CreateStudentCourseRelation(Guid studentId, Guid courseId)
+        {
+            var studentCourse = new StudentCourseEntity
+            {
+                StudentId = studentId,
+                CourseId = courseId
             };
+            _context.StudentsCourses.Add(studentCourse);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Envia el correo de Inscripcion al estudiante 
+        /// </summary>
+        /// <param name="studentEntity"></param>
+        /// <returns></returns>
+        private async Task SendWelcomeEmail(
+            StudentEntity studentEntity,
+            CourseEntity  course
+            )
+        {
+            string emailContent = $@"
+                <html>
+                <body style='font-family: Arial, sans-serif; color: #333;'>
+                    <h2 style='color: #0056b3;'>🎉 ¡Tu Inscripción Está Completa! 🎉</h2>
+                    <h3>Hola <strong>{studentEntity.FirstName}</strong>,</h3>
+                    <p>Te informamos que has sido inscrito en el curso:</p>
+                    <h3 style='color: #28a745;'>📚 {course.Name} 📚</h3>
+                    <p>Mediante tu correo: <strong>{studentEntity.Email}</strong>.</p>
+
+                    <hr>
+
+                    <p>Este es un correo informativo y con ello queremos explicarte cómo funciona <strong>ClassNotes</strong>.</p>
+                    <p><strong>ClassNotes</strong> es una plataforma para docentes que ayuda a crear registros de asistencias y calificaciones.</p>
+                    <p>Te recomendamos estar pendiente de tus correos, ya que a través de este correo inscrito (<strong>{studentEntity.Email}</strong>) te enviaremos tus solicitudes de asistencia.</p>
+
+                    <p><strong>Revisa siempre los correos, ya que nuestras cuentas oficiales son:</strong></p>
+                    <ul>
+                        <li><strong>classnotesservices@gmail.com</strong></li>
+                        <li><strong>classnotes.services@gmail.com</strong></li>
+                    </ul>
+
+                    <hr>
+
+                    <p>📢 <strong>¿Cómo funciona la asistencia?</strong></p>
+                    <p>Cuando tu docente cree una asistencia, se generará un código de ingreso único que deberás ingresar en el formulario adjunto.</p>
+                    <p>Recuerda ingresar y validar para este correo: <strong>{studentEntity.Email}</strong>.</p>
+
+                    <p>🎉 ¡Bienvenido a ClassNotes! 🎉</p>
+                </body>
+                </html>";
+
+            await _emailsService.SendEmailAsync(new EmailDto
+            {
+                To = studentEntity.Email,
+                Subject = $"🚀 ¡Te Has Inscrito en el Curso {course.Name } ! 📚 Prepárate para Aprender",
+                Content = emailContent,
+            });
         }
 
 
+        private ResponseDto<StudentResultDto> BuildFinalResponse(StudentResultDto result)
+        {
+            return new ResponseDto<StudentResultDto>
+            {
+                StatusCode = result.SuccessfulStudents.Any() ? 201 : 400,
+                Status = result.SuccessfulStudents.Any(),
+                Message = result.SuccessfulStudents.Any()
+                    ? MessagesConstant.STU_CREATE_SUCCESS
+                    : MessagesConstant.OPERATION_FAILED,
+                Data = result
+            };
+        }
         public async Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto)
         {
             // Necesitamos obtener el id de quien hace la petición
             var userId = _auditService.GetUserId();          
 
             // Buscar el estudiante por su ID
-            var studentEntity = await classNotesContext_.Students
+            var studentEntity = await _context.Students
                 .FirstOrDefaultAsync(s => s.Id == id && s.TeacherId == userId); // Solo quien lo crea lo puede editar
 
 
@@ -293,7 +458,7 @@ namespace ClassNotes.API.Services.Students
             // Verificar si el nuevo correo ya esta registrado con otro estudiante
             if (studentEditDto.Email != studentEntity.Email)
             {
-                var emailExists = await classNotesContext_.Students
+                var emailExists = await _context.Students
                     .AnyAsync(s => s.Email == studentEditDto.Email);
 
                 if (emailExists)
@@ -309,13 +474,13 @@ namespace ClassNotes.API.Services.Students
             }
 
             // Actualizar los campos del estudiante
-            mapper_.Map(studentEditDto, studentEntity);
+            _mapper.Map(studentEditDto, studentEntity);
 
             // Guardar los cambios en la base de datos
-            await classNotesContext_.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Mapear la entidad actualizada a un DTO para la respuesta
-            var studentDto = mapper_.Map<StudentDto>(studentEntity);
+            var studentDto = _mapper.Map<StudentDto>(studentEntity);
 
             // Retornar la respuesta con el DTO
             return new ResponseDto<StudentDto>
@@ -333,7 +498,7 @@ namespace ClassNotes.API.Services.Students
             var userId = _auditService.GetUserId();
 
             // Filtrar estudiantes que coincidan con los IDs proporcionados y el TeacherId del usuario
-            var studentsToDelete = await classNotesContext_.Students
+            var studentsToDelete = await _context.Students
                 .Where(s => studentIds.Contains(s.Id) && s.TeacherId == userId)
                 .ToListAsync();
 
@@ -349,17 +514,17 @@ namespace ClassNotes.API.Services.Students
             }
 
             // Obtener la cantidad de cursos en los que están inscritos los estudiantes
-            var studentCourseRelations = await classNotesContext_.StudentsCourses
+            var studentCourseRelations = await _context.StudentsCourses
                 .Where(sc => studentIds.Contains(sc.StudentId))
                 .GroupBy(sc => sc.StudentId)
                 .Select(g => new { StudentId = g.Key, CourseCount = g.Count() })
                 .ToListAsync();
 
             // Eliminar los registros en StudentsCourses SOLO del curso específico
-            var relatedRecords = await classNotesContext_.StudentsCourses
+            var relatedRecords = await _context.StudentsCourses
                 .Where(sc => studentIds.Contains(sc.StudentId) && sc.CourseId == courseId)
                 .ToListAsync();
-            classNotesContext_.StudentsCourses.RemoveRange(relatedRecords);
+            _context.StudentsCourses.RemoveRange(relatedRecords);
 
             // Determinar qué estudiantes pueden eliminarse de la tabla Students
             var studentsToKeep = studentCourseRelations
@@ -374,10 +539,10 @@ namespace ClassNotes.API.Services.Students
             // Eliminar de la tabla Students solo los que no tienen más cursos
             if (studentsToRemoveFromStudents.Any())
             {
-                classNotesContext_.Students.RemoveRange(studentsToRemoveFromStudents);
+                _context.Students.RemoveRange(studentsToRemoveFromStudents);
             }
 
-            await classNotesContext_.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             // Retornar respuesta con los IDs eliminados de StudentsCourses y Students
             return new ResponseDto<List<Guid>>

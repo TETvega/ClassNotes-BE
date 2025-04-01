@@ -16,6 +16,7 @@ using ClassNotes.API.Database.Entities;
 using iText.Kernel.Pdf.Canvas.Draw;
 using ClassNotes.API.Constants;
 using MimeKit.Text;
+using CloudinaryDotNet;
 
 namespace ClassNotes.API.Services.Emails
 {
@@ -156,112 +157,159 @@ namespace ClassNotes.API.Services.Emails
 
 
         public async Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailGradeDto dto)
-		{
-			// AM: Obtener y validar existencia de la clase
-			var courseEntity = await _context.Courses.FirstOrDefaultAsync(c => c.Id == dto.CourseId);
-			if (courseEntity is null)
-			{
-				return new ResponseDto<EmailDto>
-				{
-					StatusCode = 404,
-					Status = false,
-					Message = MessagesConstant.EMAIL_COURSE_NOT_REGISTERED
+        {
+            SmtpAccountWrapper acquiredWrapper = null;
+            StudentEntity studentEntity = null;
+            CourseEntity courseEntity = null;
+
+            try
+            {
+                // Validaciones iniciales
+                courseEntity = await _context.Courses.FirstOrDefaultAsync(c => c.Id == dto.CourseId);
+                if (courseEntity is null)
+                {
+                    return new ResponseDto<EmailDto>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = MessagesConstant.EMAIL_COURSE_NOT_REGISTERED,
+                        Data = null 
+                    };
+                }
+
+                studentEntity = await _context.Students.FirstOrDefaultAsync(s => s.Id == dto.StudentId);
+                if (studentEntity is null)
+                {
+                    return new ResponseDto<EmailDto>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = MessagesConstant.EMAIL_STUDENT_NOT_REGISTERED,
+                        Data = null
+                    };
+                }
+
+                var studentCourseEntity = await _context.StudentsCourses
+                    .FirstOrDefaultAsync(sc => sc.CourseId == dto.CourseId && sc.StudentId == dto.StudentId);
+                if (studentCourseEntity is null)
+                {
+                    return new ResponseDto<EmailDto>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = MessagesConstant.EMAIL_STUDENT_NOT_REGISTERED_IN_CLASS,
+                        Data = null 
+                    };
+                }
+
+                // Obtener datos adicionales
+                var centerEntity = await _context.Centers.FirstOrDefaultAsync(c => c.Id == courseEntity.CenterId);
+                var teacherEntity = await _context.Users.FirstOrDefaultAsync(t => t.Id == centerEntity.TeacherId);
+                var courseSettingEntity = await _context.CoursesSettings
+                    .FirstOrDefaultAsync(cs => cs.Id == courseEntity.SettingId);
+
+                var studentUnits = await _context.StudentsUnits
+                    .Where(su => su.StudentCourseId == studentCourseEntity.Id)
+                    .OrderBy(su => su.UnitNumber)
+                    .ToListAsync();
+
+                // Generar PDF
+                var pdfBytes = await GenerateGradeReport(centerEntity, teacherEntity, courseEntity,
+                    studentEntity, studentCourseEntity, courseSettingEntity, studentUnits);
+
+                // Construir el correo
+                var email = new MimeMessage();
+                email.To.Add(MailboxAddress.Parse(studentEntity.Email));
+                email.Subject = $"Tus calificaciones de {courseEntity.Name} {courseEntity.Section}";
+
+                // Adjuntar PDF
+                var body = new TextPart("plain") { Text = dto.Content };
+                var attachment = new MimePart("application", "pdf")
+                {
+                    Content = new MimeContent(new MemoryStream(pdfBytes)),
+                    ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
+                    ContentTransferEncoding = ContentEncoding.Base64,
+                    FileName = $"Calificaciones_{courseEntity.Name}_{courseEntity.Section}_{studentEntity.FirstName}{studentEntity.LastName}.pdf"
                 };
-			}
 
-			// AM: Obtener y validar existencia del estudiante
-			var studentEntity = await _context.Students.FirstOrDefaultAsync(s => s.Id == dto.StudentId);
-			if (studentEntity is null)
-			{
-				return new ResponseDto<EmailDto>
-				{
-					StatusCode = 404,
-					Status = false,
-					Message = MessagesConstant.EMAIL_STUDENT_NOT_REGISTERED
+                var multipart = new Multipart("mixed");
+                multipart.Add(body);
+                multipart.Add(attachment);
+                email.Body = multipart;
+
+                // Adquirir cuenta SMTP con balanceo de carga
+                acquiredWrapper = await AcquireAccountAsync();
+                email.From.Add(MailboxAddress.Parse(acquiredWrapper.Account.Username));
+
+                // Enviar el correo
+                using var smtp = new SmtpClient();
+                await smtp.ConnectAsync(
+                    acquiredWrapper.Account.Host,
+                    acquiredWrapper.Account.Port,
+                    SecureSocketOptions.StartTls
+                );
+
+                await smtp.AuthenticateAsync(
+                    acquiredWrapper.Account.Username,
+                    acquiredWrapper.Account.Password
+                );
+
+                await smtp.SendAsync(email);
+                await smtp.DisconnectAsync(true);
+
+                return new ResponseDto<EmailDto>
+                {
+                    StatusCode = 201,
+                    Status = true,
+                    Message = $"Las calificaciones de {studentEntity.FirstName} {studentEntity.LastName} fueron enviadas",
+                    Data = new EmailDto
+                    {
+                        To = studentEntity.Email,
+                        Subject = email.Subject,
+                        Content = dto.Content
+                    }
                 };
-			}
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error enviando email con PDF: {ex.Message}");
 
-			// AM: Validar el registro del estudiante en la clase
-			var studentCourseEntity = await _context.StudentsCourses.FirstOrDefaultAsync(sc => sc.CourseId == dto.CourseId && sc.StudentId == dto.StudentId);
-			if (studentCourseEntity is null)
-			{
-				return new ResponseDto<EmailDto>
-				{
-					StatusCode = 404,
-					Status = false,
-					Message = MessagesConstant.EMAIL_STUDENT_NOT_REGISTERED_IN_CLASS
+                // Create minimal EmailDto for error response
+                var errorEmailDto = new EmailDto
+                {
+                    To = studentEntity?.Email ?? string.Empty,
+                    Subject = courseEntity != null
+                        ? $"Calificaciones de {courseEntity.Name} - Error"
+                        : "Error enviando calificaciones",
+                    Content = dto.Content
                 };
-			}
 
-			// AM: Obtener el centro
-			var centerEntity = await _context.Centers.FirstOrDefaultAsync(c => c.Id == courseEntity.CenterId);
-			// AM: Obtener el profesor
-			var teacherEntity = await _context.Users.FirstOrDefaultAsync(t => t.Id == centerEntity.TeacherId);
-			// AM: Obtener el CourseSetting del curso (para saber cual es el minimo para reprobar o aprobar en la clase)
-			var courseSettingEntity = await _context.CoursesSettings.FirstOrDefaultAsync(cs => cs.Id == courseEntity.SettingId);
+                return new ResponseDto<EmailDto>
+                {
+                    StatusCode = 500,
+                    Status = false,
+                    Message = "Error al enviar las calificaciones",
+                    Data = errorEmailDto
+                };
+            }
+            finally
+            {
+                if (acquiredWrapper != null)
+                {
+                    try
+                    {
+                        acquiredWrapper.Semaphore.Release();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"Error liberando semáforo SMTP: {ex.Message}");
+                    }
+                }
+            }
+        }
 
-			// AM: Obtener las calificaciones por unidad del estudiante (TEMPORAL PARA PRUEBAS MIENTRAS KEN LO IMPLEMENTA)
-			var studentUnits = await _context.StudentsUnits 
-				.Where(su => su.StudentCourseId == studentCourseEntity.Id)
-				.OrderBy(su => su.UnitNumber)
-				.ToListAsync();
-
-			// AM: Creamos el correo que se va a enviar
-			var email = new MimeMessage();
-			email.From.Add(MailboxAddress.Parse(_configuration["Smtp:Username"]));
-			// AM: Aquí asignamos la dirección de email del estudiante
-			email.To.Add(MailboxAddress.Parse(studentEntity.Email));
-			// AM: Titulo del correo
-			email.Subject = $"Tus calificaciones de {courseEntity.Name} {courseEntity.Section}";
-
-			// AM: Creamos el PDF de calificaciones con los parametros necesarios
-			var pdfBytes = await GenerateGradeReport(centerEntity, teacherEntity, courseEntity, studentEntity, studentCourseEntity, courseSettingEntity, studentUnits);
-
-			// AM: Crear el cuerpo del mensaje con el PDF adjunto
-			var body = new TextPart("plain")
-			{
-				Text = dto.Content
-			};
-
-			// AM: Crear el adjunto en memoria
-			var attachment = new MimePart("application", "pdf")
-			{
-				Content = new MimeContent(new MemoryStream(pdfBytes)),
-				ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
-				ContentTransferEncoding = ContentEncoding.Base64,
-				FileName = $"Calificaciones_{courseEntity.Name}_{courseEntity.Section}_{studentEntity.FirstName}{studentEntity.LastName}.pdf"
-			};
-
-			var multipart = new Multipart("mixed");
-			multipart.Add(body);
-			multipart.Add(attachment);
-			email.Body = multipart;
-
-			// AM: Configurar el servidor SMTP y enviar el correo
-			using var smtp = new SmtpClient();
-			smtp.Connect(
-				_configuration["Smtp:Host"],
-				int.Parse(_configuration["Smtp:Port"]),
-				SecureSocketOptions.StartTls
-			);
-			smtp.Authenticate(
-				_configuration["Smtp:Username"],
-				_configuration["Smtp:Password"]
-			);
-
-			smtp.Send(email);
-			smtp.Disconnect(true);
-
-			return new ResponseDto<EmailDto>
-			{
-				StatusCode = 201,
-				Status = true,
-				Message = $"Las calificaciones del estudiante {studentEntity.FirstName} {studentEntity.LastName} en la clase de {courseEntity.Name} fueron enviadas correctamente."
-			};
-		}
-
-		// AM: Generar el pdf con las calificaciones del estudiante
-		public static async Task<byte[]> GenerateGradeReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student, StudentCourseEntity studentCourse, CourseSettingEntity courseSetting, List<StudentUnitEntity> studentUnits)
+        // AM: Generar el pdf con las calificaciones del estudiante
+        public static async Task<byte[]> GenerateGradeReport(CenterEntity center, UserEntity teacher, CourseEntity course, StudentEntity student, StudentCourseEntity studentCourse, CourseSettingEntity courseSetting, List<StudentUnitEntity> studentUnits)
 		{
 			// AM: Propiedades para redactar el documento PDF
 			using var stream = new MemoryStream();

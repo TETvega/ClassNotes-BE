@@ -2,7 +2,7 @@
 {
     public class BulkStudentCreateDto
     {
-        public string TeacherId { get; set; }
+        public bool StrictMode { get; set; }
         public Guid CourseId { get; set; }
         public List<StudentCreateDto> Students { get; set; }
     }

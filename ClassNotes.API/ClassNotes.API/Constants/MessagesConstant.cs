@@ -82,6 +82,7 @@ namespace ClassNotes.API.Constants
         public const string EMAIL_ALREADY_REGISTERED = "STU-7025: El correo electrónico ya está registrado con otro estudiante.";
         public const string STUDENT_EXISTS = "STU-7026: El estudiante ya existe y se ha referenciado correctamente.";
         public const string EMAIL_DIFFERENT_NAMES = "STU-7027: El correo electrónico ya está registrado con nombres diferentes.";
+        public const string STU_MAX_CREATE_LIMIT = "STU-727 : Se exedio el limite de estudiantes para crear en una sola peticion";
 
         // Manejo Actividades (ACT-XXX)
         public const string ACT_RECORD_NOT_FOUND = "ACT-8071: La actividad no fue encontrada.";
