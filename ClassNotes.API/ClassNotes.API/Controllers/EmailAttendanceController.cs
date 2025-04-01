@@ -4,11 +4,13 @@ using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Services;
 using Microsoft.AspNetCore.Authorization;
+using ClassNotes.API.Dtos.Common;
+using Azure;
 
 namespace ClassNotes.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/attendances")]
     [Authorize(AuthenticationSchemes = "Bearer")]
     public class EmailAttendanceController : ControllerBase
     {
@@ -19,18 +21,11 @@ namespace ClassNotes.API.Controllers
             _emailAttendanceService = emailAttendanceService;
         }
 
-        [HttpPost("send-emails")]
-        public async Task<IActionResult> SendEmails([FromBody] EmailAttendanceRequestDto request)
+        [HttpPost("send_emails")]
+        public async Task<ActionResult<ResponseDto<SendEmailsStatusDto>>> SendEmails( EmailAttendanceRequestDto request)
         {
-            try
-            {
-                await _emailAttendanceService.SendEmailsAsync(request);
-                return Ok(new { Message = "Correos enviados correctamente." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = ex.Message });
-            }
+                  var response =  await _emailAttendanceService.SendEmailsAsync(request);
+                 return StatusCode(response.StatusCode, response);
         }
 
         [HttpPost("validate-attendance")]

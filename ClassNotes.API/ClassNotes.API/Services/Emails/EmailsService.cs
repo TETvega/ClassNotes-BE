@@ -12,72 +12,150 @@ using iText.Kernel.Font;
 using iText.Layout.Properties;
 using ClassNotes.API.Database;
 using Microsoft.EntityFrameworkCore;
-using ClassNotes.API.Dtos.Otp;
 using ClassNotes.API.Database.Entities;
-using System.Threading.Tasks;
 using iText.Kernel.Pdf.Canvas.Draw;
 using ClassNotes.API.Constants;
+using MimeKit.Text;
 
 namespace ClassNotes.API.Services.Emails
 {
+	/// <summary>
+	/// Este endpoint fue trabajado por AM y a su vez por HR
+	/// En el caso se realizo una inveztigacion y el problema de saturacion de correos para lo cual se opto por distribuir cargas de correos entre 2 cuentas
+	/// Sin embargo se utilizo hilos y semaforos para concurrencia, este codigo fue trabajado con una mezcla de esfuerzo y tambien Inteligencia artificial
+	/// Se tuvo muchos problemas y unos que nisiquiera el propio Microsoft daba soluciones
+	/// - Esta configurado para cargar las cuentas smpt disponibles en varios hilos concurrentes
+	/// - Estas por cada cuenta SMTP son 7 hilos (de manera empirica probando me di cuenta que es el maximo que soporta el servidor)
+	/// - Esta sujeta a cambios 
+	/// </summary>
 	public class EmailsService : IEmailsService
 	{
 		private readonly ClassNotesContext _context;
 		private readonly IConfiguration _configuration;
+        private readonly ILogger<EmailsService> _logger;
 
-		public EmailsService(ClassNotesContext context, IConfiguration configuration)
+        /// <summary>
+        /// Lista de cuentas SMTP configuradas con sus respectivos semáforos para control de concurrencia.
+        /// Cada cuenta tiene su propio límite máximo de hilos concurrentes.
+        /// </summary>
+        private readonly List<SmtpAccountWrapper> _smtpAccounts;
+
+        /// <summary>
+        /// Clase interna que guarda una cuenta SMTP y su semáforo de control 
+		/// </summary>
+        private class SmtpAccountWrapper
         {
-			this._context = context;
-			this._configuration = configuration;
-		}
 
-		// AM: Función para enviar un correo redactado (Receptor, asunto y contenido)
-		public async Task<ResponseDto<EmailDto>> SendEmailAsync(EmailDto dto)
-		{
-			var email = new MimeMessage();
+            // Configuración de la cuenta SMTP (host, puerto, credenciales)
+			// Esta estan definidas en el Template la Nueva estructura 
+            public SMTPAcountDto Account { get; }
 
-			// AM: Obtenemos la dirección del correo emisor desde el appsettings
-			email.From.Add(MailboxAddress.Parse(_configuration.GetSection("Smtp:Username").Value));
+            public SemaphoreSlim Semaphore { get; }
 
-			// AM: Dirección del receptor
-			email.To.Add(MailboxAddress.Parse(dto.To));
 
-			// AM: Asunto del correo
-			email.Subject = dto.Subject;
+            /// <summary>
+            /// Constructor que inicializa una nueva instancia del wrapper de cuenta SMTP
+            /// </summary>
+            /// <param name="account">Configuración de la cuenta SMTP</param>
+            /// <param name="maxConcurrency"> Número máximo de operaciones concurrentes permitidas para esta cuenta.</param>
+			/// 
+            public SmtpAccountWrapper(SMTPAcountDto account, int maxConcurrency)
+            {
+                Account = account;
+                Semaphore = new SemaphoreSlim(maxConcurrency);
+            }
+        }
 
-			// AM: Contenido del correo
-			email.Body = new TextPart(MimeKit.Text.TextFormat.Html)
-			{
-				Text = dto.Content
-				,
-			};
 
-			// AM: Configuración del servidor Smtp para enviar el correo
-			using var smtp = new SmtpClient();
-			smtp.Connect(
-				_configuration.GetSection("Smtp:Host").Value,
-				Convert.ToInt32(_configuration.GetSection("Smtp:Port").Value),
-				SecureSocketOptions.StartTls
-				);
-			smtp.Authenticate(
-				_configuration.GetSection("Smtp:Username").Value,
-				_configuration.GetSection("Smtp:Password").Value
-				);
 
-			smtp.Send(email);
-			smtp.Disconnect(true);
+        public EmailsService(ClassNotesContext context, IConfiguration configuration, ILogger<EmailsService> logger)
+        {
+			_context = context;
+			_configuration = configuration;
+            _logger = logger;
+            var smtpAccounts = configuration.GetSection("SmtpAccounts").Get<List<SMTPAcountDto>>()
+                ?? new List<SMTPAcountDto>();
 
-			return new ResponseDto<EmailDto>
-			{
-				StatusCode = 201,
-				Status = true,
-				Message = MessagesConstant.EMAIL_SENT_SUCCESSFULLY,
-                Data = dto
-			};
-		}
+            if (smtpAccounts.Count == 0)
+                throw new InvalidOperationException("No hay cuentas SMTP configuradas.");
 
-		// AM: Función para enviar un correo con un PDF adjunto con iText7
-		public async Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailGradeDto dto)
+            // 7 hilos máximos por cuenta SMTP
+            _smtpAccounts = smtpAccounts
+                .Select(account => new SmtpAccountWrapper(account, 7))
+                .ToList();
+        }
+        public async Task<ResponseDto<EmailDto>> SendEmailAsync(EmailDto dto)
+        {
+            var acquiredWrapper = await AcquireAccountAsync();
+
+            try
+            {
+                return await SendWithAccount(acquiredWrapper, dto);
+            }
+            finally
+            {
+                acquiredWrapper.Semaphore.Release();
+            }
+        }
+
+        private async Task<SmtpAccountWrapper> AcquireAccountAsync()
+        {
+            // Primero intentar adquirir inmediatamente
+            foreach (var wrapper in _smtpAccounts)
+            {
+                if (await wrapper.Semaphore.WaitAsync(TimeSpan.Zero))
+                {
+                    return wrapper;
+                }
+            }
+
+            // Si todas están ocupadas, esperar a cualquiera
+            var waitTasks = _smtpAccounts.Select(w => w.Semaphore.WaitAsync()).ToArray();
+            var completedTask = await Task.WhenAny(waitTasks);
+            return _smtpAccounts[Array.IndexOf(waitTasks, completedTask)];
+        }
+
+        private async Task<ResponseDto<EmailDto>> SendWithAccount(SmtpAccountWrapper wrapper, EmailDto dto)
+        {
+            try
+            {
+                var email = new MimeMessage
+                {
+                    Subject = dto.Subject,
+                    Body = new TextPart(TextFormat.Html) { Text = dto.Content }
+                };
+                email.From.Add(MailboxAddress.Parse(wrapper.Account.Username));
+                email.To.Add(MailboxAddress.Parse(dto.To));
+
+                using var smtp = new SmtpClient();
+                await smtp.ConnectAsync(wrapper.Account.Host, wrapper.Account.Port, SecureSocketOptions.StartTls);
+                await smtp.AuthenticateAsync(wrapper.Account.Username, wrapper.Account.Password);
+                await smtp.SendAsync(email);
+                await smtp.DisconnectAsync(true);
+
+                return new ResponseDto<EmailDto>
+                {
+                    StatusCode = 201,
+                    Status = true,
+                    Message = "Correo enviado exitosamente",
+                    Data = dto
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error enviando email con cuenta {wrapper.Account.Username}: {ex.Message}");
+                return new ResponseDto<EmailDto>
+                {
+                    StatusCode = 500,
+                    Status = false,
+                    Message = $"Error temporal con la cuenta {wrapper.Account.Username}",
+                    Data = dto
+                };
+            }
+        }
+
+
+        public async Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailGradeDto dto)
 		{
 			// AM: Obtener y validar existencia de la clase
 			var courseEntity = await _context.Courses.FirstOrDefaultAsync(c => c.Id == dto.CourseId);

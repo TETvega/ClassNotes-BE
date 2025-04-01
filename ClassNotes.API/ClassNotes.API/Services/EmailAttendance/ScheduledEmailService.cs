@@ -46,20 +46,21 @@ public class ScheduledEmailSender : BackgroundService
                         {
                             var emailAttendanceService = scope.ServiceProvider.GetRequiredService<IEmailAttendanceService>();
 
+                            throw new NotImplementedException();
                             // Ejecutar la acción de enviar correos
-                            await emailAttendanceService.SendEmailsAsync(new EmailAttendanceRequestDto
-                            {
-                                ProfesorId = "profesorId", // Reemplaza con el ID del profesor
-                                CentroId = config.CourseId, // Usamos el CourseId como CentroId (ajusta según tu lógica)
-                                ClaseId = config.CourseId,
-                                Latitude = 0, // Ajusta según sea necesario
-                                Longitude = 0,
-                                RangoValidacionMetros = 100, // Ajusta según sea necesario
-                                TiempoExpiracionOTPMinutos = 10, // Ajusta según sea necesario
-                                EnvioAutomatico = true,
-                                HoraEnvio = config.HoraEnvio.ToString(),
-                                DiasEnvio = config.DiasEnvio // Aquí ya es List<DayOfWeek>, no se necesita conversión
-                            });
+                            //await emailAttendanceService.SendEmailsAsync(new EmailAttendanceRequestDto
+                            //{
+                            //    ProfesorId = "profesorId", // Reemplaza con el ID del profesor
+                            //    CentroId = config.CourseId, // Usamos el CourseId como CentroId (ajusta según tu lógica)
+                            //    ClaseId = config.CourseId,
+                            //    Latitude = 0, // Ajusta según sea necesario
+                            //    Longitude = 0,
+                            //    RangoValidacionMetros = 100, // Ajusta según sea necesario
+                            //    TiempoExpiracionOTPMinutos = 10, // Ajusta según sea necesario
+                            //    EnvioAutomatico = true,
+                            //    HoraEnvio = config.HoraEnvio.ToString(),
+                            //    DiasEnvio = config.DiasEnvio // Aquí ya es List<DayOfWeek>, no se necesita conversión
+                            //});
                         }
                     }
                 }
