@@ -9,7 +9,7 @@ namespace ClassNotes.API.Services
     public interface IEmailAttendanceService
     {
         Task<ResponseDto<List<SendEmailsStatusDto>>> SendEmailsAsync(EmailAttendanceRequestDto request);
-        Task ValidateAttendanceAsync(ValidateAttendanceRequestDto request);
+        Task<ResponseDto<AttendanceResultDto>> ValidateAttendanceAsync(ValidateAttendanceRequestDto request);
         void AddOTP(StudentOTPDto otp);
         List<StudentOTPDto> GetExpiredOTPs();
         List<StudentOTPDto> GetActiveOTPs();

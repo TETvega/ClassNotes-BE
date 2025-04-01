@@ -10,7 +10,7 @@ using Azure;
 namespace ClassNotes.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/attendances")]
     [Authorize(AuthenticationSchemes = "Bearer")]
     public class EmailAttendanceController : ControllerBase
     {
@@ -21,7 +21,7 @@ namespace ClassNotes.API.Controllers
             _emailAttendanceService = emailAttendanceService;
         }
 
-        [HttpPost("send-emails")]
+        [HttpPost("send_emails")]
         public async Task<ActionResult<ResponseDto<SendEmailsStatusDto>>> SendEmails( EmailAttendanceRequestDto request)
         {
                   var response =  await _emailAttendanceService.SendEmailsAsync(request);

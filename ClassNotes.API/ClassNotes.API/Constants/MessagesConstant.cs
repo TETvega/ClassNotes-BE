@@ -190,6 +190,7 @@ namespace ClassNotes.API.Constants
 		public const string ATT_DELETE_SUCCESS = "ATT-009: Asistencia eliminada exitosamente.";
 		public const string ATT_DELETE_ERROR = "ATT-010: No se pudo eliminar asistencia.";
         public const string ATT_STUDENT_NOT_ENROLLED = "ATT-011: El estudiante no está registrado en el curso.";
+        public const string ATT_INVALID_RADIUS = "ATT-012 : No se pudo completar la Asistencia, el rango de validacion es Invalido";
 
 	}
 }

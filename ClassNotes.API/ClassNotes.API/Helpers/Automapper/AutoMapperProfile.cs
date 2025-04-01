@@ -7,6 +7,7 @@ using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Dtos.DashboardCourses;
+using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Dtos.TagsActivities;
 using ClassNotes.API.Dtos.Users;
@@ -115,6 +116,7 @@ namespace ClassNotes.API.Helpers.Automapper
         private void MapsForStudents()
         {
             CreateMap<StudentEntity, StudentDto>();
+            CreateMap<StudentEntity, StudentSenEmailDto>();
             CreateMap<StudentCreateDto, StudentEntity>();
             CreateMap<StudentEditDto, StudentEntity>();
         }

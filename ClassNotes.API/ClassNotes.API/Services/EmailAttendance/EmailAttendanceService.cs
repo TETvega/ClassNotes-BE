@@ -1,181 +1,307 @@
 ﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ClassNotes.API.Database;
-using ClassNotes.API.Dtos;
 using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Dtos.Attendances;
-using ClassNotes.API.Services;
 using ClassNotes.API.Hubs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using ClassNotes.API.Services.Attendances;
 using ClassNotes.API.Services.Distance;
 using ClassNotes.API.Services.Emails;
-using CloudinaryDotNet;
-using ClassNotes.API.Dtos.Attendances.Student;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Constants;
+using System.Collections.Concurrent;
+using System.Net;
+using ClassNotes.API.Services.Audit;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace ClassNotes.API.Services
 {
     public class EmailAttendanceService : IEmailAttendanceService
     {
+        private readonly IConfiguration _configuration;
+
+        /// <summary>
+        /// Factoría para crear ámbitos de inyección de dependencias (IServiceScope).
+        /// Permite resolver servicios con un ciclo de vida controlado manualmente.
+        /// Evita problemas con servicios scoped que podrían ser compartidos incorrectamente
+        /// entre diferentes hilos de ejecución.
+        /// Mejora el rendimiento al asignar varios hilos para mandar el correos y no usar el mismo canal o hilo
+        /// De esta manera se evita Altos tiempos de espera 
+        /// </summary>
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ClassNotesContext _context;
-        private readonly IEmailsService _emailsService;
+       // private readonly IEmailsService _emailsService;
         private readonly ILogger<EmailAttendanceService> _logger;
         private readonly DistanceService _distanceService;
         private readonly IAttendancesService _attendanceService;
         private readonly OTPCleanupService _otpCleanupService;
-        private readonly IHubContext<AttendanceHub> _hubContext;
-        private readonly EmailScheduleService _emailScheduleService;
 
-        private SemaphoreSlim _semaphore = new SemaphoreSlim(7); // Límite de tareas concurrentes
+
+        /// <summary>
+        /// Proporciona acceso al Hub de SignalR para notificaciones en tiempo real.
+        /// Permite enviar actualizaciones a clientes conectados sobre:
+        /// - Progreso de operaciones
+        /// - Finalización de tareas
+        /// - Eventos importantes
+        /// </summary>
+        private readonly IHubContext<AttendanceHub> _hubContext;
+       // private readonly EmailScheduleService _emailScheduleService;
+        private readonly IAuditService _auditService;
+        private readonly IMapper _mapper;
+
+        /// <summary>
+        /// Controla el número máximo de operaciones concurrentes permitidas.
+        /// Se implementó para prevenir sobrecarga del servidor cuando muchas tareas
+        /// intentan ejecutarse simultáneamente. El límite actual es de 7 tareas concurrentes.
+        /// 
+        /// Funcionamiento:
+        /// - Cada tarea debe "adquirir" el semáforo antes de ejecutarse
+        /// - Si ya hay 7 tareas ejecutándose, nuevas tareas esperarán
+        /// - Cuando una tarea finaliza, libera un espacio para otra
+        /// 
+        /// NOTAS: Si se implementa un segundo servidor se tendra que hacer una modulacion 
+        /// entre los 2 servidores de correos para mejorar el rendimiento de cargas
+        /// </summary>
+        private SemaphoreSlim _semaphore; // Límite de tareas concurrentes
 
         // Lista privada para almacenar los OTPs
-        private static List<StudentOTPDto> _otpList = new List<StudentOTPDto>();
+        private static readonly ConcurrentDictionary<string, StudentOTPDto> _otpDictionary = new();
 
         public EmailAttendanceService(
+            IConfiguration configuration,
             IServiceScopeFactory scopeFactory,
             ClassNotesContext context,
-            IEmailsService emailsService,
+        //    IEmailsService emailsService,
             ILogger<EmailAttendanceService> logger,
             DistanceService distanceService,
             IAttendancesService attendanceService,
             OTPCleanupService otpCleanupService,
             IHubContext<AttendanceHub> hubContext,
-            EmailScheduleService emailScheduleService)
+           // EmailScheduleService emailScheduleService,
+            IAuditService auditService,
+            IMapper mapper
+            )
         {
+            _configuration = configuration;
             _scopeFactory = scopeFactory;
             _context = context;
-            _emailsService = emailsService;
+           // _emailsService = emailsService;
             _logger = logger;
             _distanceService = distanceService;
             _attendanceService = attendanceService;
             _otpCleanupService = otpCleanupService;
             _hubContext = hubContext;
-            _emailScheduleService = emailScheduleService;
+          //  _emailScheduleService = emailScheduleService;
+            _auditService = auditService;
+            _mapper = mapper;
+
+            // Configuracion para saber la cantidad de cuentas SMTP disponibles
+            var smtpAccounts = configuration.GetSection("SmtpAccounts").Get<List<SMTPAcountDto>>()
+                 ?? new List<SMTPAcountDto>();
+            //Por cada cuenta asignamos 7 hilos para no saturar el servidor
+            var maxConcurrent = smtpAccounts.Count * 7;           
+            _semaphore = new SemaphoreSlim(maxConcurrent);
 
         }
 
-        private void ValidarParametros(EmailAttendanceRequestDto request)
-        {
-            ValidateRange(request.RangoValidacionMetros, 15, 100, "El rango de validación debe estar entre 15 y 100 metros.");
-            ValidateRange(request.TiempoExpiracionOTPMinutos, 1, 30, "El tiempo de expiración del OTP debe estar entre 1 y 30 minutos.");
-        }
-
-        private void ValidateRange(int value, int min, int max, string errorMessage)
-        {
-            if (value < min || value > max)
-                throw new ArgumentException(errorMessage);
-        }
-
+        /// <summary>
+        /// Envía correos electrónicos con códigos OTP a todos los estudiantes de una clase para validar asistencia
+        /// </summary>
+        /// <param name="request">DTO con los parámetros de envío (ID clase, ubicación, configuración OTP)</param>
+        /// <returns>ResponseDto con lista de estados de envío para cada estudiante</returns>
+        /// <exception cref="ArgumentException">
+        /// Se lanza cuando:
+        /// - El usuario no tiene permisos para la clase
+        /// - No existen estudiantes en la clase
+        /// - Ningún estudiante tiene email válido
+        /// </exception>
+        /// <remarks>
+        /// Flujo del proceso:
+        /// 1. Valida parámetros de entrada
+        /// 2. Obtiene la clase con sus estudiantes
+        /// 3. Filtra estudiantes con email válido
+        /// 4. Envía correos en paralelo con OTPs
+        /// 5. Programa envíos automáticos si está configurado
+        /// 6. Retorna resultados de todos los envíos
+        /// </remarks>
         public async Task<ResponseDto<List<SendEmailsStatusDto>>> SendEmailsAsync(EmailAttendanceRequestDto request)
         {
 
-            ValidarParametros(request);  
-                var clase = await _context.Courses
-                    .Include(c => c.Students)
-                        .ThenInclude(sc => sc.Student)
-                    .Include(c => c.Center)
-                    .Where(c => c.Id == request.ClaseId &&
-                                c.CenterId == request.CentroId &&
-                                c.Center.TeacherId == request.ProfesorId)
-                    .FirstOrDefaultAsync()
-                    ?? throw new ArgumentException("No tienes permisos para esta clase o no existe.");
+            var userId = _auditService.GetUserId();
+            var students = await _context.Courses
+                    .Where(sc => sc.Id == request.ClaseId &&
+                                 sc.Center.TeacherId == userId)
+                    .SelectMany(c => c.Students // Accedemos a la relación de StudentCourses
+                        .Where(sc => sc.IsActive && sc.CourseId == request.ClaseId) // Filtramos solo los estudiantes activos
+                        .Select(sc => sc.Student)) // Traemos solo los datos del estudiante
+                    .ProjectTo<StudentSenEmailDto>(_mapper.ConfigurationProvider)
+                    .AsNoTracking()
+                    .ToListAsync();
+            var courseInformation = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == request.ClaseId);
 
-                if (!clase.Students.Any())
-                    throw new ArgumentException("No hay estudiantes asociados a esta clase.");
+            var course = await _context.Courses
+                .Include(c => c.CourseSetting) 
+                .FirstOrDefaultAsync();
 
-                var estudiantes = clase.Students.Select(sc => sc.Student).ToList();
-
-                var tasks = new List<Task>();
-                var emailStatuses = new List<SendEmailsStatusDto>();  // Lista para almacenar el estado del envío
+            var expiredTime = course?.CourseSetting.MinimumAttendanceTime ?? 30;
 
 
-            foreach (var estudiante in estudiantes)
+            if (students is null)
             {
-                if (string.IsNullOrEmpty(estudiante.Email))
+                return new ResponseDto<List<SendEmailsStatusDto>>
                 {
-                    _logger.LogWarning($"El estudiante {estudiante.FirstName} no tiene un correo electrónico válido.");
-                    emailStatuses.Add(new SendEmailsStatusDto
-                    {
-                        StudentName = estudiante.FirstName,
-                        Email = estudiante.Email,
-                        SentStatus = false,
-                        Message = "Correo electrónico no válido."
-                    });
-                    continue;
-                }
-
-                var otp = GenerateOTP();
-
-                var studentOTP = new StudentOTPDto
-                {
-                    OTP = otp,
-                    Latitude = request.Latitude,
-                    Longitude = request.Longitude,
-                    StudentId = estudiante.Id,
-                    StudentName = estudiante.FirstName,
-                    StudentEmail = estudiante.Email,
-                    CourseId = clase.Id,
-                    TeacherId = $"{request.ProfesorId}",
-                    ExpirationDate = DateTime.UtcNow.AddMinutes(request.TiempoExpiracionOTPMinutos),
-                    RangoValidacionMetros = request.RangoValidacionMetros
+                    StatusCode = 400,
+                    Status = false,
+                    Message = $"{MessagesConstant.RECORD_NOT_FOUND}",
+                    Data = null
                 };
-
-                AddOTP(studentOTP);
-
-                var emailDto = CreateEmailDto(estudiante, clase, otp, request.TiempoExpiracionOTPMinutos);
-
-                // Agregar la tarea de envío de correo
-                // Crear un scope para cada tarea
-                var task = Task.Run(async () =>
-                {
-                    using (var scope = _scopeFactory.CreateScope())
-                    {
-                        var scopedEmailService = scope.ServiceProvider.GetRequiredService<IEmailsService>();
-                        await SendEmailAndNotifyAsync(emailDto, estudiante.Email, estudiante.FirstName, otp, emailStatuses, scopedEmailService);
-                    }
-                });
-
-                tasks.Add(task);
             }
+            if (request.RangoValidacionMetros < 30 || request.RangoValidacionMetros > 100)
+            {
+                return new ResponseDto<List<SendEmailsStatusDto>>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = $"{MessagesConstant.ATT_INVALID_RADIUS}",
+                    Data = null
+                };
+            }
+            
+            if (!students.Any()) return new ResponseDto<List<SendEmailsStatusDto>>
+            {
+                StatusCode = 404, 
+                Status = false,
+                Message = $"{ MessagesConstant.STU_RECORDS_NOT_FOUND}",
+                Data = null
+            };
 
-            // Esperar a que todas las tareas se completen
+
+            // PREPARACIÓN PARA ENVÍO MASIVO
+            // Colección thread-safe para almacenar resultados de cada envío
+            var emailStatuses = new ConcurrentBag<SendEmailsStatusDto>();
+
+            // PROCESAMIENTO EN PARALELO
+            // Crea una tarea por cada estudiante para enviar correos concurrentemente
+            var tasks = students.Select(estudiante => 
+                ProcessEmailAsync(
+                    estudiante,
+                    courseInformation,
+                    request,
+                    emailStatuses,
+                    userId,
+                    expiredTime
+                    ));
             await Task.WhenAll(tasks);
 
-            // Limpiar OTPS activos
             SendActiveOTPsToCleanupService();
 
-            // Programar el envío automático de correos si es necesario
-            if (request.EnvioAutomatico)
-            {
-                _emailScheduleService.AddOrUpdateConfig(
-                    request.ClaseId,
-                    true,
-                    TimeSpan.Parse(request.HoraEnvio),
-                    request.DiasEnvio.Select(d => (DayOfWeek)d).ToList()
-                );
-            }
+            //if (request.EnvioAutomatico)
+            //{
+            //    _emailScheduleService.AddOrUpdateConfig(
+            //        request.ClaseId,
+            //        true,
+            //        TimeSpan.Parse(request.HoraEnvio),
+            //        request.DiasEnvio.Select(d => (DayOfWeek)d).ToList()
+            //    );
+            //}
+            SendActiveOTPsToCleanupService();
 
-            // Retornar la respuesta con el estado del envío de correos
+            // CONFIGURACIÓN DE ENVÍOS AUTOMÁTICOS
+            // Si está activado el envío automático, programa futuros envíos
+            //if (request.EnvioAutomatico)
+            //{
+            //    _emailScheduleService.AddOrUpdateConfig(
+            //        request.ClaseId,
+            //        true,
+            //        TimeSpan.Parse(request.HoraEnvio),
+            //        request.DiasEnvio.Select(d => (DayOfWeek)d).ToList()
+            //    );
+            //}
+
             return new ResponseDto<List<SendEmailsStatusDto>>
             {
                 StatusCode = 200,
                 Status = true,
                 Message = MessagesConstant.EMAIL_SENT_SUCCESSFULLY,
-                Data = emailStatuses
+                Data = emailStatuses.ToList()
             };
         }
 
-        private EmailDto CreateEmailDto(StudentEntity estudiante, CourseEntity clase, string otp, int tiempoExpiracion)
+        /// <summary>
+        /// Procesa el envío de correo electrónico a un estudiante con su OTP para validar asistencia
+        /// </summary>
+        /// <param name="estudiante">Entidad del estudiante con sus datos personales</param>
+        /// <param name="clase">Entidad del curso al que pertenece el estudiante</param>
+        /// <param name="request">DTO con los parámetros de la solicitud de asistencia</param>
+        /// <param name="emailStatuses">Colección thread-safe para registrar el estado de envío</param>
+        /// 
+        /// <returns>Tarea asíncrona que representa la operación de envío</returns>
+        /// 
+        /// <remarks>
+        /// Este método realiza las siguientes operaciones:
+        /// 1. Genera un OTP único para el estudiante
+        /// 2. Crea y registra la información del OTP
+        /// 3. Prepara el correo electrónico con el OTP
+        /// 4. Envía el correo usando un semáforo para control de concurrencia
+        /// 5. Registra el resultado en la colección de estados
+        /// </remarks>
+        private async Task ProcessEmailAsync(
+            StudentSenEmailDto estudiante,
+            CourseEntity clase,
+            EmailAttendanceRequestDto request,
+            ConcurrentBag<SendEmailsStatusDto> emailStatuses,
+            string userId,
+            int expiredTime
+            )
+        {
+            var otp = GenerateOTP();
+
+            
+            var studentOTP = new StudentOTPDto
+            {
+                OTP = otp,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
+                StudentId = estudiante.Id,
+                StudentName = estudiante.FirstName,
+                StudentEmail = estudiante.Email,
+                CourseId = clase.Id,
+                TeacherId = userId,
+                ExpirationDate = DateTime.UtcNow.AddMinutes(expiredTime),
+                RangoValidacionMetros = request.RangoValidacionMetros
+            };
+
+            AddOTP(studentOTP);
+
+            var emailDto = CreateEmailDto(estudiante, clase, otp, expiredTime);
+
+
+            
+            using var scope = _scopeFactory.CreateScope();
+
+            // Obtiene una instancia del servicio de correos dentro del scope creado
+            var scopedEmailService = scope.ServiceProvider.GetRequiredService<IEmailsService>();
+
+            
+            await SendEmailWithSemaphoreAsync(emailDto, estudiante.Email, estudiante.FirstName, otp, scopedEmailService);
+
+             // Registro del resultado exitoso
+            emailStatuses.Add(new SendEmailsStatusDto
+            {
+                StudentName = estudiante.FirstName,
+                Email = estudiante.Email,
+                OTP = otp,
+                SentStatus = true,
+                Message = "Correo enviado correctamente."
+            });
+        }
+
+        private EmailDto CreateEmailDto(StudentSenEmailDto estudiante, CourseEntity clase, string otp, int tiempoExpiracion)
         {
             return new EmailDto
             {
@@ -205,36 +331,13 @@ namespace ClassNotes.API.Services
             };
         }
 
-        private async Task SendEmailAndNotifyAsync(
-            EmailDto emailDto,
-            string email,
-            string studentName,
-            string otp,
-            List<SendEmailsStatusDto> emailStatuses,
-            IEmailsService scopedEmailService)
+        private async Task SendEmailWithSemaphoreAsync(EmailDto emailDto, string email, string studentName, string otp, IEmailsService scopedEmailService)
         {
-            // Esperar a que el semáforo permita ejecutar la tarea
             await _semaphore.WaitAsync();
-
             try
             {
-                // Enviar el correo y registrar el estado
-                var result = await _emailsService.SendEmailAsync(emailDto);
+                var result = await scopedEmailService.SendEmailAsync(emailDto);
 
-                // Registrar el estado del envío del correo
-                var emailStatus = new SendEmailsStatusDto
-                {
-                    StudentName = studentName,
-                    Email = email,
-                    OTP = otp,
-                    SentStatus = result.Status,
-                    Message = result.Status ? "Correo enviado correctamente." : result.Message
-                };
-
-                // Añadir el estado al listado de resultados
-                emailStatuses.Add(emailStatus);
-
-                // Si el correo fue enviado correctamente, notificar en tiempo real
                 if (result.Status)
                 {
                     await _hubContext.Clients.All.SendAsync("ReceiveEmailSent", new
@@ -244,104 +347,188 @@ namespace ClassNotes.API.Services
                         OTP = otp
                     });
                 }
+                else
+                {
+                    _logger.LogError($"Error al enviar email a {email}: {result.Message}");
+
+                }
             }
             finally
             {
-                // Liberar el semáforo
                 _semaphore.Release();
             }
         }
 
 
-        public async Task ValidateAttendanceAsync(ValidateAttendanceRequestDto request)
+        /// <summary>
+        /// Valida la asistencia del estudiante utilizando OTP y verificación de geolocalización.
+        /// </summary>
+        /// <param name="request">Contiene los datos de validación incluyendo el OTP y las coordenadas actuales</param>
+        /// <returns>Task que representa la operación asíncrona</returns>
+        /// <exception cref="ArgumentException">
+        /// Se lanza cuando:
+        /// - El OTP es inválido o ha expirado
+        /// - El estudiante está fuera del radio permitido
+        /// - No se encuentra el registro del estudiante
+        /// </exception>
+        /// 
+        /// <remarks>
+        /// Este método realiza las siguientes operaciones en secuencia:
+        /// 1. Validación del OTP (existencia y vigencia)
+        /// 2. Verificación de geolocalización (dentro del radio permitido)
+        /// 3. Verificación del registro del estudiante
+        /// 4. Ejecución en paralelo de:
+        ///    - Creación del registro de asistencia
+        ///    - Notificación en tiempo real via SignalR
+        /// 5. Limpieza del OTP
+        /// </remarks>
+        public async Task<ResponseDto<AttendanceResultDto>> ValidateAttendanceAsync(ValidateAttendanceRequestDto request)
         {
-            try
+            // TryGetValue es thread-safe y más eficiente que FirstOrDefault -> Bajar tiempos de carga
+            if (!_otpDictionary.TryGetValue(request.OTP, out var studentOTP) || studentOTP.ExpirationDate < DateTime.UtcNow)
             {
-                // Buscar el OTP en la lista privada y verificar su validez
-                var studentOTP = _otpList.FirstOrDefault(sotp => sotp.OTP == request.OTP);
-
-                if (studentOTP == null || studentOTP.ExpirationDate < DateTime.UtcNow)
+                return new ResponseDto<AttendanceResultDto>
                 {
-                    throw new ArgumentException("OTP inválido o expirado.");
-                }
-
-                // Calcular la distancia solo si el OTP es válido (optimización por condiciones previas)
-                var distance = _distanceService.CalcularDistancia(
-                    request.Latitude, request.Longitude,
-                    studentOTP.Latitude, studentOTP.Longitude);
-
-                if (distance > studentOTP.RangoValidacionMetros)
-                {
-                    throw new ArgumentException($"Debes estar dentro de un radio de {studentOTP.RangoValidacionMetros} metros para validar tu asistencia.");
-                }
-
-                // Agrupar la obtención de estudiante y creación de DTO en una sola operación
-                var estudiante = await _context.Students
-                    .Where(s => s.Id == studentOTP.StudentId)
-                    .Select(s => new { s.FirstName, s.Email, s.Id })
-                    .FirstOrDefaultAsync();
-
-                if (estudiante == null)
-                {
-                    throw new ArgumentException("Estudiante no encontrado.");
-                }
-
-                // Crear el DTO de asistencia
-                var attendanceCreateDto = new AttendanceCreateDto
-                {
-                    Attended = true,
-                    Status = "Presente",
-                    CourseId = studentOTP.CourseId,
-                    StudentId = studentOTP.StudentId,
-                    TeacherId = studentOTP.TeacherId,
+                    StatusCode = (int)HttpStatusCode.BadRequest,
+                    Status = false,
+                    Message = MessagesConstant.OTP_EXPIRED_OR_INVALID,
+                    Data = null
                 };
+            }
 
-                // Usar un Task.WhenAll para crear la asistencia y enviar la notificación al mismo tiempo
-                var createAttendanceTask = _attendanceService.CreateAttendanceAsync(attendanceCreateDto);
-                var sendNotificationTask = _hubContext.Clients.All.SendAsync("ReceiveAttendanceValidation", new
+            // Validación de ubicación
+            // registrada cuando se generó el OTP usando el servicio de geolocalización
+            var distance = _distanceService.CalcularDistancia(
+                request.Latitude, request.Longitude, 
+                studentOTP.Latitude, studentOTP.Longitude);
+
+            if (distance > studentOTP.RangoValidacionMetros)
+            {
+                return new ResponseDto<AttendanceResultDto>
+                {
+                    StatusCode = (int)HttpStatusCode.BadRequest,
+                    Status = false,
+                    Message = string.Format(MessagesConstant.ATT_INVALID_RADIUS, studentOTP.RangoValidacionMetros),
+                    Data = null
+                };
+            }
+
+            // Consulta optimizada a la base de datos:
+            // - Usa AsNoTracking porque solo necesitamos leer datos
+            // - Solo Campos Necesarios
+            var estudiante = await _context.Students
+                .Where(s => s.Id == studentOTP.StudentId) //Ver donde el ID coinciden
+                .Select(s => new { s.FirstName, s.Email, s.Id }) // seleciona el Primer Nombre, Email, Id
+                .AsNoTracking() // Solo leer
+                .FirstOrDefaultAsync(); 
+
+            if (estudiante == null)
+            {
+                return new ResponseDto<AttendanceResultDto>
+                {
+                    StatusCode = (int)HttpStatusCode.NotFound,
+                    Status = false,
+                    Message = MessagesConstant.ATT_STUDENT_NOT_ENROLLED,
+                    Data = null
+                };
+            }
+
+            // Preparación del registro de asistencia
+            // Crea el DTO con los datos necesarios para registrar la asistencia
+            var attendanceCreateDto = new AttendanceCreateDto
+            {
+                Attended = true, // Marca asistencia como positiva
+                Status = $"{MessageConstant_Attendance.PRESENT}", //presente
+                CourseId = studentOTP.CourseId,
+                StudentId = studentOTP.StudentId,
+                TeacherId = studentOTP.TeacherId,
+            };
+
+            // Procesamiento en paralelo
+            // Ejecuta dos operaciones asíncronas simultáneamente:
+            // 1. Crear el registro de asistencia en la base de datos
+            // 2. Notificar a todos los clientes conectados via SignalR
+            var tasks = new[]
+            {
+                _attendanceService.CreateAttendanceAsync(attendanceCreateDto),
+                _hubContext.Clients.All.SendAsync("ReceiveAttendanceValidation", new
                 {
                     StudentName = estudiante.FirstName,
-                    Email = estudiante.Email,
-                    AttendanceStatus = "Presente",
+                    estudiante.Email,
+                    AttendanceStatus = $"{MessageConstant_Attendance.PRESENT}",
                     ValidationTime = DateTime.UtcNow
-                });
+                })
+            };
+            // Espera a que ambas tareas completen
+            await Task.WhenAll(tasks);
 
-                // Eliminar el OTP de la lista privada después de crear la asistencia y enviar la notificación
-                RemoveOTP(studentOTP);
-
-                // Esperar a que ambas tareas finalicen
-                await Task.WhenAll(createAttendanceTask, sendNotificationTask);
-            }
-            catch (Exception ex)
+            // Limpieza final
+            // Elimina el OTP ya utilizado para evitar reutilización
+            RemoveOTP(studentOTP);
+            // 6. Respuesta exitosa
+            return new ResponseDto<AttendanceResultDto>
             {
-                _logger.LogError(ex, "Error al validar la asistencia");
-                throw;
-            }
+                StatusCode = (int)HttpStatusCode.OK,
+                Status = true,
+                Message = MessagesConstant.ATT_UPDATE_SUCCESS,
+                Data = new AttendanceResultDto
+                {
+                    StudentName = estudiante.FirstName,
+                    CourseId = studentOTP.CourseId,
+                }
+            };
         }
-
-
-        // Método para agregar un OTP a la lista
+        /// <summary>
+        /// Agrega un nuevo OTP al diccionario concurrente.
+        /// </summary>
+        /// <param name="otp">DTO que contiene la información del OTP generado para el estudiante</param>
+        /// <remarks>
+        /// - Utiliza TryAdd para asegurar operación atómica y thread-safe
+        /// - Si el OTP ya existe, no lo sobrescribe (retorna false silenciosamente)
+        /// - La clave del diccionario es el código OTP que es unico
+        /// </remarks>
         public void AddOTP(StudentOTPDto otp)
         {
-            _otpList.Add(otp);
+            _otpDictionary.TryAdd(otp.OTP, otp);
         }
-
-        // Método para obtener OTPs expirados
+        /// <summary>
+        /// Obtiene todos los OTPs que han expirado según la fecha/hora actual (UTC).
+        /// </summary>
+        /// <returns>Lista de OTPs expirados</returns>
+        /// <remarks>
+        /// - Filtra los OTPs cuya ExpirationDate es menor a DateTime.UtcNow (que ya vencio) 
+        /// - Convertimos a lista para evitar problemas de enumeración modificable
+        /// </remarks>
         public List<StudentOTPDto> GetExpiredOTPs()
         {
-            return _otpList.Where(otp => otp.ExpirationDate < DateTime.UtcNow).ToList();
+            return _otpDictionary.Values.Where(otp => otp.ExpirationDate < DateTime.UtcNow).ToList();
         }
 
-        // Método para obtener OTPs activos
+        /// <summary>
+        /// Obtiene todos los OTPs que aún son válidos (no han expirado).
+        /// </summary>
+        /// <returns>Lista de OTPs activos</returns>
+        /// <remarks>
+        /// - Filtra los OTPs cuya ExpirationDate es mayor o igual a DateTime.UtcNow
+        /// - Convertimos a lista para materializar los resultados
+        /// </remarks>
         public List<StudentOTPDto> GetActiveOTPs()
         {
-            return _otpList.Where(otp => otp.ExpirationDate >= DateTime.UtcNow).ToList();
+            return _otpDictionary.Values.Where(otp => otp.ExpirationDate >= DateTime.UtcNow).ToList();
         }
-
-        // Método para eliminar un OTP de la lista
+        /// <summary>
+        /// Elimina un OTP específico del diccionario.
+        /// </summary>
+        /// <param name="otp">DTO del OTP a eliminar</param>
+        /// <remarks>
+        /// - Usa TryRemove para operación thread-safe
+        /// - El parámetro out _ descarta el valor removido (no lo necesitamos)
+        /// - No lanza excepción si el OTP no existe (tarda mas en cargar ademas qeq
+        /// no se ha resportado caso donde un otp no existe esta ligado a los estudiantes basicamente
+        /// </remarks>
         public void RemoveOTP(StudentOTPDto otp)
         {
-            _otpList.Remove(otp);
+            _otpDictionary.TryRemove(otp.OTP, out _);
         }
 
         // Método para generar un OTP
@@ -359,7 +546,5 @@ namespace ClassNotes.API.Services
             var activeOTPs = GetActiveOTPs();
             _otpCleanupService.ReceiveActiveOTPs(activeOTPs);
         }
-
-
     }
 }
