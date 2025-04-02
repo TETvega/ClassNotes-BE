@@ -22,10 +22,10 @@ public class QRService : BackgroundService
     private int _validationCount = 0;
     private Timer _expirationTimer;
 
-    // Lista temporal para almacenar IDs de estudiantes que han validado su asistencia
+    //DD: Lista temporal para almacenar IDs de estudiantes que han validado su asistencia
     private static List<Guid> _validatedStudentIds = new List<Guid>();
 
-    // ID de la clase actual activa
+    //DD: ID de la clase actual activa
     private static Guid _currentCourseId;
     private static string _currentTeacherId;
 
@@ -96,14 +96,14 @@ public class QRService : BackgroundService
         {
             var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
 
-            // Validación básica de parámetros
+            //DD: Validación básica de parámetros
             if (request.TiempoLimiteMinutos < 1 || request.TiempoLimiteMinutos > 30)
                 throw new ArgumentException("El tiempo límite debe estar entre 1 y 30 minutos.");
 
             if (request.RangoValidacionMetros < 15 || request.RangoValidacionMetros > 100)
                 throw new ArgumentException("El rango de validación debe estar entre 15 y 100 metros.");
 
-            // Validación de la clase
+            //DD: Validación de la clase
             var curso = await context.Courses
                 .Include(c => c.Students)
                     .ThenInclude(sc => sc.Student)
@@ -120,25 +120,25 @@ public class QRService : BackgroundService
             if (centro == null)
                 throw new ArgumentException("No tienes permiso para generar QR para esta clase.");
 
-            // Limpiar lista de estudiantes validados anterior si existe
+            //DD: Limpiar lista de estudiantes validados anterior si existe
             _validatedStudentIds.Clear();
 
-            // Guardar el ID de la clase actual
+            //DD: Guardar el ID de la clase actual
             _currentCourseId = request.ClaseId;
             _currentTeacherId = teacherId;
 
-            // Generar contenido del QR - Simplificado
+            //DD: Generar contenido del QR - Simplificado
             var qrContent = $"{request.ClaseId}|{request.Latitud}|{request.Longitud}|{request.RangoValidacionMetros}";
 
             _qrExpirationTime = DateTime.UtcNow.AddMinutes(request.TiempoLimiteMinutos);
             _isRunning = true;
             _messageShown = false;
 
-            // Configurar timer para la expiración
+            //DD: Configurar timer para la expiración
             var tiempoRestante = _qrExpirationTime - DateTime.UtcNow;
             _expirationTimer = new Timer(async _ => await OnQRExpired(), null, tiempoRestante, Timeout.InfiniteTimeSpan);
 
-            // Generar QR con solo el contenido
+            //DD: Generar QR con solo el contenido
             using (var qrGenerator = new QRCodeGenerator())
             {
                 var qrCodeData = qrGenerator.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.Q);
@@ -162,7 +162,7 @@ public class QRService : BackgroundService
 
             try
             {
-                // Validar formato del QR
+                //DD: Validar formato del QR
                 var qrParts = request.QRContent.Split('|');
                 if (qrParts.Length < 4) throw new ArgumentException("Código QR inválido.");
 
@@ -181,7 +181,7 @@ public class QRService : BackgroundService
                     throw new ArgumentException("Rango de validación del QR inválido.");
                 }
 
-                // Validar distancia
+                //DD: Validar distancia
                 double distancia = distanceService.CalcularDistancia(qrLatitud, qrLongitud, request.EstudianteLatitud, request.EstudianteLongitud);
 
                 if (distancia > rangoValidacionMetros)
@@ -189,7 +189,7 @@ public class QRService : BackgroundService
                     throw new ArgumentException($"El estudiante está fuera del rango de validación. Distancia: {distancia} metros, Rango permitido: {rangoValidacionMetros} metros.");
                 }
 
-                // Obtener estudiante por correo
+                //DD: Obtener estudiante por correo
                 var estudiante = await context.Students
                     .FirstOrDefaultAsync(s => s.Email == request.EstudianteCorreo);
                 if (estudiante == null)
@@ -197,7 +197,7 @@ public class QRService : BackgroundService
                     throw new ArgumentException("El estudiante no está registrado.");
                 }
 
-                // Verificar que el estudiante pertenece a la clase
+                //DD: Verificar que el estudiante pertenece a la clase
                 var estudianteEnClase = await context.StudentsCourses
                     .AnyAsync(sc => sc.StudentId == estudiante.Id && sc.CourseId == claseId && sc.IsActive);
                 if (!estudianteEnClase)
@@ -205,13 +205,13 @@ public class QRService : BackgroundService
                     throw new ArgumentException("El estudiante no está asociado a esta clase.");
                 }
 
-                // Buscar asistencia existente
+                //DD: Buscar asistencia existente
                 var asistencia = await context.Attendances
                     .FirstOrDefaultAsync(a => a.StudentId == estudiante.Id && a.CourseId == claseId);
 
                 if (asistencia == null)
                 {
-                    // Crear nueva asistencia si no existe
+                    //DD: Crear nueva asistencia si no existe
                     var attendanceCreateDto = new AttendanceCreateDto
                     {
                         Attended = true,
@@ -222,7 +222,7 @@ public class QRService : BackgroundService
 
                     var newAttendance = await attendanceService.CreateAttendanceAsync(attendanceCreateDto);
 
-                    // Añadir a la lista de validados
+                    //DD: Añadir a la lista de validados
                     if (!_validatedStudentIds.Contains(estudiante.Id))
                     {
                         _validatedStudentIds.Add(estudiante.Id);
@@ -241,7 +241,7 @@ public class QRService : BackgroundService
                 }
                 else
                 {
-                    // Verificar si la asistencia ya ha sido validada
+                    //DD: Verificar si la asistencia ya ha sido validada
                     if (asistencia.Status != "En espera")
                     {
                         return new
@@ -260,7 +260,7 @@ public class QRService : BackgroundService
                         };
                     }
 
-                    // Actualizar la asistencia a "Presente" y true
+                    //DD: Actualizar la asistencia a "Presente" y true
                     var attendanceEditDto = new AttendanceEditDto
                     {
                         Attended = true,
@@ -269,7 +269,7 @@ public class QRService : BackgroundService
 
                     var updatedAttendance = await attendanceService.EditAttendanceAsync(asistencia.Id, attendanceEditDto);
 
-                    // Añadir a la lista de validados
+                    //DD: Añadir a la lista de validados
                     if (!_validatedStudentIds.Contains(estudiante.Id))
                     {
                         _validatedStudentIds.Add(estudiante.Id);
@@ -304,7 +304,7 @@ public class QRService : BackgroundService
 
         try
         {
-            // Obtener profesor que generó el QR
+            //DD: Obtener profesor que generó el QR
             var profesor = await context.Users
                 .FirstOrDefaultAsync(u => u.Id == _currentTeacherId);
 
@@ -314,14 +314,14 @@ public class QRService : BackgroundService
                 return;
             }
 
-            // Obtener estudiantes no validados
+            //DD: Obtener estudiantes no validados
             var noValidados = await context.StudentsCourses
                 .Where(sc => sc.CourseId == _currentCourseId && sc.IsActive)
                 .Select(sc => sc.StudentId)
                 .Where(id => !_validatedStudentIds.Contains(id))
                 .ToListAsync();
 
-            // Registrar inasistencias
+            //DD: Registrar inasistencias
             foreach (var studentId in noValidados)
             {
                 var asistencia = await context.Attendances
@@ -344,7 +344,7 @@ public class QRService : BackgroundService
                 }
             }
 
-            // Guardar con el usuario auditor correcto
+            //DD: Guardar con el usuario auditor correcto
             await context.SaveChangesWithoutAuditAsync();
             _validatedStudentIds.Clear();
 
