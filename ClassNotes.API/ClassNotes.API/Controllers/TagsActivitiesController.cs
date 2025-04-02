@@ -52,12 +52,12 @@ namespace ClassNotes.API.Controllers
 			return StatusCode(response.StatusCode, response);
 		}
 
-		[HttpDelete("{id}")]
+		[HttpPost("delete")]
 		[Authorize(Roles = $"{RolesConstant.USER}")]
-		public async Task<ActionResult<ResponseDto<TagActivityDto>>> Delete(Guid id)
+		public async Task<ActionResult<ResponseDto<List<TagActivityDto>>>> Delete(List<Guid> listGuidsTags)
 		{
-			var response = await _tagsActivitiesService.DeleteTagAsync(id);
-			return StatusCode(response.StatusCode, response);
+			var response = await _tagsActivitiesService.DeleteTagAsync(listGuidsTags);
+			return StatusCode(response.StatusCode , response);
 		}
 	}
 }

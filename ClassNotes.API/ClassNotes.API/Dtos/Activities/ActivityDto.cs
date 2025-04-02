@@ -4,6 +4,7 @@
     {
         public Guid Id { get; set; } // Id de la actividad
         public string Name { get; set; } // Nombre de la actividad
+        public string Description { get; set; }
         public bool IsExtra { get; set; } // Para ver si es de puntos extra o no
         public float MaxScore { get; set; } // Puntaje maximo de la actividad
         public DateTime QualificationDate { get; set; } // Fecha n que se piensa calificar

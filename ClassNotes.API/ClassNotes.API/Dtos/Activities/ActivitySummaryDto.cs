@@ -5,6 +5,7 @@ namespace ClassNotes.API.Dtos.Activities
     {
         public Guid Id { get; set; } // Id de la actividad
         public string Name { get; set; } // Nombre de la actividad
+        public string Description { get; set; }
         public DateTime QualificationDate { get; set; } // Fecha en que se planea evaluar
         public Guid TagActivityId { get; set; } // Id de su tag (como una categoria se podria decir)
 
