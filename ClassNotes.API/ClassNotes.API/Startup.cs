@@ -68,7 +68,7 @@ public class Startup
 		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
     	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
-
+		services.AddTransient<ICentersService, CentersService>();
 
         services.AddSingleton<DistanceService>(); //
         services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
