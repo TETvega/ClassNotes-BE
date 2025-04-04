@@ -11,5 +11,6 @@ namespace ClassNotes.API.Dtos.CourseFilter
         public string AbbCenter { get; set; } //Abreviatura de Centro
         public int ActiveStudents { get; set; } //Cantidad de alumnos en el curso
         public ActivitiesDto Activities { get; set; } //Resumen de actividades del curso 
+        public bool IsActive { get; set; } // ver si el curso esta activo o inactivo
     }
 }

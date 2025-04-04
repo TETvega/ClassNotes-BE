@@ -62,10 +62,14 @@ namespace ClassNotes.API.Services.AllCourses
                 query = query.Where(c => filter.Centers.Contains(c.CenterId));
             }
 
-            // Filtro por término de búsqueda
+            // Filtro por término de búsqueda 
             if (!string.IsNullOrEmpty(filter.SearchTerm))
             {
-                query = query.Where(c => c.Name.Contains(filter.SearchTerm));
+                query = query.Where(c =>
+                   c.Name.Contains(filter.SearchTerm) ||  // Busca por nombre del curso
+                   c.Code.Contains(filter.SearchTerm) ||  // Busca por código del curso
+                   c.Center.Abbreviation.Contains(filter.SearchTerm) // Busca por abreviatura del centro
+               );
             }
 
             //  total de cursos que cumplen con los filtros
@@ -95,6 +99,7 @@ namespace ClassNotes.API.Services.AllCourses
                     Code = c.Code,
                     AbbCenter = c.Center.Abbreviation, 
                     ActiveStudents = c.Students.Count(),
+                    IsActive = c.IsActive,
                     Activities =  new ActivitiesDto
                     {
                         Total = c.Activities.Count(),
