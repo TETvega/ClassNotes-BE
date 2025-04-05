@@ -5,8 +5,10 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Dtos.DashboardCourses;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace ClassNotes.API.Services.CourseNotes
 {
@@ -29,10 +31,12 @@ namespace ClassNotes.API.Services.CourseNotes
             PAGE_SIZE = configuration.GetValue<int>("PageSize:CourseNotes");
         }
 
+
+
+
+
         public async Task<ResponseDto<PaginationDto<List<CourseNoteDto>>>> GetAllCourseNotesAsync(
-            string searchTerm = "",
-            int page = 1,
-            int? pageSize = null
+            FilterCourseNotes dto
             )
 
         {
@@ -45,35 +49,49 @@ namespace ClassNotes.API.Services.CourseNotes
             *  Math.Max(1, valor) garantiza que currentPageSize nunca sea menor que 1 excepto el -1 al inicio
             *  si pageSize es nulo toma el valor de PAGE_SIZE
             */
-            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
-            int startIndex = (page - 1) * currentPageSize;
+            int currentPageSize = dto.PageSize == -1 ? int.MaxValue : Math.Max(1, dto.PageSize ?? PAGE_SIZE);
+            int startIndex = (dto.Page - 1) * currentPageSize;
 
             var userId = _auditService.GetUserId();
 
             var courseNoteQuery = _context.CoursesNotes
-                .Where(c => c.CreatedBy == userId) // El docente solo puede ver las notas de su curso
-                .AsQueryable();
+                   .Where(c => c.CourseId == dto.CourseId && c.CreatedBy == userId)
+                   .AsQueryable();
 
-            // aplicar filto de busqueda en el titulo y contenido 
-            if (searchTerm != null)
+            if (!string.IsNullOrEmpty(dto.SearchTerm))
             {
+                string searchTerm = dto.SearchTerm.ToLower();
                 courseNoteQuery = courseNoteQuery.Where(c =>
-                c.Title.ToLower().Contains(searchTerm.ToLower()) ||
-                c.Content.ToLower().Contains(searchTerm.ToLower()));
+                    c.Title.ToLower().Contains(searchTerm) ||
+                    c.Content.ToLower().Contains(searchTerm));
+            }
+
+            DateTime yesterday = DateTime.UtcNow.Date.AddDays(-1);
+
+
+            if (dto.Filter.ToUpper() == "PENDING")
+            {
+                courseNoteQuery = courseNoteQuery
+                    .Where(c => c.UseDate >= yesterday && !c.isView)
+                    .OrderBy(c => c.UseDate); // Más cercano en fecha de uso primero
+            }
+            else if (dto.Filter.ToUpper() == "HISTORY")
+            {
+                courseNoteQuery = courseNoteQuery
+                    .Where(c => c.isView)
+                    .OrderByDescending(c => c.UseDate); // Más reciente primero
             }
 
             int totalItems = await courseNoteQuery.CountAsync();
             int totalPages = (int)Math.Ceiling((double)totalItems / currentPageSize);
-
             // aplicar paginacion 
 
             // HR 
             // optimizacion directa aplicando el mapeo directamente
             var courseNoteDtos = await courseNoteQuery
-                .OrderByDescending(n => n.RegistrationDate)  // Ordenar por fecha de registro
-                .Skip(startIndex)                           // Omitir los registros anteriores a la página actual
-                .Take(currentPageSize)                      // Tomar el tamaño actual de la página
-                .ProjectTo<CourseNoteDto>(_mapper.ConfigurationProvider)  // Usamos ProjectTo para realizar el mapeo directamente 
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .ProjectTo<CourseNoteDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             return new ResponseDto<PaginationDto<List<CourseNoteDto>>>
@@ -83,13 +101,13 @@ namespace ClassNotes.API.Services.CourseNotes
                 Message = MessagesConstant.CNS_RECORDS_FOUND,
                 Data = new PaginationDto<List<CourseNoteDto>>
                 {
-                    CurrentPage = page,
+                    CurrentPage = dto.Page,
                     PageSize = currentPageSize,
                     TotalItems = totalItems,
                     TotalPages = totalPages,
                     Items = courseNoteDtos,
-                    HasPreviousPage = page > 1,
-                    HasNextPage = page < totalPages
+                    HasPreviousPage = dto.Page > 1,
+                    HasNextPage = dto.Page < totalPages
                 }
             };
 
@@ -203,6 +221,50 @@ namespace ClassNotes.API.Services.CourseNotes
 
         }
 
+        public async Task<ResponseDto<List<CoursesNotesDtoViews>>> EditListNotesViews(List<Guid> notesList)
+        {
+            if (notesList == null || !notesList.Any()) 
+            {
+                return new ResponseDto<List<CoursesNotesDtoViews>>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Error: La lista de notas es nula o vacía.",
+                    Data = null
+                };
+            }
+
+            var userId = _auditService.GetUserId();
+
+
+            var notes = await _context.CoursesNotes
+                .Where(c => notesList.Contains(c.Id) && c.CreatedBy == userId)
+                .ToListAsync();
+
+            if (notes.Count != notesList.Count)
+            {
+                return new ResponseDto<List<CoursesNotesDtoViews>>
+                {
+                    StatusCode = 403,  
+                    Status = false,
+                    Message = "Error: No tienes permisos suficientes para editar estas notas.",
+                    Data = null
+                };
+            }
+
+            notes.ForEach(n => n.isView = !n.isView);
+            await _context.SaveChangesAsync();  
+
+            var data = _mapper.Map<List<CoursesNotesDtoViews>>(notes);  
+
+            return new ResponseDto<List<CoursesNotesDtoViews>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Éxito: Notas actualizadas correctamente.",
+                Data = data
+            };
+        }
 
     }
 }
