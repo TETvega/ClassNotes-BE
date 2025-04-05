@@ -1,79 +1,72 @@
 [
   {
-    "id": "0d288091-3d68-40b3-ad09-ee22bb055cc3",
-    "Name": "Prueba",
-    "ColorHex": "DFF573",
-    "icon": "math",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "id": "7402CA4C-1937-48B0-984F-CBB28162E77A",
+    "Name": "Tasks",
+    "ColorHex": "ff7e63",
+    "icon": "tasks",
+    "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
   },
   {
-    "id": "0dd7204f-fe90-491c-ba8e-e775d8db7f4a",
-    "Name": "Examen",
-    "ColorHex": "FF0000",
-    "icon": "exam",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "id": "1F14F38A-B808-4AC0-9B31-1C8F08D3BF11",
+    "Name": "Forums",
+    "ColorHex": "84ff63",
+    "icon": "forum",
+    "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
   },
   {
-    "id": "29fd2297-8e3b-4783-8496-1e7ef8317954",
-    "Name": "Foro",
-    "ColorHex": "00FF00",
-    "icon": "chat",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "id": "D78550E1-136A-4EFE-AFF5-D13751636315",
+    "Name": "Exams",
+    "ColorHex": "4eb234",
+    "icon": "doc",
+    "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
   },
   {
-    "id": "9967535c-9bfa-4956-bfdb-f1d42c624c22",
-    "Name": "Tarea",
-    "ColorHex": "0000FF",
-    "icon": "task",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "id": "D096C211-2128-4C13-8D5C-EA96A1CCA667",
+    "Name": "ExtraPoints",
+    "ColorHex": "57efc6",
+    "icon": "star",
+    "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
   },
   {
-    "id": "25bb94dc-b13b-4649-b562-f1af741aeaf3",
-    "Name": "Proyecto",
-    "ColorHex": "FFA500",
-    "icon": "proj",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "id": "94A55CA2-F922-4572-97AE-75D115E4F906",
+    "Name": "Excursion",
+    "ColorHex": "57caef",
+    "icon": "travel",
+    "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
   },
   {
-    "id": "f45989e7-0ad8-451c-bbb1-00be292c370f",
-    "Name": "Lectura",
-    "ColorHex": "800080",
-    "icon": "book",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "f2ca8802-94a5-4179-86b4-40a6cb64a6c5",
-    "Name": "Exposición",
-    "ColorHex": "FFFF00",
-    "icon": "pres",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "ab1e1391-b4df-4b5f-8e17-c89e5d72f7b4",
-    "Name": "Laboratorio",
-    "ColorHex": "00FFFF",
-    "icon": "lab",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "eff35feb-fac1-4597-a5ef-241ee454a51d",
+    "id": "3265FE29-5B7D-4ED2-98BD-A65BB4E631CE",
     "Name": "Quiz",
-    "ColorHex": "FFC0CB",
-    "icon": "quiz",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "ColorHex": "9569fd",
+    "icon": "question",
+    "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
   },
   {
-    "id": "1ede90cb-d5e1-457d-8279-f45da35afecb",
-    "Name": "Debate",
-    "ColorHex": "A52A2A",
-    "icon": "deb",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
+    "id": "5A650FED-65B0-48CC-A56E-1E189E12238D",
+    "Name": "Presentation",
+    "ColorHex": "e369fd",
+    "icon": "presentation",
+    "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
   },
-  {
-    "id": "6d4b3e97-09e6-4a95-a813-fee0d6bc2daf",
-    "Name": "Revisión",
-    "ColorHex": "808080",
-    "icon": "rev",
-    "TeacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  }
+    {
+      "id": "E909D878-C34D-4B94-B9FB-0E92A220C423",
+      "Name": "Experiment",
+      "ColorHex": "fd699d",
+      "icon": "flask",
+      "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "4AFE537F-863E-4B74-A664-4551DB0C8854",
+      "Name": "Undefined",
+      "ColorHex": "fd699d",
+      "icon": "flask",
+      "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "C00D4C87-0B9F-4038-0E1E-08DD740910C4",
+      "Name": "TagPrueba",
+      "ColorHex": "fff000",
+      "icon": "icon",
+      "TeacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    }
 ]

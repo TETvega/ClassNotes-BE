@@ -70,7 +70,7 @@ public class Startup
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
     	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
 		services.AddTransient<ICoursesFilterService, CoursesFilterService>();
-
+		services.AddTransient<ICentersService, CentersService>();
 
         services.AddSingleton<DistanceService>(); //
         services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
