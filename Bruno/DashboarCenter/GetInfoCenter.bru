@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{PATH}}/dashboard_center/info?centerId=c854bc29-f388-400b-6fc4-08dd73c6c0de&searchTerm&page=2&pageSize=20
+  url: {{PATH}}/dashboard_center/info?centerId=c854bc29-f388-400b-6fc4-08dd73c6c0de&searchTerm&page=1&pageSize=12&classType=ACTIVE
   body: none
   auth: bearer
 }
@@ -13,8 +13,9 @@ get {
 params:query {
   centerId: c854bc29-f388-400b-6fc4-08dd73c6c0de
   searchTerm: 
-  page: 2
-  pageSize: 20
+  page: 1
+  pageSize: 12
+  classType: ACTIVE
 }
 
 auth:bearer {

@@ -3,6 +3,7 @@
     public class DashboarCenterActiveClassDto
     {
         public Guid IdCourse { get; set; }
+        public bool isActive { get; set; }
         public string CourseName { get; set; }
         public string CourseCode { get; set; }
         public int StudentCount { get; set; }

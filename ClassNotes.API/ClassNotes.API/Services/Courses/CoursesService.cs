@@ -33,10 +33,10 @@ namespace ClassNotes.API.Services.Courses
         // EG -> Enlistar todos los cursos, paginacion
 
         public async Task<ResponseDto<PaginationDto<List<CourseWithSettingDto>>>> GetCoursesListAsync(
-    string searchTerm = "",
-    int page = 1,
-    int? pageSize = null
-)
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = null
+        )
         {
             // Configuración del tamaño de página
             int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);

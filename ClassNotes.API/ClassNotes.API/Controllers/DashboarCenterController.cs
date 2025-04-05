@@ -23,9 +23,9 @@ namespace ClassNotes.API.Controllers
 
         [HttpGet("info")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<DashboardCenterDto>>> GetDashboardInfo(Guid centerId, string searchTerm = "", int page = 1)
+        public async Task<ActionResult<ResponseDto<DashboardCenterDto>>> GetDashboardInfo(Guid centerId, string searchTerm = "", int page = 1, int? pageSize =null , string classType= null)
         {
-            var result = await _dashboardCenterService.GetDashboardCenterAsync(centerId, searchTerm, page);
+            var result = await _dashboardCenterService.GetDashboardCenterAsync(centerId, searchTerm, page, pageSize , classType);
             return StatusCode(result.StatusCode, result);
         }
 
