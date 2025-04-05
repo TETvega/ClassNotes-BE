@@ -124,6 +124,7 @@ namespace ClassNotes.API.Helpers.Automapper
         private void MapsForCourseNotes()
         {
             CreateMap<CourseNoteEntity, CourseNoteDto>();
+            CreateMap<CourseNoteEntity, CoursesNotesDtoViews>();
             CreateMap<CourseNoteCreateDto, CourseNoteEntity>();
             CreateMap<CourseNoteEditDto, CourseNoteEntity>();
         }
