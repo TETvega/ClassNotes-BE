@@ -5,14 +5,15 @@ meta {
 }
 
 get {
-  url: {{PATH}}/attendances/student_attendances?searchTerm&page=1
+  url: {{PATH}}/attendances/student_attendances?page=1&pageSize=2
   body: json
   auth: bearer
 }
 
 params:query {
-  searchTerm: 
   page: 1
+  pageSize: 2
+  ~searchTerm: 
 }
 
 auth:bearer {
@@ -21,7 +22,7 @@ auth:bearer {
 
 body:json {
   {
-    "studentId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "courseId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    "studentId": "6778549f-c94e-4c09-ee31-08dd73cc1390",
+    "courseId": "f6cfc25e-8259-4cde-4e74-08dd73c935a0"
   }
 }

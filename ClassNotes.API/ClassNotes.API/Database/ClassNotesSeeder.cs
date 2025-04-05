@@ -3,6 +3,7 @@ using ClassNotes.API.Database.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Runtime.ConstrainedExecution;
 
 namespace ClassNotes.API.Database
 {
@@ -63,11 +64,13 @@ namespace ClassNotes.API.Database
                         if (existingUser == null)
                         {
                             // JA: Si el usuario no existe, crear uno nuevo con la contraseña
+                            user.UserName = user.Email;
                             var createUserResult = await userManager.CreateAsync(user, "Temporal01*");
 
                             if (createUserResult.Succeeded)
                             {
                                 // JA: Asignar el rol USER al usuario recién creado
+                                
                                 await userManager.AddToRoleAsync(user, RolesConstant.USER);
                             }
                             else
@@ -82,12 +85,12 @@ namespace ClassNotes.API.Database
                     }
                 }
             }
-			catch (Exception e)
-			{
-				var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
-				logger.LogError(e.Message);
-			}
-		}
+            catch (Exception e)
+            {
+                var logger = loggerFactory.CreateLogger<ClassNotesSeeder>();
+                logger.LogError(e.Message);
+            }
+        }
 	
         // AM: Cargar estudiantes desde students.json
         public static async Task LoadStudentsAsync(ILoggerFactory loggerFactory, ClassNotesContext context)
@@ -101,7 +104,7 @@ namespace ClassNotes.API.Database
                 foreach (var student in students)
                 {
 					// AM: Asignar a Juan Perez 
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
                     bool exists = await context.Students.AnyAsync(s => s.Id == student.Id);
                     if (!exists)
                     {
@@ -134,7 +137,7 @@ namespace ClassNotes.API.Database
 				foreach (var studentUnit in studentsUnits)
 				{
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7"); 
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073"); 
 					bool exists = await context.StudentsUnits.AnyAsync(t => t.Id == studentUnit.Id);
 					if (!exists)
 					{
@@ -167,7 +170,7 @@ namespace ClassNotes.API.Database
                 foreach (var tag in tags)
                 {
                     // AM: Asignar a Juan Perez
-                    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");  
+                    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");  
                     // JA: Verificar si la TagActivity ya existe
                     bool exists = await context.TagsActivities.AnyAsync(t => t.Id == tag.Id);
                     if (!exists)
@@ -201,7 +204,7 @@ namespace ClassNotes.API.Database
                 foreach (var unit in units)
                 {
                     // AM: Asignar a Juan Perez
-                    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7"); 
+                    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073"); 
                     // JA: Verificar si la unidad ya existe
                     bool exists = await context.Units.AnyAsync(t => t.Id == unit.Id);
                     if (!exists)
@@ -235,7 +238,7 @@ namespace ClassNotes.API.Database
                 foreach (var activity in Activities) 
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 					bool exists = await context.Activities.AnyAsync(s => s.Id == activity.Id);
                     if (!exists) 
                     {
@@ -267,7 +270,7 @@ namespace ClassNotes.API.Database
                 if (!await context.Centers.AnyAsync())
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 
 					for (int i = 0; i < center.Count; i++)
                     {
@@ -300,7 +303,7 @@ namespace ClassNotes.API.Database
                 foreach (var course in courses) 
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 					bool exist = await context.Courses.AnyAsync(s => s.Id == course.Id);
                     if (!exist) { 
                       course.CreatedBy = user.Id;
@@ -333,7 +336,7 @@ namespace ClassNotes.API.Database
                 foreach(var attendace in attendances)
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 					bool exist = await context.Attendances.AnyAsync(s =>s.Id == attendace.Id);
                     if (!exist) 
                     {
@@ -367,7 +370,7 @@ namespace ClassNotes.API.Database
                 foreach (var courseNote in course_notes)  
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 					bool exist = await context.CoursesNotes.AnyAsync(s => s.Id == courseNote.Id);
                     if (!exist) 
                     {
@@ -400,7 +403,7 @@ namespace ClassNotes.API.Database
                 foreach( var courseSetting in courseSettings) 
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 					bool exists = await context.CoursesSettings.AnyAsync(s => s.Id == courseSetting.Id);
                     if (!exists) 
                     {
@@ -433,7 +436,7 @@ namespace ClassNotes.API.Database
                 foreach (var students_activities_note in students_activities_notes) 
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 					bool exists = await context.StudentsActivitiesNotes.AnyAsync(s => s.Id == students_activities_note.Id);
                     if (!exists) 
                     {
@@ -466,7 +469,7 @@ namespace ClassNotes.API.Database
                 foreach (var student_course in student_courses)
                 {
 					// AM: Asignar a Juan Perez
-					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "41e958ea-a9e3-4deb-bccb-e17a987164c7");
+					var user = await context.Users.FirstOrDefaultAsync(u => u.Id == "356d48a0-2ca3-48f4-ac8b-c5f25effb073");
 					bool exists = await context.StudentsCourses.AnyAsync(s => s.Id == student_course.Id);
 
                     if (!exists)
