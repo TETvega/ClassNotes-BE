@@ -1,0 +1,21 @@
+meta {
+  name: Pagination_List
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/students?searchTerm&page=1&pageSize=-1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  page: 1
+  pageSize: -1
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

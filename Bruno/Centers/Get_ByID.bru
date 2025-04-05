@@ -1,0 +1,19 @@
+meta {
+  name: Get_ByID
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{PATH}}/centers/c854bc29-f388-400b-6fc4-08dd73c6c0de
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+vars:pre-request {
+  id: 550E8400-E29B-41D4-A716-446655440000
+}

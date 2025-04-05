@@ -1,0 +1,24 @@
+meta {
+  name: Send_Email_Atendence
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/attendances/send_emails
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+   "claseId": "f6cfc25e-8259-4cde-4e74-08dd73c935a0",
+    "latitude": 14.59,
+    "longitude":  -88.58,
+     "rangoValidacionMetros": 100
+  }
+}

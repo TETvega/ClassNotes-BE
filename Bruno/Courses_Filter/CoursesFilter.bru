@@ -1,0 +1,27 @@
+meta {
+  name: CoursesFilter
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/courses-filter/all
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "classTypes": "all",
+    "centers": [
+  
+    ],
+    "page": 1,
+    "pageSize": 10,
+    "searchTerm": ""
+  }
+}

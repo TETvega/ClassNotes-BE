@@ -1,0 +1,20 @@
+meta {
+  name: Get_All
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/tags_activities/?searchTerm&page=1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  page: 1
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
