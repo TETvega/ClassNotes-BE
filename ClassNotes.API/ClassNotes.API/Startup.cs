@@ -29,6 +29,7 @@ using ClassNotes.API.Services.Date;
 using ClassNotes.API.Services.Distance;
 using ClassNotes.API.Services;
 using ClassNotes.API.Services.Notes;
+using ClassNotes.API.Services.AllCourses;
 
 
 namespace ClassNotes.API;
@@ -68,6 +69,7 @@ public class Startup
 		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
 		services.AddTransient<ICloudinaryService, CloudinaryService>();
     	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
+		services.AddTransient<ICoursesFilterService, CoursesFilterService>();
 		services.AddTransient<ICentersService, CentersService>();
 
         services.AddSingleton<DistanceService>(); //
