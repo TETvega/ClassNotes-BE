@@ -17,8 +17,8 @@ namespace ClassNotes.API.Services.TagsActivities
 		// AM: Editar una etiqueta
 		Task<ResponseDto<TagActivityDto>> UpdateTagAsync(TagActivityEditDto dto, Guid id);
 
-		// AM: Eliminar una etiqueta
-		Task<ResponseDto<TagActivityDto>> DeleteTagAsync(Guid id);
+        // AM: Eliminar una etiqueta
+        Task<ResponseDto<List<TagActivityDto>>> DeleteTagAsync(List<Guid> listGuidsTags);
 
 		// AM: Metodo para crear un conjunto de tags predeterminadas
 		Task<ResponseDto<List<TagActivityDto>>> CreateDefaultTagsAsync(string userId);

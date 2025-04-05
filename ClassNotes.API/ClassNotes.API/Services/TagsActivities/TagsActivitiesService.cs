@@ -36,7 +36,7 @@ namespace ClassNotes.API.Services.TagsActivities
 		// AM: Metodo para obtener todas las tags en forma de paginación
 		public async Task<ResponseDto<PaginationDto<List<TagActivityDto>>>> GetTagsListAsync(string searchTerm = "", int page = 1)
 		{
-			int startIndex = (page - 1) * PAGE_SIZE;
+			//int startIndex = (page - 1) * PAGE_SIZE;
 
 			// AM: ID del usuario en sesión
 			var userId = _auditService.GetUserId(); 
@@ -51,13 +51,13 @@ namespace ClassNotes.API.Services.TagsActivities
 			}
 
 			int totalItems = await tagsQuery.CountAsync();
-			int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+			//int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
 
 			// AM: Aplicar paginacion 
 			var tagsEntities = await tagsQuery
 				.OrderByDescending(t => t.CreatedDate) // AM: Ordenar por fecha de creación (Más viejos primero) 
-				.Skip(startIndex)
-				.Take(PAGE_SIZE)
+				//.Skip(startIndex)
+				//.Take(PAGE_SIZE)
 				.ToListAsync();
 
 			// AM: Mapear a DTO para la respuesta
@@ -71,12 +71,12 @@ namespace ClassNotes.API.Services.TagsActivities
 				Data = new PaginationDto<List<TagActivityDto>>
 				{
 					CurrentPage = page,
-					PageSize = PAGE_SIZE,
+					PageSize = totalItems,
 					TotalItems = totalItems,
-					TotalPages = totalPages,
+					TotalPages = 1,
 					Items = tagsDto,
 					HasPreviousPage = page > 1,
-					HasNextPage = page < totalPages
+					HasNextPage = page < 1
 				}
 			};
 		}
@@ -116,10 +116,30 @@ namespace ClassNotes.API.Services.TagsActivities
 		{
 			try
 			{
-				/* Las validaciones de seguridad necesarias se realizan en el DTO de TagActivityCreateDto */
-
-				// AM: Crear la nueva tag
-				var tagEntity = _mapper.Map<TagActivityEntity>(dto);
+                // HR: Id del usuario en sesión
+                var userId = _auditService.GetUserId();
+                /* Las validaciones de seguridad necesarias se realizan en el DTO de TagActivityCreateDto */
+                var tagCount = await _context.TagsActivities.CountAsync(t => t.TeacherId == userId);
+                if (tagCount >= 25)
+                {
+                    return new ResponseDto<TagActivityDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "No puedes crear más de 25 etiquetas."
+                    };
+                }
+                if (dto.Name.ToLower().Trim() == "undefined")
+                {
+                    return new ResponseDto<TagActivityDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "No se puede asignar el nombre 'Undefined' a otra etiqueta."
+                    };
+                }
+                // AM: Crear la nueva tag
+                var tagEntity = _mapper.Map<TagActivityEntity>(dto);
 
 				// AM: el teacher id corresponde al usuario en sesión
 				tagEntity.TeacherId = _auditService.GetUserId();
@@ -170,9 +190,27 @@ namespace ClassNotes.API.Services.TagsActivities
 						Message = MessagesConstant.TA_RECORD_NOT_FOUND
 					};
 				}
+                if (tagEntity.Name.ToLower().Trim() == "undefined")
+                {
+                    return new ResponseDto<TagActivityDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "No se puede editar la etiqueta por defecto 'Undefined'."
+                    };
+                }
+                if (dto.Name == "Undefined")
+                {
+                    return new ResponseDto<TagActivityDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "No se puede asignar el nombre 'Undefined' a otra etiqueta."
+                    };
+                }
 
-				// AM: Mapear el DTO a Entity
-				_mapper.Map(dto, tagEntity);
+                // AM: Mapear el DTO a Entity
+                _mapper.Map(dto, tagEntity);
 				// AM: Actualizar y guardar cambios
 				_context.TagsActivities.Update(tagEntity);
 				await _context.SaveChangesAsync();
@@ -200,67 +238,97 @@ namespace ClassNotes.API.Services.TagsActivities
 			}
 		}
 
-		// AM: Metodo para eliminar una tag completamente de la base de datos
-		public async Task<ResponseDto<TagActivityDto>> DeleteTagAsync(Guid id)
-		{
-			try
-			{
-				// AM: Id del usuario en sesión
-				var userId = _auditService.GetUserId();
+        // AM: Metodo para eliminar una tag completamente de la base de datos
+        public async Task<ResponseDto<List<TagActivityDto>>> DeleteTagAsync(List<Guid> listGuidsTags)
+        {
+            try
+            {
+                // AM: Obtener el ID del usuario en sesión
+                var userId = _auditService.GetUserId();
 
-				// AM: Validar existencia y filtrar por CreatedBy
-				var tagEntity = await _context.TagsActivities.FirstOrDefaultAsync(t => t.Id == id && t.CreatedBy == userId);
-				if (tagEntity == null)
-				{
-					return new ResponseDto<TagActivityDto>
+                // AM: Obtener todas las etiquetas del usuario en la lista proporcionada
+                var userTags = await _context.TagsActivities
+                    .Where(t => listGuidsTags.Contains(t.Id) && t.CreatedBy == userId)
+                    .ToListAsync();
+
+                // AM: Validar que todas las etiquetas pertenezcan al usuario
+                if (userTags.Count != listGuidsTags.Count)
+                {
+                    return new ResponseDto<List<TagActivityDto>>
 					{
-						StatusCode = 404,
+						StatusCode = 403, // Código de error por permisos insuficientes
 						Status = false,
-						Message = MessagesConstant.TA_RECORD_NOT_FOUND
+						Message = $"{MessagesConstant.UNAUTHORIZED_DELETE} && {MessagesConstant.RECORD_NOT_FOUND}"
+
 					};
-				}
+                }
 
-				// AM: Si la tag esta siendo utilizada en alguna actividad, no se podra eliminar
-				var tagUsed = await _context.Activities.AnyAsync(a => a.TagActivityId == tagEntity.Id);
-				if (tagUsed)
-				{
-					return new ResponseDto<TagActivityDto>
-					{
-						StatusCode = 400,
-						Status = false,
-						Message = MessagesConstant.TA_IS_USED
-					};
-				}
+                // AM: Buscar la etiqueta por defecto "Undefined"
+                var defaultTag = await _context.TagsActivities
+                    .FirstOrDefaultAsync(t => t.Name == "Undefined" && t.CreatedBy == userId);
 
-				// AM: Eliminar y guardar cambios
-				_context.TagsActivities.Remove(tagEntity);
-				await _context.SaveChangesAsync();
+                if (defaultTag == null)
+                {
+                    return new ResponseDto<List<TagActivityDto>>
+                    {
+                        StatusCode = 500,
+                        Status = false,
+                        Message = "No se encontró la etiqueta por defecto 'Undefined'."
+                    };
+                }
+                if (userTags.Any(t => t.Name == "Undefined"))
+                {
+                    return new ResponseDto<List<TagActivityDto>>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "No se puede eliminar la etiqueta por defecto 'Undefined'."
+                    };
+                }
 
-				// AM: Mapear Entity a Dto para la respuesta
-				var tagDto = _mapper.Map<TagActivityDto>(tagEntity);
 
-				return new ResponseDto<TagActivityDto>
-				{
-					StatusCode = 200,
-					Status = true,
-					Message = MessagesConstant.TA_DELETE_SUCCESS,
-					Data = tagDto
-				};
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, MessagesConstant.TA_DELETE_ERROR);
-				return new ResponseDto<TagActivityDto>
-				{
-					StatusCode = 500,
-					Status = false,
-					Message = MessagesConstant.TA_DELETE_ERROR
-				};
-			}
-		}
+                // AM: Verificar si alguna etiqueta está en uso y reasignarlas
+                var tagIds = userTags.Select(t => t.Id).ToList();
+                var activitiesToUpdate = await _context.Activities
+                    .Where(a => tagIds.Contains(a.TagActivityId))
+                    .ToListAsync();
 
-		// AM: Metodo para crear un conjunto de tags predeterminadas
-		public async Task<ResponseDto<List<TagActivityDto>>> CreateDefaultTagsAsync(string userId)
+                foreach (var activity in activitiesToUpdate)
+                {
+                    activity.TagActivityId = defaultTag.Id;
+                }
+
+                // AM: Eliminar las etiquetas del usuario
+                _context.TagsActivities.RemoveRange(userTags);
+
+                // AM: Guardar cambios en la base de datos
+                await _context.SaveChangesAsync();
+
+                // AM: Mapear la lista eliminada a DTOs
+                var tagDtos = _mapper.Map<List<TagActivityDto>>(userTags);
+
+                return new ResponseDto<List<TagActivityDto>>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = MessagesConstant.TA_DELETE_SUCCESS,
+                    Data = tagDtos
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MessagesConstant.TA_DELETE_ERROR);
+                return new ResponseDto<List<TagActivityDto>>
+                {
+                    StatusCode = 500,
+                    Status = false,
+                    Message = MessagesConstant.TA_DELETE_ERROR
+                };
+            }
+        }
+
+        // AM: Metodo para crear un conjunto de tags predeterminadas
+        public async Task<ResponseDto<List<TagActivityDto>>> CreateDefaultTagsAsync(string userId)
 		{
 			try
 			{

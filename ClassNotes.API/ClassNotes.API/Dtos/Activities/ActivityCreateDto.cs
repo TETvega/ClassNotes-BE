@@ -12,6 +12,9 @@ namespace ClassNotes.API.Dtos.Activities
 		[StringLength(50, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
 		public string Name { get; set; }
 
+		[Display (Name="Descripcion")]
+		public string Description { get; set; }
+
         [Required]
         [Display (Name="es extra")]
         public bool IsExtra { get; set; }

@@ -5,13 +5,12 @@ meta {
 }
 
 get {
-  url: {{PATH}}/attendances/student_attendances?searchTerm&page=1&pageSize=21
+  url: {{PATH}}/attendances/student_attendances?page=1&pageSize=2
   body: json
   auth: bearer
 }
 
 params:query {
-  searchTerm: 
   page: 1
   pageSize: 21
   ~isCurrentMonth: true

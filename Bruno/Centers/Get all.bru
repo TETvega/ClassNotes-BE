@@ -5,14 +5,14 @@ meta {
 }
 
 get {
-  url: {{PATH}}/centers/?page=1&pageSize=5
+  url: {{PATH}}/centers/?page=1&pageSize=30
   body: none
   auth: bearer
 }
 
 params:query {
   page: 1
-  pageSize: 5
+  pageSize: 30
   ~isArchived: true
 }
 

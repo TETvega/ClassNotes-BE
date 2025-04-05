@@ -5,15 +5,16 @@ meta {
 }
 
 get {
-  url: {{PATH}}/dashboard_center/info?centerId=550e8400-e29b-41d4-a716-446655440000&searchTerm=ma
+  url: {{PATH}}/dashboard_center/info?centerId=c854bc29-f388-400b-6fc4-08dd73c6c0de&searchTerm&page=2&pageSize=20
   body: none
   auth: bearer
 }
 
 params:query {
-  centerId: 550e8400-e29b-41d4-a716-446655440000
-  searchTerm: ma
-  ~page: 1
+  centerId: c854bc29-f388-400b-6fc4-08dd73c6c0de
+  searchTerm: 
+  page: 2
+  pageSize: 20
 }
 
 auth:bearer {

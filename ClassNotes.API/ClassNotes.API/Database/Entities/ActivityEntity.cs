@@ -11,7 +11,11 @@ namespace ClassNotes.API.Database.Entities
         [Column("name")]
         public string Name { get; set; }
 
-		[Required]
+        [StringLength(200)]
+        [Column("description")]
+        public string? Description { get; set; }
+
+        [Required]
         [Column("is_extra")]
         public bool IsExtra { get; set; }
 
