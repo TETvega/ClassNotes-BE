@@ -9,5 +9,8 @@ namespace ClassNotes.API.Dtos.Courses
 
         // Props de las configuraciones
         public CourseSettingDto CourseSetting { get; set; }
+
+        //Para devolver unidades...
+        public List<UnitDto> Units { get; set; }
     }
 }

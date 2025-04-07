@@ -10,9 +10,8 @@ namespace ClassNotes.API.Database.Entities
 		[Column("unit_number")]
 		public int UnitNumber { get; set; }
 
-		[Required]
 		[Column("max_score")]
-		public float MaxScore { get; set; }
+		public float? MaxScore { get; set; } //Cambiado para permitir nulos...
 
 		[Required]
 		[Column("course_id")]

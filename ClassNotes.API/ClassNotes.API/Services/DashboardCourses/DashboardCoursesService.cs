@@ -206,7 +206,8 @@ namespace ClassNotes.API.Services.DashboardCourses
                     // Calcular el ponderado de esta actividad
                     if (totalMaxScores > 0 && activity.Unit.MaxScore > 0)
                     {
-                        float weightedScore = (activity.MaxScore / totalMaxScores) * activity.Unit.MaxScore; // Aqui se hace la ponderación
+                        //(Ken) forzado a float para que no de errores, debera arreglarse para considerar los nulos de las unidades tipo oro...
+                        float weightedScore = (float)((activity.MaxScore / totalMaxScores) * activity.Unit.MaxScore); // Aqui se hace la ponderación
                         totalScoreEvaluated += weightedScore;
                     }
                 }

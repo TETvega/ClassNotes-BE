@@ -7,6 +7,7 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace ClassNotes.API.Services.Activities
@@ -92,13 +93,7 @@ namespace ClassNotes.API.Services.Activities
         {
             //(Ken)
             //Obtenemos la propia actividad especificada...
-            var activityEntity = await _context.Activities.Include(a => a.Unit).FirstOrDefaultAsync(a => a.Id == ActivityId);
-            
-            //Transformacion de las reviciones proporcionadas en forma de StudentActivityNoteCreateDto a entities
-            var studentActivityEntity = _mapper.Map<List<StudentActivityNoteEntity>>(dto);
-            
-            //Busqueda de las studentUnits de ese curso, para calcular promedios...
-            var studentsUnits = _context.StudentsUnits.Include(a => a.StudentCourse).Where(x => x.StudentCourse.CourseId == activityEntity.Unit.CourseId);
+            var activityEntity = await _context.Activities.Include(a => a.Unit).ThenInclude(x => x.Course).FirstOrDefaultAsync(a => a.Id == ActivityId);
 
             //Verificacion de existencia...
             if (activityEntity == null)
@@ -111,27 +106,47 @@ namespace ClassNotes.API.Services.Activities
                 };
             }
 
+            //busca el settings de ese curso, para obtener su configuración de nota...
+            var courseSetting = await _context.CoursesSettings.FirstOrDefaultAsync(x => x.Id == activityEntity.Unit.Course.SettingId);
+
+            //Transformacion de las reviciones proporcionadas en forma de StudentActivityNoteCreateDto a entities
+            var studentActivityEntity = _mapper.Map<List<StudentActivityNoteEntity>>(dto);
+
+            //Busqueda de las studentUnits de ese curso, para calcular promedios...
+            var studentsUnits = _context.StudentsUnits.Include(a => a.Unit).Include(a => a.StudentCourse).Where(x => x.StudentCourse.CourseId == activityEntity.Unit.CourseId);
+
+
             //Por cada actividad revisada enviada por el usuario...
             foreach (var activity in studentActivityEntity)
             {
                 //Se le incorpora a la entidad su activity id
                 activity.ActivityId = ActivityId;
 
+                //Se verifica que la calificacion sea valida...
+                if (activity.Note > activityEntity.MaxScore || activity.Note < 0)
+                {
+                    return new ResponseDto<List<StudentActivityNoteDto>>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "Se ingresó una calificación no valida."
+                    };
+                }
 
-
+                //Se guarda la calificación como un promedio
+                activity.Note = (activity.Note / activityEntity.MaxScore) * 100;
 
                 //Se filtran las studentUnits para tener solo las del estudiante asociado a la actividad revisada actual,
                 //para questiones de promedio...
                 var studentUnitEntity = studentsUnits.Include(a => a.StudentCourse).Where(a => a.StudentCourse.StudentId == activity.StudentId);
 
 
-
-
                 //De las filtradas, se busca la de la misma unidad que esta actividad, para cambiar su nota...
-                var individualStudentUnit = studentUnitEntity.Include(a => a.StudentCourse).FirstOrDefault(x => x.UnitId == activityEntity.UnitId);
-                //Busqueda de ntidad de cstudentCourse para confirmar que s esta en la clase el estudiante
+                var individualStudentUnit = studentUnitEntity.Include(a => a.Unit).Include(a => a.StudentCourse).FirstOrDefault(x => x.UnitId == activityEntity.UnitId);
+
+                //Busqueda de entidad de studentsCourse para confirmar que si esta en la clase el estudiante
                 var testStudentCourse = _context.StudentsCourses.FirstOrDefault(x => x.StudentId == activity.StudentId && x.CourseId == activityEntity.Unit.CourseId);
-               
+
                 if (testStudentCourse == null)
                 {
                     return new ResponseDto<List<StudentActivityNoteDto>>
@@ -160,44 +175,37 @@ namespace ClassNotes.API.Services.Activities
                     individualStudentUnit = newStudentUnit;
                 }
 
-                //Se verifica que la calificacion sea valida...
-                if (activity.Note > activityEntity.MaxScore || activity.Note < 0)
-                {
-                    return new ResponseDto<List<StudentActivityNoteDto>>
-                    {
-                        StatusCode = 400,
-                        Status = false,
-                        Message = "Se ingresó una calificación no valida."
-                    };
-                }
-
                 //Se buscan las otras actividades en la unidad del estudiate
-                var studentActivities =   _context.StudentsActivitiesNotes.Where(x => x.Activity.UnitId == activityEntity.UnitId && x.StudentId == activity.StudentId);
+                var studentActivities = _context.StudentsActivitiesNotes.Include(x => x.Activity).Where(x => x.Activity.UnitId == activityEntity.UnitId && x.StudentId == activity.StudentId);
 
                 //En esta lista se almacenaran los puntajes de estas actividades, para asi recalcular el promedio del parcial...
                 var totalUnitPoints = new List<float>();
 
+                //Dentro de studentUnit, se almacenara una sumatoria de las calificaciónes en bruto, tienen que pasarse de porcentaje a numero en bruto...
+
                 //Si no hay otras actividades, la lista solo tendra la nota de esta actividad...
                 if (studentActivities.Count() == 0)
                 {
-                    totalUnitPoints.Add(activity.Note);
+                    totalUnitPoints.Add((activity.Note/100)*activityEntity.MaxScore);
                 }
                 else
                 {
-
+                    //Aqui se llena la lista para poder realizar la sumatoría...
                     foreach (var revisedActivity in studentActivities)
                     {
-                        totalUnitPoints.Add(revisedActivity.Note);
+                        totalUnitPoints.Add((revisedActivity.Note / 100) * revisedActivity.Activity.MaxScore); // como la nota revisada es un porcentaje, se pasa a puntaje en bruto
                     }
-                    totalUnitPoints.Add(activity.Note);
+                    totalUnitPoints.Add((activity.Note / 100) * activityEntity.MaxScore); //Lo mismo para esta actividad recien revisada...
 
                 }
 
-
-                //Calculo del promedio de la unidad para almacenar en la entidad
-                var newUnitScore = totalUnitPoints.Sum()/totalUnitPoints.Count();
+                //Aqui se realiza la sumatoria...
+                float newUnitScore = 0;
+                newUnitScore = (totalUnitPoints.Sum());
+               
+               
                 individualStudentUnit.UnitNote = newUnitScore;
-
+                //Se actualiza la unidad de estudiante con la nueva calificación
                 _context.StudentsUnits.Update(individualStudentUnit);
                 await _context.SaveChangesAsync();
 
@@ -207,19 +215,34 @@ namespace ClassNotes.API.Services.Activities
                 var totalPoints = new List<float>();
                 foreach (var unit in studentUnitEntity)
                 {
-                    totalPoints.Add(unit.UnitNote);
+                   
+                    //Si no es oro, las sumatorias de studentUnit deben ser promediadas a corde a lo que vale la unidad para el curso
+                    if (courseSetting.ScoreType != "oro")
+                    {
+                        //Debe forsarse a ser float de esta forma para no dar problemas debido a que unit.maxScore
+                        //permite null (para cursos con puntaje oro, aunque aqui no aplique siempre afecta el hecho de que los permita...
+                        totalPoints.Add( (float)((unit.UnitNote / 100) * unit.Unit.MaxScore) );
+                        //la formula es basicamente una forma de regla de 3, debido a que tanto ponderado como aritmetico permiten hasta 100 puntos dentro de su unidad...
+                    }
+                    else
+                    {
+                        //si es oro, solo hace una sumatoria de las sumatorias de unidades sin ponderar...
+                        totalPoints.Add(unit.UnitNote);
+                    };
                 }
 
+               
                 //Se actualiza la nota en el curso del estudiante usando los valores almacenados...
-                individualStudentUnit.StudentCourse.FinalNote = totalPoints.Sum() / totalPoints.Count();
+                individualStudentUnit.StudentCourse.FinalNote = totalPoints.Sum() ;
 
+                
 
                 _context.StudentsCourses.Update(individualStudentUnit.StudentCourse);
-                await _context.SaveChangesAsync(); 
+                await _context.SaveChangesAsync();
 
                 //Se busca la relacion actividad a estudiante para confirmar su existencia...
                 var existingStudentActivity = _context.StudentsActivitiesNotes.FirstOrDefault(x => x.ActivityId == ActivityId && x.StudentId == activity.StudentId);
-               
+
 
                 //Si existe, se actualizan sus datos, sino, se crea...
                 if (existingStudentActivity != null)
@@ -227,6 +250,7 @@ namespace ClassNotes.API.Services.Activities
                     existingStudentActivity.Note = activity.Note;
                     existingStudentActivity.Feedback = activity.Feedback;
 
+                    activity.Id = existingStudentActivity.Id;
                     _context.StudentsActivitiesNotes.Update(existingStudentActivity);
                     await _context.SaveChangesAsync();
                 }
@@ -294,9 +318,152 @@ namespace ClassNotes.API.Services.Activities
                 };
             }
 
+            //(Ken)
+            //Se busca la unidad a la que pertenece esta actividad para hacer validaciones...
+            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == dto.UnitId);
+
+
+            if (unitEntity is null)
+            {
+                return new ResponseDto<ActivityDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.ACT_RECORD_NOT_FOUND
+                };
+            }
+            //Estas dos variables son lostas de flotantes para hacer validaciones...
+            //Se buscan las otras unidades enla unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
+            var otherActivities = _context.Activities.Where(x => x.UnitId == dto.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
+            //Lo mismo pero para puntos oro, esto es para verificar que entre todas las unidades DEL CURSO no se pasen del maximo del curso...
+            var otherCourseActivities = _context.Activities.Include(x => x.Unit).Where(x => x.Unit.CourseId == unitEntity.CourseId && !x.IsExtra).Select(x => x.MaxScore).ToList();
+
+            //Solo se considera que no se pasen si no son extra...
+            if (!dto.IsExtra)
+            {
+                //Si no es oro, se confirma que no se pasen de 100...
+                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != "oro")
+                {
+                   
+                    return new ResponseDto<ActivityDto>
+                    {
+                        StatusCode = 405,
+                        Status = false,
+                        Message = "No puede agregar más puntos de el 100% de la unidad"
+                    };
+                }//Si son oro, se confirma que no se pasen de el maximo del curso...
+                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == "oro")
+                {
+                    return new ResponseDto<ActivityDto>
+                    {
+                        StatusCode = 405,
+                        Status = false,
+                        Message = "No puede agregar más puntos que el maximo de el curso"
+                    };
+                }
+            }
+
+
             var activityEntity = _mapper.Map<ActivityEntity>(dto);
             _context.Activities.Add(activityEntity);
             await _context.SaveChangesAsync();
+
+            //Cuando se agrega o modifica una actividad cuando ya se reviso a estudiantes, deben acomodarse todas esas entidades,
+            //para que tomen en cuenta la nueva actividad o nuevo valor...
+
+           //Se buscan los estudiantes del curso...
+            var studentCourses = _context.StudentsCourses.Include(x => x.Course).Where(x => x.Course.Id == unitEntity.CourseId);
+
+            //Estas son todas las relaciones estudiante a unidad que pertenescan a unidades de este curso..
+            var fullStudentUnits = _context.StudentsUnits.Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
+
+            //En estas listas se almacenaran los studentUnit a agregar, los que se modificaron, y los student course, estas listas son para hacer addRange o updateRange
+            List<StudentUnitEntity> newStudentUnitList =[];
+            List<StudentUnitEntity> oldStudentUnitList = [];
+            List<StudentCourseEntity> StudentCourseList = [];
+
+            //Las studentUnit de la unidad a la que pertenece la actividad cambiaran, por lo que se les llama a todas las actividades de esa unidad para acoplar el nuevo valor...
+            var allStudentActivities = _context.StudentsActivitiesNotes.Include(x => x.Activity).Where(x => x.Activity.UnitId == activityEntity.UnitId).ToList();
+
+            //Por cada estudiante en el curso...
+            foreach (var studentCourse in studentCourses)
+            {
+                //Se filtran las student unit de ese studentCourse en especifico...
+                var studentUnits = fullStudentUnits.Where(x => x.StudentCourseId == studentCourse.Id).ToList();
+
+                //Se guarda la studentUnit de esta actividad en especifico...
+                var thisUnit = studentUnits.FirstOrDefault(x => x.UnitId == activityEntity.UnitId);
+
+
+                //Si no existe se crea, para que este cuando se ñe revise al alumno...
+                if (thisUnit == null)
+                {
+
+                    var newStudentUnit = new StudentUnitEntity
+                    {
+                        UnitNote = 0,
+                        UnitNumber = activityEntity.Unit.UnitNumber,
+                        UnitId = activityEntity.UnitId,
+                        StudentCourseId = studentCourse.Id
+                    };
+
+                    newStudentUnitList.Add(newStudentUnit);
+
+                    thisUnit = newStudentUnit;
+                }
+
+                //Se buscan las actividades de esta unidad el estudiante
+                var studentActivities = allStudentActivities.Where(x => x.StudentId == studentCourse.StudentId).ToList();
+                var totalUnitPoints = new List<float>();
+
+                //Por cada actividad, si no es de puntaje "oro", Se pondera de 100 a su valor en el valor maximo real de la unidad, al igual que en el endpoint ReviewEntity, antes de este...
+                foreach (var revisedActivity in studentActivities)
+                {
+                    if (unitEntity.Course.CourseSetting.ScoreType != "oro")
+                    {
+                        totalUnitPoints.Add( (float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
+                    }
+                    else
+                    {
+                        totalUnitPoints.Add(thisUnit.UnitNote);
+                    };
+                }
+
+                float newUnitScore = 0;
+
+
+                newUnitScore = (totalUnitPoints.Sum());
+
+                thisUnit.UnitNote = newUnitScore;
+                oldStudentUnitList.Add(thisUnit);
+
+                //Luego se usan los valores de todas las unidades del estudiante para actualizar la nota de curso...
+                var totalPoints = new List<float>();
+                foreach (var unit in studentUnits)
+                {
+                    totalPoints.Add(unit.UnitNote );
+
+                }
+
+
+                //Se actualiza la nota en el curso del estudiante usando los valores de la lista...
+                studentCourse.FinalNote = totalPoints.Sum();
+
+
+                StudentCourseList.Add(studentCourse);
+
+            }
+
+            //Los add y update range de las entidades...
+            _context.StudentsUnits.AddRange(newStudentUnitList);
+            await _context.SaveChangesAsync();
+
+            _context.StudentsUnits.UpdateRange(oldStudentUnitList);
+            await _context.SaveChangesAsync();
+
+            _context.StudentsCourses.UpdateRange(StudentCourseList);
+            await _context.SaveChangesAsync();
+
             var activityDto = _mapper.Map<ActivityDto>(activityEntity);
             return new ResponseDto<ActivityDto>
             {
@@ -307,6 +474,9 @@ namespace ClassNotes.API.Services.Activities
             };
         }
 
+
+
+
         // Editar una actividad
         public async Task<ResponseDto<ActivityDto>> EditAsync(ActivityEditDto dto, Guid id)
         {
@@ -314,6 +484,8 @@ namespace ClassNotes.API.Services.Activities
 
             var activityEntity = await _context.Activities
                 .FirstOrDefaultAsync(a => a.Id == id && a.CreatedBy == userId);
+
+
 
             // Validar que la fecha de calificación no sea menor a la fecha actual
             if (dto.QualificationDate < DateTime.UtcNow.Date)
@@ -336,9 +508,157 @@ namespace ClassNotes.API.Services.Activities
                 };
             }
 
+            //(Ken)
+            //Para impedir cambios de unidad...
+            if (activityEntity.UnitId != dto.UnitId)
+            {
+                dto.UnitId = activityEntity.UnitId;
+            }
+
+            //AL igual que en createAsync, se usa unitEntity para hacer validaciones...
+            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == dto.UnitId);
+
+
+            if (unitEntity is null)
+            {
+                return new ResponseDto<ActivityDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.ACT_RECORD_NOT_FOUND
+                };
+            }
+
+            //Estas dos variables son lostas de flotantes para hacer validaciones...
+            //Se buscan las otras unidades enla unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
+            var otherActivities = _context.Activities.Where(x => x.UnitId == dto.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
+            //Lo mismo pero para puntos oro, esto es para verificar que entre todas las unidades DEL CURSO no se pasen del maximo del curso...
+            var otherCourseActivities = _context.Activities.Include(x => x.Unit).Where(x => x.Unit.CourseId == unitEntity.CourseId && !x.IsExtra).Select(x => x.MaxScore).ToList();
+
+
+            //Solo se considera que no se pasen si no son extra...
+            if (!dto.IsExtra)
+            {
+                //Si no es oro, se confirma que no se pasen de 100...
+                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != "oro")
+                {
+
+                    return new ResponseDto<ActivityDto>
+                    {
+                        StatusCode = 405,
+                        Status = false,
+                        Message = "No puede agregar más puntos de el 100% de la unidad"
+                    };
+                }//Si es oro, confirma pero de que no se pase del maximo de puntos de el curso...
+                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == "oro")
+                {
+                    return new ResponseDto<ActivityDto>
+                    {
+                        StatusCode = 405,
+                        Status = false,
+                        Message = "No puede agregar más puntos que el maximo de el curso"
+                    };
+                }
+            }
+
             _mapper.Map(dto, activityEntity);
             _context.Activities.Update(activityEntity);
             await _context.SaveChangesAsync();
+
+
+           
+            //Se buscan los estudiantes del curso...
+            var studentCourses = _context.StudentsCourses.Include(x => x.Course).Where(x => x.Course.Id == unitEntity.CourseId);
+            
+            //Estas son todas las relaciones estudiante a unidad que pertenescan a unidades de este curso..
+            var fullStudentUnits = _context.StudentsUnits.Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
+
+            //En estas listas se almacenaran los studentUnit a agregar, los que se modificaron, y los student course, estas listas son para hacer addRange o updateRange
+            List<StudentUnitEntity> newStudentUnitList = [];
+            List<StudentUnitEntity> oldStudentUnitList = [];
+            List<StudentCourseEntity> StudentCourseList = [];
+
+            //Las studentUnit de la unidad a la que pertenece la actividad cambiaran, por lo que se les llama a todas las actividades de esa unidad para acoplar el nuevo valor...
+            var allStudentActivities = _context.StudentsActivitiesNotes.Include(x => x.Activity).Where(x => x.Activity.UnitId == activityEntity.UnitId).ToList();
+
+            //Por cada alumno en el curso...
+            foreach (var studentCourse in studentCourses)
+            {
+                //StudentUnit de este alumno
+                var studentUnits = fullStudentUnits.Where(x => x.StudentCourseId == studentCourse.Id).ToList();
+
+                //La unidad de esta actividad y alumno
+                var thisUnit = studentUnits.FirstOrDefault(x => x.UnitId == activityEntity.UnitId);
+
+
+                //Si no existe la studentUnit se crea para que cuando se le revise al alumno pueda usarse la entidad directamente...
+                if (thisUnit == null)
+                {
+
+                    var newStudentUnit = new StudentUnitEntity
+                    {
+                        UnitNote = 0,
+                        UnitNumber = activityEntity.Unit.UnitNumber,
+                        UnitId = activityEntity.UnitId,
+                        StudentCourseId = studentCourse.Id
+                    };
+
+                    newStudentUnitList.Add(newStudentUnit);
+
+                    thisUnit = newStudentUnit;
+                }
+
+                //Actividades de este estudiante
+                var studentActivities = allStudentActivities.Where(x => x.StudentId == studentCourse.StudentId).ToList();
+                var totalUnitPoints = new List<float>();
+
+                foreach (var revisedActivity in studentActivities)
+                {
+                    //por cada actividad, si no se evalua como oro, se pondera de 100 a la nota maxima de la unidad, para solo necesitar se sumada a studentCourse, si se evalua como oro se suma en bruto
+                    if (unitEntity.Course.CourseSetting.ScoreType != "oro")
+                    {
+                        totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
+                    }
+                    else
+                    {
+                        totalUnitPoints.Add(thisUnit.UnitNote );
+                    };
+                }
+
+                float newUnitScore = 0;
+
+
+                newUnitScore = (totalUnitPoints.Sum());
+
+                thisUnit.UnitNote = newUnitScore;
+                oldStudentUnitList.Add(thisUnit);
+
+                //Se suman los puntajes del alumno en unidades para sacar el total del curso...
+                var totalPoints = new List<float>();
+                foreach (var unit in studentUnits)
+                {
+                    totalPoints.Add(unit.UnitNote);
+
+                }
+
+
+                //Se actualiza la nota en el curso del estudiante es igual a la suma de studentUnit...
+                studentCourse.FinalNote = totalPoints.Sum() ;
+
+
+                StudentCourseList.Add(studentCourse);
+
+            }
+
+            _context.StudentsUnits.AddRange(newStudentUnitList);
+            await _context.SaveChangesAsync();
+
+            _context.StudentsUnits.UpdateRange(oldStudentUnitList);
+            await _context.SaveChangesAsync();
+
+            _context.StudentsCourses.UpdateRange(StudentCourseList);
+            await _context.SaveChangesAsync();
+
             var activityDto = _mapper.Map<ActivityDto>(activityEntity);
             return new ResponseDto<ActivityDto>
             {
