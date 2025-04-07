@@ -1,5 +1,6 @@
 ﻿using ClassNotes.API.Constants;
 using ClassNotes.API.Dtos.Attendances;
+using ClassNotes.API.Dtos.Attendances.Student;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Services.Attendances;
 using Microsoft.AspNetCore.Authorization;
@@ -35,21 +36,21 @@ namespace ClassNotes.API.Controllers
 			return StatusCode(response.StatusCode, response);
 		}
 
-		[HttpGet("student_stats")]
-		[Authorize(Roles = $"{RolesConstant.USER}")]
-		public async Task<ActionResult<ResponseDto<StudentAttendancesDto>>> GetStudentStats(StudentIdCourseIdDto dto)
-		{
-			var response = await _attendancesService.GetStudentAttendancesStatsAsync(dto);
-			return StatusCode(response.StatusCode, response);
-		}
+        [HttpGet("student_stats")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<StudentAttendancesDto>>> GetStudentStats(StudentIdCourseIdDto dto, bool isCurrentMonth = false)
+        {
+            var response = await _attendancesService.GetStudentAttendancesStatsAsync(dto, isCurrentMonth);
+            return StatusCode(response.StatusCode, response);
+        }
 
-		[HttpGet("student_attendances")]
-		[Authorize(Roles = $"{RolesConstant.USER}")]
-		public async Task<ActionResult<ResponseDto<List<AttendanceDto>>>> GetAttendancesByStudentPagination(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1)
-		{
-			var response = await _attendancesService.GetAttendancesByStudentPaginationAsync(dto, searchTerm, page);
-			return StatusCode(response.StatusCode, response);
-		}
+        [HttpGet("student_attendances")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<AttendanceDto>>>> GetAttendancesByStudentPagination(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1, bool isCurrentMonth = false, int pageSize = 10)
+        {
+            var response = await _attendancesService.GetAttendancesByStudentPaginationAsync(dto, searchTerm, page, isCurrentMonth, pageSize);
+            return StatusCode(response.StatusCode, response);
+        }
 
 
         /// <summary>

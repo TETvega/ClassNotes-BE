@@ -5,10 +5,11 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Database.Entities;
+using ClassNotes.API.Dtos.Attendances.Student;
 
 namespace ClassNotes.API.Services.Attendances
 {
-	public class AttendancesService : IAttendancesService
+    public class AttendancesService : IAttendancesService
 	{
 		private readonly ClassNotesContext _context;
 		private readonly IAuditService _auditService;
@@ -175,21 +176,20 @@ namespace ClassNotes.API.Services.Attendances
 			};
 		}
 
-		// AM: Obtener stats de las asistencias por estudiante
-		public async Task<ResponseDto<StudentAttendancesDto>> GetStudentAttendancesStatsAsync(StudentIdCourseIdDto dto)
-		{
-			//JA: Buscamos el nombre del estudiante y lo guardamos 
-			var student = await _context.Students
-				.Where(s => s.Id == dto.StudentId)
-				.Select(s => new { s.FirstName })
-				.FirstOrDefaultAsync();
+        // AM: Obtener stats de las asistencias por estudiante
+        public async Task<ResponseDto<StudentAttendancesDto>> GetStudentAttendancesStatsAsync(StudentIdCourseIdDto dto, bool isCurrentMonth = false)
+        {
+            //JA: Buscar el nombre del estudiante
+            var student = await _context.Students
+                .Where(s => s.Id == dto.StudentId)
+                .Select(s => new { FullName = s.FirstName + ' ' + s.LastName })
+                .FirstOrDefaultAsync();
 
-			//JA:  Validar existencia del estudiante en el curso que se envio
-			var studentCourse = await _context.StudentsCourses
+            var studentCourse = await _context.StudentsCourses
                 .FirstOrDefaultAsync(sc => sc.StudentId == dto.StudentId && sc.CourseId == dto.CourseId);
+
             if (studentCourse == null)
             {
-                //JA: Si no devolmemos que no esta en ese curso
                 return new ResponseDto<StudentAttendancesDto>
                 {
                     StatusCode = 404,
@@ -198,29 +198,38 @@ namespace ClassNotes.API.Services.Attendances
                 };
             }
 
-			//JA: Obtenemos la lista de asistencias de estudiante en el curso
-            var attendances = await _context.Attendances
-                .Where(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId)
-                .ToListAsync();
+            //JA: Obtener la lista de asistencias del estudiante en el curso, filtrando por mes si es necesario
+            var query = _context.Attendances
+                .Where(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId);
 
-			//JA: Calcular lo que retornaremos
-            int totalAttendances = attendances.Count; //JA: Total de asistencias del estudiante en el curso
-            int attendedCount = attendances.Count(a => a.Attended);//JA: Numero de asistencias
-            int absenceCount = totalAttendances - attendedCount;//JA: Numero de inasistencias
-            double attendanceRate = totalAttendances > 0 ? Math.Round((double)attendedCount / totalAttendances * 100, 2) : 0;//JA: Porcentaje de asistencias
-            double absenceRate = 100 - attendanceRate;//JA: Porcentaje de inasistencias
+            if (isCurrentMonth)
+            {
+                //JA: Filtrar solo las asistencias del mes actual
+                var currentMonth = DateTime.Now.Month;
+                query = query.Where(a => a.RegistrationDate.Month == currentMonth);
+            }
+
+            var attendances = await query.ToListAsync();
+
+            //JA: Calcular estadísticas
+            int totalAttendances = attendances.Count;
+            int attendedCount = attendances.Count(a => a.Attended);
+            int absenceCount = totalAttendances - attendedCount;
+
+            //JA: Si no hay asistencias, tanto attendanceRate como absenceRate serán 0
+            double attendanceRate = totalAttendances > 0 ? Math.Round((double)attendedCount / totalAttendances * 100, 2) : 0;
+            double absenceRate = totalAttendances > 0 ? 100 - attendanceRate : 0; // Asegura que absenceRate sea 0 si no hay asistencias
 
             var studentStats = new StudentAttendancesDto
             {
-                StudentName = student.FirstName, //JA: Nombre del estudiante
-                AttendanceCount = attendedCount, //JA: Cantidad de asistencias
-                AttendanceRate = attendanceRate, //JA: Porcentaje de asistencia
-                AbsenceCount = absenceCount, //JA: Cantidad de inasistencias
-                AbsenceRate = absenceRate, //JA: Porcentaje de inasistencias
-                IsActive = attendedCount > 0 //JA: Determinar si el estudiante ha asistido al menos una vez
+                StudentName = student?.FullName ?? "Desconocido",
+                AttendanceCount = attendedCount,
+                AttendanceRate = attendanceRate,
+                AbsenceCount = absenceCount,
+                AbsenceRate = absenceRate,
+                IsActive = attendedCount > 0
             };
 
-			//JA: Retornamos la respuesta
             return new ResponseDto<StudentAttendancesDto>
             {
                 StatusCode = 200,
@@ -230,46 +239,50 @@ namespace ClassNotes.API.Services.Attendances
             };
         }
 
-		// AM: Mostrar paginación de asistencias por estudiante
-		public async Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1)
-		{
-			//JA: calculamos el indice de inicio para la paginacion
-            int startIndex = (page - 1) * PAGE_SIZE;
+        // AM: Mostrar paginación de asistencias por estudiante
+        public async Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1, bool isCurrentMonth = false, int pageSize = 10)
+        {
+            int startIndex = (page - 1) * pageSize;
 
-			//JA: Validar existencia del estudiante en el curso
-			var studentCourse = await _context.StudentsCourses
-				.FirstOrDefaultAsync(sc => sc.StudentId == dto.StudentId && sc.CourseId == dto.CourseId);
-			if (studentCourse == null)
-			{
-				//JA: Si el estudiante no esta registrado en ese curso retornamos un mensaje que no esta incrito
-				return new ResponseDto<PaginationDto<List<AttendanceDto>>>
-				{
-					StatusCode = 404,
-					Status = false,
-					Message = MessagesConstant.ATT_STUDENT_NOT_ENROLLED,
-				};
-			}
+            //JA: Validar existencia del estudiante en el curso
+            var studentCourse = await _context.StudentsCourses
+                .FirstOrDefaultAsync(sc => sc.StudentId == dto.StudentId && sc.CourseId == dto.CourseId);
+            if (studentCourse == null)
+            {
+                return new ResponseDto<PaginationDto<List<AttendanceDto>>>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.ATT_STUDENT_NOT_ENROLLED,
+                };
+            }
 
-			//JA: Consultar asistencias del estudiante en el curso
-			var query = _context.Attendances
+            //JA: Consultar asistencias del estudiante en el curso
+            var query = _context.Attendances
                 .Where(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId);
 
-            //JA: Filtrar asistencia por fecha espesifica, (por si se ocupa)
+            //JA: Filtrar asistencia por fecha específica (si se proporciona un término de búsqueda)
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 query = query.Where(a => a.RegistrationDate.ToString().Contains(searchTerm));
             }
 
+            //JA: Filtrar por mes actual si isCurrentMonth es true
+            if (isCurrentMonth)
+            {
+                var currentMonth = DateTime.Now.Month;
+                query = query.Where(a => a.RegistrationDate.Month == currentMonth);
+            }
+
             //JA: Contar el total de registros de asistencia encontrados
             int totalItems = await query.CountAsync();
-            //JA: Calcular el número total de paginas
-            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
 
-            //JA: Obtener y mapear asistencias con paginacion
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
             var attendances = await query
                 .OrderByDescending(a => a.RegistrationDate)
                 .Skip(startIndex)
-                .Take(PAGE_SIZE)
+                .Take(pageSize)
                 .Select(a => new AttendanceDto
                 {
                     Id = a.Id,
@@ -280,7 +293,6 @@ namespace ClassNotes.API.Services.Attendances
                 })
                 .ToListAsync();
 
-			//Retornamos la respuesta
             return new ResponseDto<PaginationDto<List<AttendanceDto>>>
             {
                 StatusCode = 200,
@@ -289,7 +301,7 @@ namespace ClassNotes.API.Services.Attendances
                 Data = new PaginationDto<List<AttendanceDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = pageSize,
                     TotalItems = totalItems,
                     TotalPages = totalPages,
                     Items = attendances,
@@ -298,8 +310,6 @@ namespace ClassNotes.API.Services.Attendances
                 }
             };
         }
-
-
 
         public async Task<AttendanceDto> CreateAttendanceAsync(AttendanceCreateDto attendanceCreateDto)
         {

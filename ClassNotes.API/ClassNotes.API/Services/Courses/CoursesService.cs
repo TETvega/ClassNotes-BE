@@ -8,6 +8,8 @@ using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
+using NetTopologySuite.Geometries;
+using NetTopologySuite;
 
 namespace ClassNotes.API.Services.Courses
 {
@@ -34,10 +36,10 @@ namespace ClassNotes.API.Services.Courses
         // EG -> Enlistar todos los cursos, paginacion
 
         public async Task<ResponseDto<PaginationDto<List<CourseWithSettingDto>>>> GetCoursesListAsync(
-    string searchTerm = "",
-    int page = 1,
-    int? pageSize = null
-)
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = null
+        )
         {
             // Configuración del tamaño de página
             int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
@@ -175,9 +177,9 @@ namespace ClassNotes.API.Services.Courses
             //(Ken) creación de unidades..
 
             //Valida que se cree correctamente el tipo de puntaje... esos son los valores que se pueden usar...
-            if (dto.CourseSetting.ScoreType != "oro" &&
-                dto.CourseSetting.ScoreType != "ponderado" &&
-                dto.CourseSetting.ScoreType != "aritmetico")
+            if (dto.CourseSetting.ScoreType.ToLower().Trim() != "oro" &&
+                dto.CourseSetting.ScoreType.ToLower().Trim() != "ponderado" &&
+                dto.CourseSetting.ScoreType.ToLower().Trim() != "aritmetico")
             {
                 return new ResponseDto<CourseWithSettingDto>
                 {
@@ -192,7 +194,7 @@ namespace ClassNotes.API.Services.Courses
             var UnitList = dto.Units;
 
             //Evalua que no se reciban null si no es oro...
-            if(UnitList.Select(x => x.MaxScore).ToList().Contains(null) && dto.CourseSetting.ScoreType != "oro")
+            if(UnitList.Select(x => x.MaxScore).ToList().Contains(null) && dto.CourseSetting.ScoreType.ToLower().Trim() != "oro")
             {
                 return new ResponseDto<CourseWithSettingDto>
                 {
@@ -203,7 +205,7 @@ namespace ClassNotes.API.Services.Courses
             }
 
             //Si es ponderado, la suma de Maxscore de todas las unidades debe ser igual al máximo de el curso...
-            if (UnitList.Select(x => x.MaxScore).ToList().Sum() != dto.CourseSetting.MaximumGrade && dto.CourseSetting.ScoreType == "ponderado")
+            if (UnitList.Select(x => x.MaxScore).ToList().Sum() != dto.CourseSetting.MaximumGrade && dto.CourseSetting.ScoreType.ToLower().Trim() == "ponderado")
             {
                 return new ResponseDto<CourseWithSettingDto>
                 {
@@ -221,7 +223,7 @@ namespace ClassNotes.API.Services.Courses
             foreach (var unit in UnitList)
             {
                 //No se puede ingresar valores maximos  de unidad iguales o menores a 0, al menos si no es oro.
-                if (unit.MaxScore <= 0 && dto.CourseSetting.ScoreType != "oro")
+                if (unit.MaxScore <= 0 && dto.CourseSetting.ScoreType.ToLower().Trim() != "oro")
                 {
                     return new ResponseDto<CourseWithSettingDto>
                     {
@@ -250,7 +252,7 @@ namespace ClassNotes.API.Services.Courses
 
                 //Si es aritmetico, se guarda la nota máxima de la unidad como la divición entre el puntaje maximo del curso
                 // y la cantidad de unidades, para asegurar que sean iguales...
-                if (dto.CourseSetting.ScoreType != "aritmetico")
+                if (dto.CourseSetting.ScoreType.ToLower().Trim() != "aritmetico")
                 {
                     unitMax = dto.CourseSetting.MaximumGrade/UnitList.Count();
                 }
@@ -323,12 +325,13 @@ namespace ClassNotes.API.Services.Courses
                 duplicatedSettingEntity = new CourseSettingEntity
                 {
                     Name = existingSetting.Name,
-                    ScoreType = existingSetting.ScoreType,
+                    ScoreType = existingSetting.ScoreType.ToLower().Trim(),
                     StartDate = existingSetting.StartDate,
                     EndDate = existingSetting.EndDate,
                     MinimumGrade = existingSetting.MinimumGrade,
                     MaximumGrade = existingSetting.MaximumGrade,
                     MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
+                    GeoLocation = existingSetting.GeoLocation,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = false // Marcamos como copia
@@ -336,16 +339,19 @@ namespace ClassNotes.API.Services.Courses
             }
             else // Caso 2: Crear una nueva configuración original
             {
+                var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var point = geometryFactory.CreatePoint(new Coordinate(dto.CourseSetting.GetLocationDto.X, dto.CourseSetting.GetLocationDto.Y));
                 // Crear la configuración original
                 var originalSettingEntity = new CourseSettingEntity
                 {
                     Name = dto.CourseSetting.Name,
-                    ScoreType = dto.CourseSetting.ScoreType,
+                    ScoreType = dto.CourseSetting.ScoreType.ToLower().Trim(),
                     StartDate = dto.CourseSetting.StartDate,
                     EndDate = dto.CourseSetting.EndDate,
                     MinimumGrade = dto.CourseSetting.MinimumGrade,
                     MaximumGrade = dto.CourseSetting.MaximumGrade,
                     MinimumAttendanceTime = dto.CourseSetting.MinimumAttendanceTime,
+                    GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = true // Marcamos como configuración original
@@ -359,12 +365,13 @@ namespace ClassNotes.API.Services.Courses
                 duplicatedSettingEntity = new CourseSettingEntity
                 {
                     Name = originalSettingEntity.Name,
-                    ScoreType = originalSettingEntity.ScoreType,
+                    ScoreType = originalSettingEntity.ScoreType.ToLower().Trim(),
                     StartDate = originalSettingEntity.StartDate,
                     EndDate = originalSettingEntity.EndDate,
                     MinimumGrade = originalSettingEntity.MinimumGrade,
                     MaximumGrade = originalSettingEntity.MaximumGrade,
                     MinimumAttendanceTime = originalSettingEntity.MinimumAttendanceTime,
+                    GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = false // La copia siempre es marcada como no original
@@ -418,6 +425,13 @@ namespace ClassNotes.API.Services.Courses
         }
 
         // CP -> Editar un curso 
+        // TODO
+
+
+
+
+
+        // Podra editar la configuracion de GEOLOCALIZACION 
         public async Task<ResponseDto<CourseDto>> EditAsync(CourseEditDto dto, Guid id)
         {
             var userId = _auditService.GetUserId();
@@ -535,5 +549,58 @@ namespace ClassNotes.API.Services.Courses
                 Message = MessagesConstant.CRS_DELETE_SUCCESS
             };
         }
+
+        public async Task<ResponseDto<CourseWithSettingDto>> EditUbicationAsync(LocationDto dto, Guid id)
+        {
+            var userId = _auditService.GetUserId();
+
+            // Validar si no se mandó lat/lng
+            if (dto.X == 0 || dto.Y == 0)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Ubicación inválida"
+                };
+            }
+
+            // Obtener el curso con su CourseSetting
+            var course = await _context.Courses
+                .Include(c => c.CourseSetting)
+                .FirstOrDefaultAsync(c => c.Id == id  && c.CreatedBy == userId);
+
+            if (course == null || course.CourseSetting == null)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "Curso o configuración no encontrados"
+                };
+            }
+
+            // Crear el punto de ubicación
+            var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+            var point = geometryFactory.CreatePoint(new Coordinate(dto.X, dto.Y));
+
+            // Actualizar la geolocalización
+            course.CourseSetting.GeoLocation = point;
+
+            // Guardar cambios
+            await _context.SaveChangesAsync();
+
+            var courseDto = _mapper.Map<CourseWithSettingDto>(course);
+
+            return new ResponseDto<CourseWithSettingDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Ubicación actualizada correctamente",
+                Data = courseDto
+            };
+        }
+
+
     }
 }

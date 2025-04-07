@@ -22,20 +22,16 @@ namespace ClassNotes.API.Controllers
 
 		// Traer todos 
 
-		[HttpGet]
-    [Authorize(Roles = $"{RolesConstant.USER}")]
-
-    public async Task<ActionResult<ResponseDto<CourseNoteDto>>> GetAll(
-			string searchTerm = "",
-			int page = 1,
-			int? pageSize = null
-			
+		[HttpPost("getAllNotes")]
+		[Authorize(Roles = $"{RolesConstant.USER}")]
+		 public async Task<ActionResult<ResponseDto<CourseNoteDto>>> GetAll(
+				FilterCourseNotes dto
 			)
-		{
-			var response = await _courseNotesService.GetAllCourseNotesAsync(searchTerm, page, pageSize);
+			{
+				var response = await _courseNotesService.GetAllCourseNotesAsync(dto);
 
-			return StatusCode(response.StatusCode, response);
-		}
+				return StatusCode(response.StatusCode, response);
+			}
 
 		// Traer por id 
 		[HttpGet("{id}")]
@@ -70,8 +66,17 @@ namespace ClassNotes.API.Controllers
 			return StatusCode(response.StatusCode, response);
 		}
 
-		// Eliminar 
-		[HttpDelete("{id}")]
+        [HttpPut("notesViews")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<CoursesNotesDtoViews>>>> EditNotesViews( List<Guid> notesList)
+        {
+            var response = await _courseNotesService.EditListNotesViews(notesList);
+
+            return StatusCode(response.StatusCode, response);
+        }
+
+        // Eliminar 
+        [HttpDelete("{id}")]
 		[Authorize(Roles = $"{RolesConstant.USER}")]
 
 		public async Task<ActionResult<ResponseDto<CourseNoteDto>>> Delete(Guid id)

@@ -1,509 +1,198 @@
 [
   {
-    "id": "7a518b04-de18-487b-97ab-984a0c999114",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "70ce3027-ede7-4e9e-bf52-b7a2e8b7e208",
-    "FinalNote": 84,
-    "IsActive": false
-  },
-  {
-    "id": "adf5f7a6-a5da-4bf7-884c-cd988cd5c66e",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "09e11a03-9267-4a88-a4b5-bf102da835b6",
-    "FinalNote": 71,
-    "IsActive": false
-  },
-  {
-    "id": "814c99c6-edee-45e7-b0d1-fb0f919e3e5b",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "4ddca1ac-9ad6-4877-a518-bc1d500500f9",
-    "FinalNote": 78,
-    "IsActive": false
-  },
-  {
-    "id": "08011ba8-088f-4158-ac7c-e058d33b6ccc",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "994827ce-51e6-486d-86bd-458e57ddaea1",
-    "FinalNote": 80,
-    "IsActive": true
-  },
-  {
-    "id": "32e26261-69a6-4c4b-bf34-65fe257249ad",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "9c06a243-8646-4a91-b372-818e2728e44e",
-    "FinalNote": 92,
-    "IsActive": false
-  },
-  {
-    "id": "4773f39c-9ce6-4c75-94d4-0a445446600c",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "f723d695-c4bc-413b-a171-ada2ebacbad2",
-    "FinalNote": 56,
-    "IsActive": true
-  },
-  {
-    "id": "1cb3d65e-9c13-441d-8909-7850d24411bb",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "ec99d003-681f-46a8-9670-75db4f7aea97",
-    "FinalNote": 60,
-    "IsActive": true
-  },
-  {
-    "id": "51b1abc9-a035-4eed-9a5e-713e855ef9db",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "99d15fb7-ef67-4927-9571-023f95b29f3d",
-    "FinalNote": 96,
-    "IsActive": true
-  },
-  {
-    "id": "83d4130a-1480-4a1d-a9ea-ed5863f8c7a9",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "7b006375-d6c9-4c0a-812a-630de20d4462",
-    "FinalNote": 82,
-    "IsActive": true
-  },
-  {
-    "id": "dd51ea17-015a-46c9-8a65-852abafeed69",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "3d6b9862-65eb-41e1-a521-ba86ac804aaa",
-    "FinalNote": 77,
-    "IsActive": true
-  },
-  {
-    "id": "34d84468-74ae-4fd5-853c-76e8c1a8aaed",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "b36ddbe4-e48c-447f-86f5-07cfd1746596",
-    "FinalNote": 73,
-    "IsActive": true
-  },
-  {
-    "id": "0ba4a451-ad14-4e24-86ce-4f37d3872cb3",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "c45ac639-31c5-45e5-955d-4ec7cac26dee",
-    "FinalNote": 64,
-    "IsActive": true
-  },
-  {
-    "id": "9b3df60f-5b50-4d2b-ad11-c903cf973d2b",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "e337a206-1ace-4be0-81fb-11f7608b2ede",
-    "FinalNote": 60,
-    "IsActive": true
-  },
-  {
-    "id": "c029979b-bfdb-4d99-a484-4aa7bfd0e37e",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "c16bf8c6-36c6-44d4-87e1-df7612f1be02",
-    "FinalNote": 96,
-    "IsActive": true
-  },
-  {
-    "id": "d53ab732-badb-48ae-a4ef-5c81e2f33c33",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "329779d8-4a69-4f27-8c96-5b43a7d0d09d",
-    "FinalNote": 81,
-    "IsActive": true
-  },
-  {
-    "id": "fcab290d-a27f-4f0e-876e-4e7a03a6f70c",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "f9594a29-cae2-4528-af65-9647603aa535",
-    "FinalNote": 66,
-    "IsActive": true
-  },
-  {
-    "id": "87344145-dd8c-4a90-a66e-edffceb15586",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "cc41e61e-9a2b-4bff-8cde-0b74ab6cfb09",
-    "FinalNote": 90,
-    "IsActive": true
-  },
-  {
-    "id": "8667209d-eb61-460d-8ff4-fcdf4d38f479",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "01085456-e8be-4370-83a3-3ee7e1de9b40",
-    "FinalNote": 63,
-    "IsActive": true
-  },
-  {
-    "id": "cc4c845e-771e-4587-be45-86432f50ab69",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "38bb2a0b-cbb2-4a73-8995-0f7440023c1f",
-    "FinalNote": 68,
-    "IsActive": true
-  },
-  {
-    "id": "9f5f7cac-4350-4a2d-8a44-e7c560bfcee1",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "3b1bd91b-d735-45ec-b3e2-bb38372ce8e0",
-    "FinalNote": 98,
-    "IsActive": true
-  },
-  {
-    "id": "37221193-b468-44d6-ab1f-9b1faee8ef17",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "9fce9d67-3d93-4278-9c03-2d2ef7dbf800",
-    "FinalNote": 77,
-    "IsActive": true
-  },
-  {
-    "id": "19272bd7-fe10-4ed1-b6dc-8efd73906f20",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "0db0992e-a0fe-4559-8d45-bd55b26f2568",
-    "FinalNote": 82,
-    "IsActive": true
-  },
-  {
-    "id": "ac6260b7-c647-4917-a0d8-a234fc58f5ad",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "1db7b303-110b-4eef-aa60-52e573ad5f5f",
-    "FinalNote": 57,
-    "IsActive": true
-  },
-  {
-    "id": "77d519b1-8728-4b60-a3eb-fb6495f0d4eb",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "cfef2d0d-44c1-4c9c-8e20-79ce8a3345f7",
-    "FinalNote": 89,
-    "IsActive": true
-  },
-  {
-    "id": "10468a41-60bf-4889-8c8e-3daaac182e10",
-    "CourseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f",
-    "StudentId": "ffa0431f-70e8-4c2b-a697-cc147788c06c",
-    "FinalNote": 60,
-    "IsActive": true
-  },
-  // JA: Primeros 25 matriculados
-  {
-    "id": "c6bbc188-e619-4a48-a9ec-8873d187d23a",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "09c6f266-883b-45ce-bb0f-5db9cb438b74",
-    "FinalNote": 69,
-    "IsActive": true
-  },
-  {
-    "id": "2008d800-31e1-47ac-9e1c-2aa4da897f4e",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "2d178ece-d358-410f-8427-967e01e855ec",
-    "FinalNote": 77,
-    "IsActive": true
-  },
-  {
-    "id": "19cbe3b7-bee6-4eac-999c-53b75483914b",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "2d178ece-d358-410f-8427-967e01e855ec",
-    "FinalNote": 87,
-    "IsActive": true
-  },
-  {
-    "id": "ff71853d-9818-417e-b2c0-60e60d0befba",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "638de89c-da72-490a-ac94-38b3c30ce2c2",
-    "FinalNote": 87,
-    "IsActive": true
-  },
-  {
-    "id": "ff481d90-ba32-4450-a8ef-b57341241080",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "7b026040-fd0a-49fd-a0f7-9ec3b18cd0bd",
-    "FinalNote": 79,
-    "IsActive": true
-  },
-  {
-    "id": "98f35203-ba79-4375-8359-e5f9c27cac33",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "3c11d57f-e10a-4f02-9416-b419e942cac8",
-    "FinalNote": 97,
-    "IsActive": true
-  },
-  {
-    "id": "6fb76863-0beb-4f57-826d-ff4a384ef8df",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "0db36a86-0c8d-4156-ae52-c0377921f5e0",
-    "FinalNote": 67,
-    "IsActive": true
-  },
-  {
-    "id": "ae2d5b03-3ab1-4809-b887-9296148f224c",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "38e67bcc-62f4-49af-9987-4ff644fbed8d",
-    "FinalNote": 91,
-    "IsActive": true
-  },
-  {
-    "id": "3edd76e8-caa1-4db6-8d6c-8cf485b22184",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "a8d20e6f-a78e-4532-9faf-b72f54b06632",
-    "FinalNote": 67,
-    "IsActive": true
-  },
-  {
-    "id": "d17f6213-6f7b-44a6-bf53-7a8f5383ea57",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "918e3931-10ad-44b4-8f65-495c5485d874",
-    "FinalNote": 96,
-    "IsActive": true
-  },
-  {
-    "id": "1f25afc3-b3cc-487c-9cb1-83e85b6c7875",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "58a390fe-e54f-4ab8-adcc-88b0738a10a5",
-    "FinalNote": 95,
-    "IsActive": true
-  },
-  {
-    "id": "36f98e9e-9299-4c79-aad5-13fb11e74981",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "9f847b60-f742-45f8-924f-fc2a98b01d93",
-    "FinalNote": 62,
-    "IsActive": true
-  },
-  {
-    "id": "b6826e26-bf47-4caf-b580-fb208fad1a90",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "30564c02-3798-47d4-ad46-1a93ac00f89a",
-    "FinalNote": 57,
-    "IsActive": true
-  },
-  {
-    "id": "bf37aa7b-6efa-4cd7-a630-cf971f860ac6",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "303c48b5-2e90-454c-90c5-5434dce6f032",
-    "FinalNote": 92,
-    "IsActive": true
-  },
-  {
-    "id": "85d6c97b-3beb-4013-93d0-80266fb69bdb",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "6b8bf468-d97a-427b-bdf2-631c0ffff246",
-    "FinalNote": 57,
-    "IsActive": true
-  },
-  {
-    "id": "59d042cd-e11d-4cb9-9e63-6053b1ed6d54",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "637afab9-124c-477f-b1d7-2ee65434166c",
-    "FinalNote": 93,
-    "IsActive": true
-  },
-  {
-    "id": "d42da4b2-f35e-4730-80ca-a593a8931068",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "2bae8c0e-bc23-4c2c-88a1-55b0d5d82350",
-    "FinalNote": 58,
-    "IsActive": true
-  },
-  {
-    "id": "17df4c24-d8a8-456b-9656-77570dedc775",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "e52962da-c8b4-4b22-9409-76e35e9c7745",
-    "FinalNote": 84,
-    "IsActive": true
-  },
-  {
-    "id": "b81ec463-f3c1-451d-a40a-5c5a39d9e330",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "03ac79e5-3c47-486e-aa3b-5c7b0825e3c6",
-    "FinalNote": 77,
-    "IsActive": true
-  },
-  {
-    "id": "bc8a64e4-d3c2-4d46-91b6-631e075d0779",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "1d609fdb-f1a3-43e5-90d7-795ada61486e",
-    "FinalNote": 98,
+    "id": "86556B6E-43E3-4D4D-AE9B-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "E94943DB-F6FF-4460-EE29-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "ddb7eb52-ffb4-44f4-b189-5b91fc150835",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "c8836181-85be-4f89-b64c-4971044188ba",
-    "FinalNote": 71,
+    "id": "6DAE139D-3003-4A79-AE9C-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "231CA03B-BF60-48B2-EE2A-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "3c6445e4-bcbe-4c10-ac87-d53caf244215",
-    "CourseId": "caab5305-52d2-463d-bc77-c579b41167fa",
-    "StudentId": "53f7ce78-4f4f-42bf-996c-185be417f84b",
-    "FinalNote": 58,
+    "id": "B227D436-87DD-450C-AE9D-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "6BEE6190-BE47-489C-EE2B-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
-  // JA: Segundos 22 matriculados
   {
-    "id": "d9ea2a0f-6265-44cc-af1f-18faf9b46650",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "d2c85af2-ca72-4804-a4ed-a961727b9e46",
-    "FinalNote": 86,
+    "id": "41822447-5C8B-4163-AE9E-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "E139B80B-293E-466B-EE2C-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "900dc9cc-e3bf-4eb1-9574-3704fd88bdfc",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "c1a04d10-7140-4276-892c-d328bee8fa6b",
-    "FinalNote": 71,
+    "id": "41C31B03-FC90-4E00-AE9F-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "555A8B7E-3B94-461C-EE2D-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "593c2f71-b26a-433a-a3a9-2e2a64ae881d",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "1f0e53b9-98b1-4ffb-b850-bf5455a147f4",
-    "FinalNote": 68,
+    "id": "F4B82C4C-9820-4029-AEA0-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "5E44C58D-4665-4AA4-EE2E-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "63c19e39-0b90-41ec-b2f8-252486decbcd",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "957e2a48-f81f-461e-aed8-877ffe10d1c9",
-    "FinalNote": 80,
+    "id": "85D1C3AF-CCF6-49B0-AEA1-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "4E7610E8-3AA4-4DF0-EE2F-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "b7eff631-983b-4485-8bc8-d2128304b0d3",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "9e105434-f3c5-4958-bb86-ddc307cdd243",
-    "FinalNote": 86,
+    "id": "1922BE71-8BB5-4910-AEA2-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "FDC326DE-6CF5-46AE-EE30-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "66cbaef0-1c8a-4bf4-b975-30b98c3f5088",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "fbe9dfb4-e1e9-4b73-bcc2-d4e74d5298a8",
-    "FinalNote": 78,
+    "id": "2FF0145B-C570-40E6-AEA3-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "6778549F-C94E-4C09-EE31-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "448a01b0-60be-4894-adbe-afdb62a041a0",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "6c4b3654-0914-430d-826a-e17fa4c28b16",
-    "FinalNote": 68,
+    "id": "33F800CA-C605-4E35-AEA4-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "92FBD7CC-DBCF-4812-EE32-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "2e10b9b8-2dd7-4844-8e35-bc1145f0c6af",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "be90b306-bb09-43cb-8162-8652935b0488",
-    "FinalNote": 85,
+    "id": "36E872AC-54F9-4705-AEA5-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9EC4C5A9-1401-4DA2-EE33-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "3c48447c-a354-4a90-95c7-55cdfe77c465",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "eaa069cf-509f-46ed-8e3f-6f9291654207",
-    "FinalNote": 94,
+    "id": "BB9243A6-C883-480B-AEA6-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "6B3680C0-9463-4A2A-EE34-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "fd0156b0-87a0-4385-9a9f-51435936f68c",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "6c414426-7342-4072-afd8-2dc0d47514f9",
-    "FinalNote": 82,
+    "id": "EDF7BE13-777A-4FA4-AEA7-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "2E3EBD7C-0451-4287-EE35-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "15376d92-9218-49b7-91e6-78398fde2e8d",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "88a4d135-5556-4fec-afc0-3cb2321db2e7",
-    "FinalNote": 78,
+    "id": "D31E0ED3-EE78-4D70-AEA8-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "2F752895-3C52-469C-EE36-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "7dab20c5-e247-4ca8-a29f-4bb75c225cd7",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "8b98ed34-1559-464a-be39-70475b63eb25",
-    "FinalNote": 63,
+    "id": "F6158ED8-4A85-40A5-AEA9-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "C0B28711-59E4-4389-EE37-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "f33e4593-1f0f-4bae-8d86-f02b68a5e9d2",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "9e6925a1-e847-44d1-86f5-7e7371cd4947",
-    "FinalNote": 73,
+    "id": "C60BBB3A-5701-43EA-AEAA-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9A6E2BEE-5D49-4721-EE38-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "6bf4d2fc-25f5-4431-bd92-83c17f8b22b1",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "fbbe1f0a-4109-4df7-ab05-3882c1f0fe5d",
-    "FinalNote": 65,
+    "id": "2EA7A0A5-725C-4F45-AEAB-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "18552DEC-2266-4F00-EE39-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "a2c0d68f-aab4-4f52-a4ee-64a0deec42b0",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "5b2f1d46-3bc6-491a-a7a1-7845d4d58b4f",
-    "FinalNote": 68,
+    "id": "F851A7EB-7AE7-4323-AEAC-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9425F7A8-F699-4400-EE3A-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "36b933ed-e1b2-4faa-ad85-58bfba5adcc4",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "d5de5fa7-075c-4d24-9bb7-6788e94b5491",
-    "FinalNote": 69,
+    "id": "DF321078-D386-4E86-AEAD-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9278D63D-9143-4616-EE3B-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "eb45c259-3a68-4f30-926f-ef6244ab94d4",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "4c2e5504-4855-4364-9eb9-28cb45385cdf",
-    "FinalNote": 88,
+    "id": "446FC1E8-735D-43F1-AEAE-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "50B18A7C-AAA8-4261-EE3C-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "df8e244d-5553-4b8c-b488-7c145d9da590",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "960bab74-da1e-4c55-83a1-f12bdbfbf774",
-    "FinalNote": 100,
+    "id": "6357CC36-9B40-47C7-AEAF-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "11AED3F7-C53F-4FBA-EE3D-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "659c8590-ec9d-480f-a9ea-2e7cc8cced3b",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "d475fb0b-f0d0-47f8-9a86-6c042beca7e7",
-    "FinalNote": 71,
+    "id": "37612796-85F5-49B0-AEB0-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "879E2D50-D95B-4ED5-EE3E-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "71a949d1-f649-4aa1-bb69-c1d5db64446b",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "e6733968-418a-4587-b98f-0f82bd85802f",
-    "FinalNote": 56,
+    "id": "A045BFEC-3BD5-453D-AEB1-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "73ED78D6-F669-4BB8-EE3F-08DD73CC1390",
+    "FinalNote": 0,
     "IsActive": true
   },
   {
-    "id": "735e2e91-394a-47c3-91b8-3d81e474d5f6",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "9999888e-1949-4535-87d5-6c7775901195",
-    "FinalNote": 69,
+    "id": "43B0EF84-7F79-4003-AEB2-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "3D0B1229-905A-4BB0-EE40-08DD73CC1390",
+    "FinalNote": 3,
     "IsActive": true
   },
   {
-    "id": "499cf11d-1cf1-461f-a3d6-6844e35621db",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "3f6cf9b7-366c-429d-b9a1-3c3a0783b62b",
-    "FinalNote": 72,
+    "id": "54F3FA89-08C5-4A30-AEB3-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "ACF5A242-0A02-4FBF-EE41-08DD73CC1390",
+    "FinalNote": 4,
     "IsActive": true
   },
   {
-    "id": "db2ff18e-6572-47cf-a214-5439fc82fc39",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "f9c2b906-770e-4f8a-a4d0-99df875ae611",
-    "FinalNote": 92,
+    "id": "9CDCB500-AB2D-46B9-AEB4-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "1351D6B4-1469-47E9-EE42-08DD73CC1390",
+    "FinalNote": 5,
     "IsActive": true
   },
   {
-    "id": "180d24bb-8bb3-427f-a767-8924acd93b7d",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "449f0ab3-0990-4a06-83a3-7dedcc507fa1",
-    "FinalNote": 84,
+    "id": "AF62CAA4-A7F4-4BB7-AEB5-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "65B45386-E0CD-49E2-EE43-08DD73CC1390",
+    "FinalNote": 5,
     "IsActive": true
   },
   {
-    "id": "e1d90c61-b6db-44ce-8ec4-002430a1e66d",
-    "CourseId": "b941094a-2646-470f-a18b-5bd75f9b067c",
-    "StudentId": "41d61e79-05de-48aa-88a3-3f0a2128fd0a",
-    "FinalNote": 82,
+    "id": "D7862874-B407-4496-AEB6-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "87F39F99-CFF5-449B-EE44-08DD73CC1390",
+    "FinalNote": 1,
     "IsActive": true
   }
 ]
-

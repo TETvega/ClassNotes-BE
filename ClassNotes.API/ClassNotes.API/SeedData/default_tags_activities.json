@@ -38,5 +38,10 @@
     "name": "Experiment",
     "colorHex": "fd699d",
     "icon": "flask"
+  },
+  {
+    "name": "Undefined",
+    "colorHex": "fd699d",
+    "icon": "flask"
   }
 ]

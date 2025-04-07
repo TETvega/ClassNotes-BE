@@ -1,0 +1,26 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/course_notes
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+      "title": "Calentamiento Global charla",
+      "content": "Expocision sobre las bases de datos",
+      "registrationDate": "2025-03-02T10:00:00",
+      "useDate": "2025-04-28T12:00:00",
+    "courseId": "f6cfc25e-8259-4cde-4e74-08dd73c935a0"
+  }
+  
+}

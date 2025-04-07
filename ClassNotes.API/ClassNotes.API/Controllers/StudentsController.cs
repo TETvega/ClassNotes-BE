@@ -1,8 +1,11 @@
 ﻿using ClassNotes.API.Constants;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Students;
+using iText.Kernel.Geom;
+using MailKit.Search;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +24,22 @@ namespace ClassNotes.API.Controllers
 			_studentsService = studentsService;
 		}
 
+        [HttpGet("pendings/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<PendingClassesDto>>>> GetPendingActivitiesClases(Guid id, int? top = null  )
+        {
+            var response = await _studentsService.GetPendingActivitiesClasesListAsync(id , top);
+            return StatusCode(response.StatusCode, new
+            {
+                response.Status,
+                response.Message,
+                response.Data,
+            });
+        }
+
+
         [HttpGet]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<PaginationDto<List<StudentDto>>>>> PaginationList(string searchTerm, int? pageSize = null, int page = 1)
         {
             var response = await _studentsService.GetStudentsListAsync(searchTerm,pageSize, page);

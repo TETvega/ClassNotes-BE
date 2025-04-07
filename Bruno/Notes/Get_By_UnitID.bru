@@ -1,0 +1,26 @@
+meta {
+  name: Get_By_UnitID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/notes/units?studentId=41D61E79-05DE-48AA-88A3-3F0A2128FD0A&courseId=B941094A-2646-470F-A18B-5BD75F9B067C&page=1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  studentId: 41D61E79-05DE-48AA-88A3-3F0A2128FD0A
+  courseId: B941094A-2646-470F-A18B-5BD75F9B067C
+  page: 1
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+vars:pre-request {
+  studentId: 
+  unitId: 
+}

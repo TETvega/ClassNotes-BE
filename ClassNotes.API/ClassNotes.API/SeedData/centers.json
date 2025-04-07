@@ -1,122 +1,183 @@
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "name": "Universidad Nacional Autónoma de Honduras",
-    "abbreviation": "UNAH",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "72ed66eb-6396-4788-a337-eb40174dd756",
-    "name": "Universidad Nacional Autónoma de Honduras",
-    "abbreviation": "UNAH",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-  },
-  {
-    "id": "3f471eaa-2cb9-404b-bbc7-5173c45d2083",
-    "name": "Universidad Nacional Autónoma de Honduras",
-    "abbreviation": "UNAH",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "8f920314-2345-67ab-cdef-8901234567fc"
-  },
-  {
-    "id": "9106f197-3996-4213-95fe-db492c10c1f3",
-    "name": "Universidad Nacional Autónoma de Honduras",
-    "abbreviation": "UNAH",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "9f031425-3456-78ab-cdef-9012345678fd"
-  },
-  {
-    "id": "e29b8400-e29b-41d4-a716-446655440001",
-    "name": "Universidad Tecnológica Centroamericana",
-    "abbreviation": "UNITEC",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "e29b8400-e29b-41d4-a716-446655440002",
-    "name": "Universidad José Cecilio del Valle",
-    "abbreviation": "UJCV",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "234ef0aa-9ad5-411e-b34a-872b61deac7d",
-    "name": "Universidad Católica de Honduras",
-    "abbreviation": "UNICAH",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "15ead739-8a7e-411b-97d1-0c719faf1008",
-    "name": "Universidad Católica de Honduras",
-    "abbreviation": "UNICAH",
-    "logo": null,
-    "isArchived": true,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "a8519f94-6210-4110-8ba5-65b3c7d22081",
-    "name": "Escuela Licenciado Jerónimo J. Reina",
-    "abbreviation": "ELJJR",
-    "logo": null,
-    "isArchived": false,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "300c439c-e4e2-4eab-bb6e-e1eaec4252ff",
-    "name": "Escuela Manuel Bonilla",
-    "abbreviation": "EMB",
-    "logo": null,
-    "isArchived": false,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "643e622c-ea02-4690-b63d-f78960d515c4",
-    "name": "Instituto Oficial Álvaro Contreras",
-    "abbreviation": "IDAC",
-    "logo": null,
-    "isArchived": false,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "8c86ddbb-f619-4257-a9fa-a2bd8f4d9333",
-    "name": "Instituto Salesiano María Auxiliadora",
-    "abbreviation": "ISMA",
-    "logo": null,
-    "isArchived": false,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "a6118753-9a7c-4949-9f9e-d86193d15880",
-    "name": "Instituto Bilingüe Héctor Emilio Medina",
-    "abbreviation": "IBHEM",
-    "logo": null,
-    "isArchived": false,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "faba84c3-9f09-4bdd-a5db-d5ca5888f88a",
-    "name": "Western International School - Campus Santa Rosa de Lima",
-    "abbreviation": "WIS",
-    "logo": null,
-    "isArchived": false,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  },
-  {
-    "id": "42ac6409-53d6-429b-9414-ad4aaf153fcf",
+    "id": "42AC6409-53D6-429B-9414-AD4AAF153FCF",
     "name": "Alfa y Omega Bilingual School",
     "abbreviation": "AYO",
-    "logo": null,
     "isArchived": false,
-    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7"
-  }
+    "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+  },
+  {
+    "id": "A8519F94-6210-4110-8BA5-65B3C7D22081",
+    "name": "Escuela Licenciado Jerónimo J. Reina",
+    "abbreviation": "ELJJR",
+    "isArchived": false,
+    "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+  },
+  {
+    "id": "300C439C-E4E2-4EAB-BB6E-E1EAEC4252FF",
+    "name": "Escuela Manuel Bonilla",
+    "abbreviation": "EMB",
+    "isArchived": false,
+    "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+  },
+  {
+    "id": "A6118753-9A7C-4949-9F9E-D86193D15880",
+    "name": "Instituto Bilingüe Héctor Emilio Medina",
+    "abbreviation": "IBHEM",
+    "isArchived": false,
+    "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+  },
+  {
+    "id": "281425C4-CD3B-45E6-6FCD-08DD73C6C0DE",
+    "name": "Instituto Gubernamental Alvaro Contreras",
+    "abbreviation": "IGAC",
+    "isArchived": false,
+    "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+  },
+    {
+      "id": "643E622C-EA02-4690-B63D-F78960D515C4",
+      "name": "Instituto Oficial Álvaro Contreras",
+      "abbreviation": "IDAC",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "8C86DDBB-F619-4257-A9FA-A2BD8F4D9333",
+      "name": "Instituto Salesiano María Auxiliadora",
+      "abbreviation": "ISMA",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "70EB26CE-9759-43AC-6FCE-08DD73C6C0DE",
+      "name": "Kinder Federico C. Canales",
+      "abbreviation": "KFCC",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "66163193-2F32-4E59-D73D-08DD73428361",
+      "name": "Universidad Catolica de Honduras",
+      "abbreviation": "UNICAH",
+      "isArchived": false
+    },
+  {
+    "id": "2F9ED086-5513-4F3F-D73E-08DD73428361",
+    "name": "Universidad Catolica Honduras",
+    "abbreviation": "UNICAH-CO",
+    "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743748535\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_2f9ed086-5513-4f3f-d73e-08dd73428361_vjilgu.jpg",
+    "isArchived": false
+  },
+    {
+      "id": "1541FF7C-0E5E-4FD7-6FC9-08DD73C6C0DE",
+      "name": "Universidad de Brasil",
+      "abbreviation": "UnB",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805395\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_1541ff7c-0e5e-4fd7-6fc9-08dd73c6c0de_h3qall.jpg",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "63AEDA03-0270-409D-6FCA-08DD73C6C0DE",
+      "name": "Universidad de Chile",
+      "abbreviation": "UCH",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805434\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_63aeda03-0270-409d-6fca-08dd73c6c0de_fzhplp.jpg",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "2DF40FB5-252D-4F97-6FC6-08DD73C6C0DE",
+      "name": "Universidad de Ciencias y Tecnologias de China",
+      "abbreviation": "USTC",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805249\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_2df40fb5-252d-4f97-6fc6-08dd73c6c0de_tmlfct.jpg",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "1292601A-8CB9-4030-6FCC-08DD73C6C0DE",
+      "name": "Universidad de Korea del Sur",
+      "abbreviation": "KU",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805469\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_1292601a-8cb9-4030-6fcc-08dd73c6c0de_amdo2n.jpg",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+  {
+    "id": "75EFF00E-DABC-4831-6FC7-08DD73C6C0DE",
+    "name": "Universidad de Oxford",
+    "abbreviation": "OXON",
+    "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805269\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_75eff00e-dabc-4831-6fc7-08dd73c6c0de_n3lr7o.jpg",
+    "isArchived": false,
+    "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+  },
+    {
+      "id": "C854BC29-F388-400B-6FC4-08DD73C6C0DE",
+      "name": "Universidad de Pekin",
+      "abbreviation": "UPK",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805163\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_c854bc29-f388-400b-6fc4-08dd73c6c0de_kjn4un.jpg",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "4446CAAE-B8E0-422B-6FCB-08DD73C6C0DE",
+      "name": "Universidad de TOKYO",
+      "abbreviation": "TOKYO",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805453\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_4446caae-b8e0-422b-6fcb-08dd73c6c0de_hhybxn.jpg",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "3A534D7B-90BF-43BF-6FC5-08DD73C6C0DE",
+      "name": "Universidad de Tsinghua",
+      "abbreviation": "THU",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805221\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_3a534d7b-90bf-43bf-6fc5-08dd73c6c0de_vw6dfo.jpg",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "E29B8400-E29B-41D4-A716-446655440002",
+      "name": "Universidad José Cecilio del Valle",
+      "abbreviation": "UJCV",
+      "isArchived": true,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+  {
+    "id": "EAE917FF-F8FB-408A-D740-08DD73428361",
+    "name": "Universidad Metropolitana Copan de Honduras",
+    "abbreviation": "METRO-CO",
+    "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743749348\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_eae917ff-f8fb-408a-d740-08dd73428361_w2nios.png",
+    "isArchived": false
+  },
+    {
+      "id": "33F73BA2-7A68-4401-D73F-08DD73428361",
+      "name": "Universidad Metropolitana de Honduras",
+      "abbreviation": "METRO",
+      "isArchived": false
+    },
+    {
+      "id": "7C698CFA-3F3B-459D-D73C-08DD73428361",
+      "name": "Universidad Nacional Autonoma de Honduras",
+      "abbreviation": "UNAH",
+      "isArchived": false
+    },
+    {
+      "id": "F113F48F-42D1-4596-6FC8-08DD73C6C0DE",
+      "name": "Universidad Peruana de Ciencias Aplicadas",
+      "abbreviation": "UPC",
+      "logo": "http:\/\/res.cloudinary.com\/dbf8pdnbc\/image\/upload\/v1743805327\/Centers\/356d48a0-2ca3-48f4-ac8b-c5f25effb073_f113f48f-42d1-4596-6fc8-08dd73c6c0de_tvj5zj.png",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "E29B8400-E29B-41D4-A716-446655440001",
+      "name": "Universidad Tecnológica Centroamericana",
+      "abbreviation": "UNITEC",
+      "isArchived": true,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    },
+    {
+      "id": "FABA84C3-9F09-4BDD-A5DB-D5CA5888F88A",
+      "name": "Western International School - Campus Santa Rosa de Lima",
+      "abbreviation": "WIS",
+      "isArchived": false,
+      "teacherId": "356d48a0-2ca3-48f4-ac8b-c5f25effb073"
+    }
 ]

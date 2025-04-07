@@ -1,0 +1,15 @@
+meta {
+  name: Course_Attendances_Stats
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/attendances/course_stats/f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Change_Email
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/users/email/5712fc6c-b601-4e06-a848-4872610f7583
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "newEmail": ""
+  }
+}

@@ -1,0 +1,31 @@
+meta {
+  name: Pagination_List
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{PATH}}/course_notes/getAllNotes
+  body: json
+  auth: bearer
+}
+
+params:query {
+  ~page: 3
+  ~pageSize: 3
+  ~searchTerm: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "courseId": "f6cfc25e-8259-4cde-4e74-08dd73c935a0",
+    "searchTerm": "",
+    "page": 1,
+    "pageSize": 10,
+    "filter": "HISTORY"
+  }
+}

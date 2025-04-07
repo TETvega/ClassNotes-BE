@@ -1,0 +1,19 @@
+meta {
+  name: Get_Student_PendingActivities_Clases
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{PATH}}/students/pendings/87f39f99-cff5-449b-ee44-08dd73cc1390
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~top: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

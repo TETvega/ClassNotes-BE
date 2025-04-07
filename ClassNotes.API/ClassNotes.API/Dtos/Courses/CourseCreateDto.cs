@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ClassNotes.API.Dtos.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace ClassNotes.API.Dtos.Courses
 {
