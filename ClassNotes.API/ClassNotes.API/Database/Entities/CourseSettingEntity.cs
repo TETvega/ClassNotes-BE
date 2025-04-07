@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using System.ComponentModel;
+using NetTopologySuite.Geometries;
 
 namespace ClassNotes.API.Database.Entities
 {
@@ -47,7 +48,16 @@ namespace ClassNotes.API.Database.Entities
         [Column("minimum_attendance_time")]
         [Range(5, 59)]
         [DefaultValue(10)]
-        public int MinimumAttendanceTime { get; set; }
+        public int MinimumAttendanceTime { get; set; } // tiempo minimo para realizar la asistencia
+
+        [Column("geolocation")]
+        public Point GeoLocation { get; set; } // Sistema de geolocalizacion
+
+        [Required]
+        [Column("validate_range_mts")]
+        [Range(30,200)]
+        [DefaultValue(50)]
+        public int ValidateRangeMeters { get; set; } // De tipo requerido
 
         [Required]
         [Column("is_original")]

@@ -1,0 +1,15 @@
+meta {
+  name: Dashboard_ByID
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{PATH}}/courses/f6cfc25e-8259-4cde-4e74-08dd73c935a0/info
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

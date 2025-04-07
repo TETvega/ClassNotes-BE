@@ -7,6 +7,8 @@ using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
+using NetTopologySuite;
 
 namespace ClassNotes.API.Services.Courses
 {
@@ -224,6 +226,7 @@ namespace ClassNotes.API.Services.Courses
                     MinimumGrade = existingSetting.MinimumGrade,
                     MaximumGrade = existingSetting.MaximumGrade,
                     MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
+                    GeoLocation = existingSetting.GeoLocation,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = false // Marcamos como copia
@@ -231,6 +234,8 @@ namespace ClassNotes.API.Services.Courses
             }
             else // Caso 2: Crear una nueva configuración original
             {
+                var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var point = geometryFactory.CreatePoint(new Coordinate(dto.CourseSetting.GetLocationDto.X, dto.CourseSetting.GetLocationDto.Y));
                 // Crear la configuración original
                 var originalSettingEntity = new CourseSettingEntity
                 {
@@ -241,6 +246,7 @@ namespace ClassNotes.API.Services.Courses
                     MinimumGrade = dto.CourseSetting.MinimumGrade,
                     MaximumGrade = dto.CourseSetting.MaximumGrade,
                     MinimumAttendanceTime = dto.CourseSetting.MinimumAttendanceTime,
+                    GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = true // Marcamos como configuración original
@@ -260,6 +266,7 @@ namespace ClassNotes.API.Services.Courses
                     MinimumGrade = originalSettingEntity.MinimumGrade,
                     MaximumGrade = originalSettingEntity.MaximumGrade,
                     MinimumAttendanceTime = originalSettingEntity.MinimumAttendanceTime,
+                    GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = false // La copia siempre es marcada como no original
@@ -302,6 +309,13 @@ namespace ClassNotes.API.Services.Courses
         }
 
         // CP -> Editar un curso 
+        // TODO
+
+
+
+
+
+        // Podra editar la configuracion de GEOLOCALIZACION 
         public async Task<ResponseDto<CourseDto>> EditAsync(CourseEditDto dto, Guid id)
         {
             var userId = _auditService.GetUserId();
@@ -417,5 +431,58 @@ namespace ClassNotes.API.Services.Courses
                 Message = MessagesConstant.CRS_DELETE_SUCCESS
             };
         }
+
+        public async Task<ResponseDto<CourseWithSettingDto>> EditUbicationAsync(LocationDto dto, Guid id)
+        {
+            var userId = _auditService.GetUserId();
+
+            // Validar si no se mandó lat/lng
+            if (dto.X == 0 || dto.Y == 0)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Ubicación inválida"
+                };
+            }
+
+            // Obtener el curso con su CourseSetting
+            var course = await _context.Courses
+                .Include(c => c.CourseSetting)
+                .FirstOrDefaultAsync(c => c.Id == id  && c.CreatedBy == userId);
+
+            if (course == null || course.CourseSetting == null)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "Curso o configuración no encontrados"
+                };
+            }
+
+            // Crear el punto de ubicación
+            var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+            var point = geometryFactory.CreatePoint(new Coordinate(dto.X, dto.Y));
+
+            // Actualizar la geolocalización
+            course.CourseSetting.GeoLocation = point;
+
+            // Guardar cambios
+            await _context.SaveChangesAsync();
+
+            var courseDto = _mapper.Map<CourseWithSettingDto>(course);
+
+            return new ResponseDto<CourseWithSettingDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Ubicación actualizada correctamente",
+                Data = courseDto
+            };
+        }
+
+
     }
 }

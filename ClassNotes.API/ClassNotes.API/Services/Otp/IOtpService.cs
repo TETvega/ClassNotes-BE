@@ -10,5 +10,8 @@ namespace ClassNotes.API.Services.Otp
 
 		// CG: este servicio solo funciona para validar que el otp se elimina de cache
 		Task<ResponseDto<OtpDto>> GetCachedOtpAsync(string email);
-	}
+
+        string GenerateSecretKey(string hmacToUse, string id);
+        string GenerateOtp(string secretKey, int otpExpirationSeconds);
+    }
 }
