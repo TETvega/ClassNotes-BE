@@ -30,7 +30,7 @@ using ClassNotes.API.Services.Distance;
 using ClassNotes.API.Services;
 using ClassNotes.API.Services.Notes;
 using ClassNotes.API.Services.AllCourses;
-
+using Serilog;
 
 namespace ClassNotes.API;
 
@@ -53,51 +53,50 @@ public class Startup
 
         // Contexto de la base de datos
         services.AddDbContext<ClassNotesContext>(options =>
-			options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-		// Servicios personalizados
-		services.AddTransient<IActivitiesService, ActivitiesService>();
-		services.AddTransient<IAttendancesService, AttendancesService>();
-		services.AddTransient<INotesService, NotesService>();
-		services.AddTransient<ICourseNotesService, CourseNotesService>();
-		services.AddTransient<ICourseSettingsService, CourseSettingsService>();
-		services.AddTransient<ICoursesService, CoursesService>();
-		services.AddTransient<IStudentsService, StudentsService>();
-		services.AddTransient<IUsersService, UsersService>();
-		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
-		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
-		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
-		services.AddTransient<ICloudinaryService, CloudinaryService>();
-    	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
-		services.AddTransient<ICoursesFilterService, CoursesFilterService>();
-		services.AddTransient<ICentersService, CentersService>();
+        // Servicios personalizados
+        services.AddTransient<IActivitiesService, ActivitiesService>();
+        services.AddTransient<IAttendancesService, AttendancesService>();
+        services.AddTransient<INotesService, NotesService>();
+        services.AddTransient<ICourseNotesService, CourseNotesService>();
+        services.AddTransient<ICourseSettingsService, CourseSettingsService>();
+        services.AddTransient<ICoursesService, CoursesService>();
+        services.AddTransient<IStudentsService, StudentsService>();
+        services.AddTransient<IUsersService, UsersService>();
+        services.AddTransient<IDashboardHomeService, DashboardHomeService>();
+        services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
+        services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
+        services.AddTransient<IDashboardCenterService, DashboardCenterService>();
+        services.AddTransient<ICoursesFilterService, CoursesFilterService>();
+        services.AddTransient<ICentersService, CentersService>();
 
-        services.AddSingleton<DistanceService>(); //
-        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
+        services.AddSingleton<DistanceService>();
+        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>();
         services.AddScoped<QRService>();
         services.AddHostedService<QRService>();
-        services.AddSingleton<OTPCleanupService>(); // 
-        services.AddHostedService(provider => provider.GetRequiredService<OTPCleanupService>()); //
+        services.AddSingleton<OTPCleanupService>();
+        services.AddHostedService(provider => provider.GetRequiredService<OTPCleanupService>());
         services.AddSingleton<EmailScheduleService>();
         services.AddHostedService<ScheduledEmailSender>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
 
         // Servicios de seguridad
         services.AddTransient<IAuditService, AuditService>();
-		services.AddTransient<IAuthService, AuthService>();
-		services.AddTransient<IOtpService, OtpService>();
+        services.AddTransient<IAuthService, AuthService>();
+        services.AddTransient<IOtpService, OtpService>();
 
-		// Servicio para el envio de correos (SMTP)
-		services.AddTransient<IEmailsService, EmailsService>();
+        // Servicio para el envio de correos (SMTP)
+        services.AddTransient<IEmailsService, EmailsService>();
 
-		// Servicio para la subida de archivos de imagenes en la nube (Cloudinary)
-		services.AddTransient<ICloudinaryService, CloudinaryService>();
+        // Servicio para la subida de archivos de imagenes en la nube (Cloudinary)
+        services.AddTransient<ICloudinaryService, CloudinaryService>();
 
-		// Servicio para el mapeo automático de Entities y DTOs (AutoMapper)
-		services.AddAutoMapper(typeof(AutoMapperProfile));
+        // Servicio para el mapeo automático de Entities y DTOs (AutoMapper)
+        services.AddAutoMapper(typeof(AutoMapperProfile));
 
-		// Habilitar cache en memoria
-		services.AddMemoryCache();
+        // Habilitar cache en memoria
+        services.AddMemoryCache();
 
         // Configuración del IdentityUser
         services.AddIdentity<UserEntity, IdentityRole>(options =>
@@ -106,42 +105,42 @@ public class Startup
         }).AddEntityFrameworkStores<ClassNotesContext>()
           .AddDefaultTokenProviders();
 
-		services.AddAuthentication(options =>
-		{
-			options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-			options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-			options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-		}).AddJwtBearer(options =>
-		{
-			options.SaveToken = true;
-			options.RequireHttpsMetadata = false;
-			options.TokenValidationParameters = new TokenValidationParameters
-			{
-				ValidateIssuer = true,
-				ValidateAudience = false,
-				ValidAudience = Configuration["JWT:ValidAudience"],
-				ValidIssuer = Configuration["JWT:ValidIssuer"],
-				ClockSkew = TimeSpan.Zero,
-				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
-			};
-		});
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.SaveToken = true;
+            options.RequireHttpsMetadata = false;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = false,
+                ValidAudience = Configuration["JWT:ValidAudience"],
+                ValidIssuer = Configuration["JWT:ValidIssuer"],
+                ClockSkew = TimeSpan.Zero,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
+            };
+        });
 
-		// CORS Configuration
-		services.AddCors(opt =>
-		{
-			var allowURLS = Configuration.GetSection("AllowURLS").Get<string[]>();
+        // CORS Configuration
+        services.AddCors(opt =>
+        {
+            var allowURLS = Configuration.GetSection("AllowURLS").Get<string[]>();
 
-			opt.AddPolicy("CorsPolicy", builder => builder
-			.WithOrigins(allowURLS)
-			.AllowAnyMethod()
-			.AllowAnyHeader()
-			.AllowCredentials());
-		});
-	}
+            opt.AddPolicy("CorsPolicy", builder => builder
+            .WithOrigins(allowURLS)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+        });
+    }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        if(env.IsDevelopment())
+        if (env.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI();
@@ -150,6 +149,8 @@ public class Startup
         app.UseHttpsRedirection();
 
         app.UseRouting();
+
+        app.UseSerilogRequestLogging(); //JA: Log de cada peticion HTTP
 
         app.UseCors("CorsPolicy");
 

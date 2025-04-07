@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Database.Configuration;
 using ClassNotes.API.Services.Audit;
 using System.Diagnostics;
+using Serilog;
 
 
 namespace ClassNotes.API.Database
@@ -71,27 +72,68 @@ namespace ClassNotes.API.Database
         {
             var entries = ChangeTracker
                 .Entries()
-                .Where(e => e.Entity is BaseEntity && (
-                    e.State == EntityState.Added ||
-                    e.State == EntityState.Modified
-                ));
+                .Where(e => e.Entity is BaseEntity &&
+                    (e.State == EntityState.Added ||
+                     e.State == EntityState.Modified ||
+                     e.State == EntityState.Deleted));
 
             foreach (var entry in entries)
             {
                 var entity = entry.Entity as BaseEntity;
+                var userId = _auditService.GetUserId();
+                var entityName = entry.Entity.GetType().Name;
+                var primaryKey = entry.Properties
+                    .FirstOrDefault(p => p.Metadata.IsPrimaryKey())?.CurrentValue?.ToString();
+
                 if (entity != null)
                 {
-                    //El usuario esta creando 
                     if (entry.State == EntityState.Added)
                     {
-                        entity.CreatedBy = _auditService.GetUserId();
+                        entity.CreatedBy = userId;
                         entity.CreatedDate = DateTime.Now;
+
+                        Log.Information("Entidad agregada - {Entity}, Id: {Id}, Usuario: {UserId}, Valores: {@Values}",
+                            entityName,
+                            primaryKey ?? "Desconocido",
+                            userId ?? "Anonimo",
+                            entry.CurrentValues.Properties.ToDictionary(p => p.Name, p => entry.CurrentValues[p]));
                     }
-                    //El usuario esta editando 
-                    else
+                    else if (entry.State == EntityState.Modified)
                     {
-                        entity.UpdatedBy = _auditService.GetUserId();
+                        entity.UpdatedBy = userId;
                         entity.UpdatedDate = DateTime.Now;
+
+                        var changes = new List<object>();
+
+                        foreach (var prop in entry.Properties)
+                        {
+                            if (!Equals(prop.OriginalValue, prop.CurrentValue))
+                            {
+                                changes.Add(new
+                                {
+                                    Property = prop.Metadata.Name,
+                                    OldValue = prop.OriginalValue,
+                                    NewValue = prop.CurrentValue
+                                });
+                            }
+                        }
+
+                        if (changes.Any())
+                        {
+                            Log.Information("Entidad modificada - {Entity}, Id: {Id}, Usuario: {UserId}, Cambios: {@Changes}",
+                                entityName,
+                                primaryKey ?? "Desconocido",
+                                userId ?? "Anonimo",
+                                changes);
+                        }
+                    }
+                    else if (entry.State == EntityState.Deleted)
+                    {
+                        Log.Information("Entidad eliminada - {Entity}, Id: {Id}, Usuario: {UserId}, Valores anteriores: {@OldValues}",
+                            entityName,
+                            primaryKey ?? "Desconocido",
+                            userId ?? "Anonimo",
+                            entry.OriginalValues.Properties.ToDictionary(p => p.Name, p => entry.OriginalValues[p]));
                     }
                 }
             }
@@ -99,9 +141,10 @@ namespace ClassNotes.API.Database
             return base.SaveChangesAsync(cancellationToken);
         }
 
+
         // AM: Funcion SaveChangesAsync pero que omite el AuditService que se puede usar cuando el usuario no esta autenticado
         // Por ejemplo, se puede utilizar en el seeder ya que los campos de auditoria se pasan manualmente
-		public async Task<int> SaveChangesWithoutAuditAsync( CancellationToken cancellationToken = default)
+        public async Task<int> SaveChangesWithoutAuditAsync( CancellationToken cancellationToken = default)
 		{
          
             // AM: Omite cualquier lógica relacionada con AuditService.
