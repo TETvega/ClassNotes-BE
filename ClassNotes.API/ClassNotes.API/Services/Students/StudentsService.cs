@@ -6,6 +6,7 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.Diagnostics;
 
 namespace ClassNotes.API.Services.Students
 {
@@ -554,7 +556,75 @@ namespace ClassNotes.API.Services.Students
             };
         }
 
+        public async Task<ResponseDto<List<PendingClassesDto>>> GetPendingActivitiesClasesListAsync(
+            Guid id,
+            int? top = null)
+        {
+            var userId = _auditService.GetUserId();
+
+            var studentExists = await _context.Students
+                .AsNoTracking()
+                .AnyAsync(s => s.Id == id && s.Courses.Any(sc => sc.IsActive));
+
+            if (!studentExists)
+            {
+                return new ResponseDto<List<PendingClassesDto>>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.STU_RECORD_NOT_FOUND
+                };
+            }
+            // Verificar que el usuario autenticado sea docente del estudiante
+            var isTeacherOfStudent = await _context.Students
+                .AsNoTracking()
+                .AnyAsync(s => s.Id == id && s.TeacherId == userId);
+
+            if (!isTeacherOfStudent)
+            {
+                return new ResponseDto<List<PendingClassesDto>>
+                {
+                    StatusCode = 403,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+            // HR -> tuve unos problemitas para esta peticion pero la mejor forma 
+            // con un join 
+            var pendingClasses = await (
+                    from sc in _context.StudentsCourses  //Traeme todas las relaciones estudiante - curso
+                    //Uní cada actividad a que tenga una unidad cuya propiedad CourseId sea igual al CourseId del curso al que está inscrito el estudiante sc
+                    join a in _context.Activities on sc.CourseId equals a.Unit.CourseId
+                    where 
+                         sc.StudentId == id &&
+                         sc.IsActive && sc.Course.IsActive &&
+                         a.QualificationDate <= DateTime.UtcNow
+                    // Solo traé las actividades donde el estudiante no tiene ninguna nota mayor a 0
+                    where !a.StudentNotes.Any(sn => 
+                          sn.StudentId == id &&
+                          sn.Note > 0)
+                    // todas las actividades que cumplan los filtros en grupos por curso
+                    group a by new { sc.CourseId, sc.Course.Name } into g
+                    select new PendingClassesDto
+                    {
+                        CourseId = g.Key.CourseId,
+                        CourseName = g.Key.Name,
+                        PendingActivities = g.Count()
+                    }
+                )
+                .OrderByDescending(x => x.PendingActivities)
+                .Take(top ?? 10)
+                .ToListAsync();
 
 
+            return new ResponseDto<List<PendingClassesDto>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = pendingClasses
+            };
+        }
     }
 }
