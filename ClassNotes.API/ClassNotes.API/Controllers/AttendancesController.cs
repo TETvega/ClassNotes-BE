@@ -1,5 +1,6 @@
 ﻿using ClassNotes.API.Constants;
 using ClassNotes.API.Dtos.Attendances;
+using ClassNotes.API.Dtos.Attendances.Student;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Services.Attendances;
 using Microsoft.AspNetCore.Authorization;

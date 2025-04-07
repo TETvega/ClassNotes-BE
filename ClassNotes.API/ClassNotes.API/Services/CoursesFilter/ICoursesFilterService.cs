@@ -1,5 +1,4 @@
-﻿using ClassNotes.API.Dtos.Allcourses;
-using ClassNotes.API.Dtos.Common;
+﻿using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseFilter;
 
 namespace ClassNotes.API.Services.AllCourses

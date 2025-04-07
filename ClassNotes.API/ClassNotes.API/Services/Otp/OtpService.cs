@@ -45,10 +45,10 @@ namespace ClassNotes.API.Services.Otp
 			}
 
 			// CG: Si existe usuario, crear su secreto de Otp en base a su id y contraseña en base32
-			var secretKey = GenerateSecretKey(user);
+			var secretKey = GenerateSecretKey(user.PasswordHash , user.Id);
 
             // CG: Guardar el OTP en memoria
-            var otpCode = GenerateOtp(secretKey);
+            var otpCode = GenerateOtp(secretKey, _otpExpirationSeconds);
             var cacheKey = $"OTP_{user.Email}";
             var otpData = new { Code = otpCode, Expiration = DateTime.UtcNow.AddSeconds(_otpExpirationSeconds) };
             
@@ -146,23 +146,42 @@ namespace ClassNotes.API.Services.Otp
 			};
 		}
 
-		// AM: Generar codigo OTP basado en un secreto unico para cada usuario
-		private string GenerateOtp(string secretKey)
-		{
-			var otpGenerator = new Totp(Base32Encoding.ToBytes(secretKey), step: _otpExpirationSeconds);
-			return otpGenerator.ComputeTotp();
-		}
+        public string GenerateOtp(string secretKey, int otpExpirationSeconds)
+        {
+            var otpGenerator = new Totp(Base32Encoding.ToBytes(secretKey), step: otpExpirationSeconds);
+            return otpGenerator.ComputeTotp();
+        }
 
         // CG: Generar SecretKey dinamicamente en base a la contraseña e id del usuario
-        private string GenerateSecretKey(UserEntity user)
+        public string GenerateSecretKey(string hmacToUse, string id)
         {
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(user.PasswordHash));
-            byte[] hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Id.ToString()));
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(hmacToUse));
+            byte[] hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(id));
 
 
             return Base32Encoding.ToString(hashBytes);
 
         }
+
+
+
+        // AM: Generar codigo OTP basado en un secreto unico para cada usuario
+  //      private string GenerateOtp(string secretKey)
+		//{
+		//	var otpGenerator = new Totp(Base32Encoding.ToBytes(secretKey), step: _otpExpirationSeconds);
+		//	return otpGenerator.ComputeTotp();
+		//}
+
+  //      // CG: Generar SecretKey dinamicamente en base a la contraseña e id del usuario
+  //      private string GenerateSecretKey(UserEntity user)
+  //      {
+  //          using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(user.PasswordHash));
+  //          byte[] hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Id.ToString()));
+
+
+  //          return Base32Encoding.ToString(hashBytes);
+
+  //      }
 
         // CG: Este metodo solo sirve para verificar que la cache esta siendo limpiada tras usar o expirar un OTP
         public async Task<ResponseDto<OtpDto>> GetCachedOtpAsync(string email)

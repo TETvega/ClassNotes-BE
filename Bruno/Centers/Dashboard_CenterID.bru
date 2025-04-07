@@ -1,0 +1,22 @@
+meta {
+  name: Dashboard_CenterID
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{PATH}}/centers/info/c854bc29-f388-400b-6fc4-08dd73c6c0de?searchTerm&page=1&pageSize=12&classType=ACTIVE
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  page: 1
+  pageSize: 12
+  classType: ACTIVE
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

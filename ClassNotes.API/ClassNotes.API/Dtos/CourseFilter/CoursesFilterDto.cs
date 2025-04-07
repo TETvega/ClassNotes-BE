@@ -1,4 +1,4 @@
-﻿namespace ClassNotes.API.Dtos.Allcourses
+﻿namespace ClassNotes.API.Dtos.CourseFilter
 {
     // DTO que representa los filtros disponibles para buscar cursos
     public class CoursesFilterDto

@@ -4,7 +4,6 @@ using AutoMapper;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Dtos.Activities;
-using ClassNotes.API.Dtos.Allcourses;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseFilter;
 using ClassNotes.API.Dtos.Courses;

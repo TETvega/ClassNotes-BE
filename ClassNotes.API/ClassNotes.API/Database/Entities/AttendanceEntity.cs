@@ -17,6 +17,8 @@ namespace ClassNotes.API.Database.Entities
         [Column("registration_date")]
         public DateTime RegistrationDate { get; set; }
 
+        [Column("method")]
+        public string Method { get; set; } // "email" o "qr"
 
         [Required]
         [Column("course_id")]

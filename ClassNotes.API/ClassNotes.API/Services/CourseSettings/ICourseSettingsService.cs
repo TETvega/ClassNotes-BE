@@ -3,8 +3,8 @@ using ClassNotes.API.Dtos.CourseSettings;
 
 namespace ClassNotes.API.Services.CoursesSettings
 {
-	// --------------------- CP --------------------- //
-	public interface ICourseSettingsService
+    // --------------------- CP --------------------- //
+    public interface ICourseSettingsService
 	{
 		// Listar todas las configuraciones que tiene creadas el docente
 		Task<ResponseDto<PaginationDto<List<CourseSettingDto>>>> GetCourseSettingsListAsync(
