@@ -252,12 +252,17 @@ namespace ClassNotes.API.Services.Courses
 
                 //Si es aritmetico, se guarda la nota máxima de la unidad como la divición entre el puntaje maximo del curso
                 // y la cantidad de unidades, para asegurar que sean iguales...
-                if (dto.CourseSetting.ScoreType.ToLower().Trim() != "aritmetico")
+                if (dto.CourseSetting.ScoreType == "aritmetico")
                 {
                     unitMax = dto.CourseSetting.MaximumGrade/UnitList.Count();
                 }
+                //Si es oro, forzamos null vaya lo que vaya
+                else if(dto.CourseSetting.ScoreType == "oro")
+                {
+                    unitMax = null;
+                }
 
-                // si no es aritmetico, se almacena directamente, esto permite nulos para puntajes de tipo oro...
+                // si no, es aritmetico, se almacena directamente...
                 else
                 {
                     unitMax = unit.MaxScore;
