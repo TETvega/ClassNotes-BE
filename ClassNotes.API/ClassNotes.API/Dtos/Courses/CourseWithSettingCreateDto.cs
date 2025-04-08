@@ -9,5 +9,8 @@ namespace ClassNotes.API.Dtos.Courses
 
         // Propiedades de la configuración del curso
         public CourseSettingCreateDto CourseSetting { get; set; }
+
+        // (Ken) Ahora se necesita una lista de unitCreateDto, para que se cree junto con sus unidades...
+        public List<UnitCreateDto> Units { get; set; } 
     }
 }

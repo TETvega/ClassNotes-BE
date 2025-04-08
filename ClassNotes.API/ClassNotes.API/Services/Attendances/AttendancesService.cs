@@ -5,10 +5,11 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Database.Entities;
+using ClassNotes.API.Dtos.Attendances.Student;
 
 namespace ClassNotes.API.Services.Attendances
 {
-	public class AttendancesService : IAttendancesService
+    public class AttendancesService : IAttendancesService
 	{
 		private readonly ClassNotesContext _context;
 		private readonly IAuditService _auditService;

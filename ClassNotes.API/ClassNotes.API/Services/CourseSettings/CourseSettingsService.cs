@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClassNotes.API.Services.CoursesSettings
 {
-	public class CourseSettingsService : ICourseSettingsService
+    public class CourseSettingsService : ICourseSettingsService
 	{
 		// --------------------- CP --------------------- //
 		private readonly ClassNotesContext _context;

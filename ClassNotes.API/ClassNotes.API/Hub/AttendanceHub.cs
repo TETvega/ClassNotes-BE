@@ -6,5 +6,14 @@ namespace ClassNotes.API.Hubs
     {
         // No es necesario agregar métodos adicionales aquí,
         // ya que el controlador enviará mensajes directamente a los clientes.
+        public async Task JoinCourseGroup(string courseId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, courseId);
+        }
+
+        public async Task LeaveCourseGroup(string courseId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, courseId);
+        }
     }
 }

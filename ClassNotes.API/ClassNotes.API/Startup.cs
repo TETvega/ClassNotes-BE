@@ -31,6 +31,9 @@ using ClassNotes.API.Services;
 using ClassNotes.API.Services.Notes;
 using ClassNotes.API.Services.AllCourses;
 using Serilog;
+using ClassNotes.API.Services.AttendanceRealTime;
+using ClassNotes.API.Hubs;
+
 
 namespace ClassNotes.API;
 
@@ -49,30 +52,36 @@ public class Startup
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
+
+		// Centro de cargas en Tiempo real
         services.AddSignalR();
 
         // Contexto de la base de datos
         services.AddDbContext<ClassNotesContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+			options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
+            x => x.UseNetTopologySuite() // para almacenar datos para geolocalizacion en el formato necesitado
+            ));
 
-        // Servicios personalizados
-        services.AddTransient<IActivitiesService, ActivitiesService>();
-        services.AddTransient<IAttendancesService, AttendancesService>();
-        services.AddTransient<INotesService, NotesService>();
-        services.AddTransient<ICourseNotesService, CourseNotesService>();
-        services.AddTransient<ICourseSettingsService, CourseSettingsService>();
-        services.AddTransient<ICoursesService, CoursesService>();
-        services.AddTransient<IStudentsService, StudentsService>();
-        services.AddTransient<IUsersService, UsersService>();
-        services.AddTransient<IDashboardHomeService, DashboardHomeService>();
-        services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
-        services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
-        services.AddTransient<IDashboardCenterService, DashboardCenterService>();
-        services.AddTransient<ICoursesFilterService, CoursesFilterService>();
-        services.AddTransient<ICentersService, CentersService>();
+		// Servicios personalizados
+		services.AddTransient<IActivitiesService, ActivitiesService>();
+		services.AddTransient<IAttendancesService, AttendancesService>();
+		services.AddTransient<INotesService, NotesService>();
+		services.AddTransient<ICourseNotesService, CourseNotesService>();
+		services.AddTransient<ICourseSettingsService, CourseSettingsService>();
+		services.AddTransient<ICoursesService, CoursesService>();
+		services.AddTransient<IStudentsService, StudentsService>();
+		services.AddTransient<IUsersService, UsersService>();
+		services.AddTransient<IDashboardHomeService, DashboardHomeService>();
+		services.AddTransient<ITagsActivitiesService, TagsActivitiesService>();
+		services.AddTransient<IDashboardCoursesService, DashboardCoursesService>();
+		services.AddTransient<ICloudinaryService, CloudinaryService>();
+    	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
+		services.AddTransient<ICoursesFilterService, CoursesFilterService>();
+		services.AddTransient<ICentersService, CentersService>();
 
-        services.AddSingleton<DistanceService>();
-        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>();
+        services.AddSingleton<DistanceService>(); //
+        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
+
         services.AddScoped<QRService>();
         services.AddHostedService<QRService>();
         services.AddSingleton<OTPCleanupService>();
@@ -80,6 +89,13 @@ public class Startup
         services.AddSingleton<EmailScheduleService>();
         services.AddHostedService<ScheduledEmailSender>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
+
+
+
+		//Para Asistencias en Tiepo real
+		services.AddTransient<IAttendanceRSignalService, AttendanceRSignalService>();
+
+
 
         // Servicios de seguridad
         services.AddTransient<IAuditService, AuditService>();
@@ -161,6 +177,9 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+
+			// conexion al cual estara directamente FE
+            endpoints.MapHub<AttendanceHub>("/attendanceHub");
         });
     }
 }

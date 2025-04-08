@@ -2,7 +2,9 @@
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Attendances;
+using ClassNotes.API.Dtos.Attendances.Student;
 using ClassNotes.API.Dtos.Centers;
+using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
@@ -12,6 +14,7 @@ using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Dtos.TagsActivities;
 using ClassNotes.API.Dtos.Users;
 using ClassNotes.API.Services.Audit;
+using NetTopologySuite.Geometries;
 
 namespace ClassNotes.API.Helpers.Automapper
 {
@@ -32,6 +35,7 @@ namespace ClassNotes.API.Helpers.Automapper
             MapsForActivityNotes();
             MapsForUnitNotes();
             MapsForTotalNotes();
+            MapsForUnits();
         }
         private void MapsForActivities()
         {
@@ -61,12 +65,19 @@ namespace ClassNotes.API.Helpers.Automapper
             CreateMap<ActivityEditDto, ActivityEntity>();
         }
 
+        private void MapsForUnits()
+        {
+            CreateMap<UnitEntity, UnitDto>();
+
+        }
+
         private void MapsForAttendances()
         {
             CreateMap<AttendanceEntity, AttendanceDto>();
             CreateMap<AttendanceCreateDto, AttendanceEntity>();
             CreateMap<AttendanceEditDto, AttendanceEntity>();
         }
+
         private void MapsForActivityNotes()
         {
             CreateMap<StudentActivityNoteEntity, StudentActivityNoteDto>();
@@ -108,9 +119,21 @@ namespace ClassNotes.API.Helpers.Automapper
             CreateMap<CourseCreateDto, CourseEntity>();
             CreateMap<CourseEditDto, CourseEntity>();
 
+            // Mapeo con configuración
             CreateMap<CourseEntity, CourseWithSettingDto>()
                 .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src)) // Mapeamos el curso
-                .ForMember(dest => dest.CourseSetting, opt => opt.MapFrom(src => src.CourseSetting)); // Mapeamos la configuración
+                .ForMember(dest => dest.CourseSetting, opt => opt.MapFrom(src => src.CourseSetting)) // Mapeamos la configuración
+                .ForMember(dest => dest.Units, opt => opt.MapFrom(src => src.Units)); // (Ken) ahora puede devolver sus unidades...
+
+            CreateMap<Point, LocationDto>()
+                .ForMember(dest => dest.X, opt => opt.MapFrom(src => src.X))
+                .ForMember(dest => dest.Y, opt => opt.MapFrom(src => src.Y));
+
+            CreateMap<CourseSettingEntity, CourseSettingDto>()
+                .ForMember(dest => dest.GeoLocation, opt => opt.MapFrom(src => src.GeoLocation));
+            CreateMap<LocationDto, Point>()
+                 .ConvertUsing(dto => new Point(dto.X, dto.Y) { SRID = 4326 });
+
         }
 
         private void MapsForStudents()

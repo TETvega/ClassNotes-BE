@@ -19,7 +19,9 @@ namespace ClassNotes.API.Services.Courses
         // CP -> Editar cursos 
         Task<ResponseDto<CourseDto>> EditAsync(CourseEditDto dto, Guid id);
 
+        Task<ResponseDto<CourseWithSettingDto>> EditUbicationAsync(LocationDto dto, Guid id);
+
         // CP -> Eliminar un curso
         Task<ResponseDto<CourseWithSettingDto>> DeleteAsync(Guid id);
-        }
+    }
 }
