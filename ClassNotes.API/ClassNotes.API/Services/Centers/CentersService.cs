@@ -16,6 +16,8 @@ using CloudinaryDotNet.Actions;
 using CloudinaryInstance = CloudinaryDotNet.Cloudinary;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.IdentityModel.Tokens;
+using MailKit.Search;
+using AutoMapper.QueryableExtensions;
 
 namespace ClassNotes.API.Services.Centers
 {
@@ -961,6 +963,55 @@ namespace ClassNotes.API.Services.Centers
             var deleteParams = new DeletionParams(publicId);
             var result = await cloudinary.DestroyAsync(deleteParams);
             return result;
+        }
+
+        public async Task<ResponseDto<PaginationDto<List<CenterDto>>>> GetCentersActivesListAsync(
+            int? pageSize = null,
+            int page = 1
+            )
+        {
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+            var userId = _auditService.GetUserId();
+
+            var query = _context.Centers
+               .Where(x => x.TeacherId == userId)
+               .AsNoTracking();
+
+            var centers = await query
+                 .OrderByDescending(x => x.Name)
+                 .Select(c => new CenterDto
+                 {
+                     Id = c.Id,
+                     Name = c.Name,
+                     Abbreviation = c.Abbreviation,
+                     IsArchived = c.IsArchived,
+                     Logo = c.Logo,
+                     TeacherId = c.TeacherId,
+                 })
+                 .Skip(startIndex)
+                 .Take(currentPageSize)
+                 .ToListAsync();
+
+            var totalCenters = await query.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalCenters / currentPageSize);
+
+            return new ResponseDto<PaginationDto<List<CenterDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = new PaginationDto<List<CenterDto>>
+                {
+                    CurrentPage = page, // pagina actual
+                    PageSize = currentPageSize, // Total de items que puede tener la peticion
+                    TotalItems = totalCenters, // el total de items en la BD segun la consulta y sus filtros
+                    TotalPages = totalPages, // Total de paginas que tiene la consulta con todo y filtros
+                    Items = centers,  // Los itmes y su informacion
+                    HasPreviousPage = page > 1, //tiene pagina antes
+                    HasNextPage = page < totalPages // tiene pagina despues
+                }
+            };
         }
     }
 }

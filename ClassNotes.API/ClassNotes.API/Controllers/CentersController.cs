@@ -44,6 +44,14 @@ namespace ClassNotes.API.Controllers
         }
 
 
+        [HttpGet("actives")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<PaginationDto<List<CenterDto>>>>> GetCentersActivesNames( int? pageSize = null, int page = 1)
+        {
+            var response = await _centersService.GetCentersActivesListAsync(pageSize, page);
+            return StatusCode(response.StatusCode, response);
+        }
+
         [HttpGet]
         [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<List<CenterExtendDto>>>> GetAll(string searchTerm = "", bool? isArchived = null, int? pageSize = null, int page = 1)
