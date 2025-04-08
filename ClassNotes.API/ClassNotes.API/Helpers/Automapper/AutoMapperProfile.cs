@@ -35,6 +35,7 @@ namespace ClassNotes.API.Helpers.Automapper
             MapsForActivityNotes();
             MapsForUnitNotes();
             MapsForTotalNotes();
+            MapsForUnits();
         }
         private void MapsForActivities()
         {
@@ -64,12 +65,19 @@ namespace ClassNotes.API.Helpers.Automapper
             CreateMap<ActivityEditDto, ActivityEntity>();
         }
 
+        private void MapsForUnits()
+        {
+            CreateMap<UnitEntity, UnitDto>();
+
+        }
+
         private void MapsForAttendances()
         {
             CreateMap<AttendanceEntity, AttendanceDto>();
             CreateMap<AttendanceCreateDto, AttendanceEntity>();
             CreateMap<AttendanceEditDto, AttendanceEntity>();
         }
+
         private void MapsForActivityNotes()
         {
             CreateMap<StudentActivityNoteEntity, StudentActivityNoteDto>();
@@ -113,8 +121,9 @@ namespace ClassNotes.API.Helpers.Automapper
 
             // Mapeo con configuración
             CreateMap<CourseEntity, CourseWithSettingDto>()
-                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src))
-                .ForMember(dest => dest.CourseSetting, opt => opt.MapFrom(src => src.CourseSetting));
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src)) // Mapeamos el curso
+                .ForMember(dest => dest.CourseSetting, opt => opt.MapFrom(src => src.CourseSetting)) // Mapeamos la configuración
+                .ForMember(dest => dest.Units, opt => opt.MapFrom(src => src.Units)); // (Ken) ahora puede devolver sus unidades...
 
             CreateMap<Point, LocationDto>()
                 .ForMember(dest => dest.X, opt => opt.MapFrom(src => src.X))

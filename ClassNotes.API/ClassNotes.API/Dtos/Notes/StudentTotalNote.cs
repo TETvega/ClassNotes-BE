@@ -7,6 +7,5 @@ namespace ClassNotes.API.Dtos.CourseNotes
         public Guid StudentId { get; set; }
         public Guid CourseId { get; set; }
         public float FinalNote { get; set; }
-        public float AveragedNote { get; set; }
     }
 }

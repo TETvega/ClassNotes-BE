@@ -36,7 +36,7 @@ namespace ClassNotes.API.Services.Notes
             this._auditService = auditService;
             this._logger = logger;
             this._configuration = configuration;
-            PAGE_SIZE = configuration.GetValue<int>("PageSize");
+            PAGE_SIZE = configuration.GetValue<int>("PageSize:Students");
             this._context = context;
         }
 
@@ -54,12 +54,14 @@ namespace ClassNotes.API.Services.Notes
                     .Where(c=>  c.StudentCourse.StudentId == studentId && c.StudentCourse.CourseId == courseId && c.CreatedBy==userId) 
                     .AsQueryable();
 
+            var courseEntity = _context.Courses.Include(x => x.CourseSetting).FirstOrDefault(x => x.Id ==courseId);
+
             int totalItems = await studentUnitsQuery.CountAsync();
             int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
 
           
             var studentUnitEntities = await studentUnitsQuery
-                .OrderByDescending(n => n.UnitNumber) 
+                .OrderBy(n => n.UnitNumber) //Filtrar en orden...
                 .Skip(startIndex)
                 .Take(PAGE_SIZE)
                 .ToListAsync();
@@ -104,12 +106,7 @@ namespace ClassNotes.API.Services.Notes
                 };
             }
 
-            //busca el settings de ese curso, para obtener su maxScore
-            var courseSetting = await _context.CoursesSettings.FirstOrDefaultAsync(x => x.Id == course.SettingId && x.CreatedBy == userId);
-
-            //Busca las unidades de ese curso, para obtener la calificacion del estudiante por unidad
-            var courseUnits = _context.Units.Where(x => x.CourseId == courseId && x.CreatedBy == userId);
-
+     
             //Busca todas las relaciones entre cursos y estudiantes, asi se obtienen solo estudiantes del curso...
             var studentCoursesQuery = _context.StudentsCourses
                     .Where(c => c.CourseId == courseId)
@@ -130,56 +127,13 @@ namespace ClassNotes.API.Services.Notes
             var studentNoteDto = _mapper.Map<List<StudentTotalNoteDto>>(studentNotesEntities);
 
 
-            //Por cada estudiante, se iteran todas las unidades y se obtiene su promedio ponderado de alli...
+            //Por cada estudiante, la nota final ya esta almacenada en la entidad studentCourse ...
              studentNoteDto.ForEach(studentNote => {
 
-                //flotantes para almacenar sumatoria de notas de todas las unidades
-                float UnitNoteSum = 0;
-                float UnitExtraNoteSum = 0;
-
-                 //Lista de todas las actividades del alumno
-                 var totalStudentPoints = _context.StudentsActivitiesNotes.Include(z=>z.Activity)
-                    .Where(x => x.Activity.Unit.CourseId == courseId
-                                && x.StudentId ==  studentNote.StudentId && x.Activity!=null).ToList();
-
-                 
-                 foreach (var unit in courseUnits)
+                 //Si la nota propedada es mayor a 100, seguarda como 100 en el dto, sino, se retorna directamente...
+                 if(studentNote.FinalNote > 100)
                  {
-                     //En cada unidad, se obtendran todos los puntos no extra de esa unidad...
-                     var unitNotes = totalStudentPoints.Where(x=> !x.Activity.IsExtra).Select(x => x.Note).ToList(); 
-
-                     //Este promedio es para ajustar esos puntos al maxScore de la unidad...
-                     var unitAverage = (unitNotes.Sum() / unit.MaxScore) * 100;
-
-                     //Se hace la sumatoria de ese promedio...
-                     UnitNoteSum += unitAverage;
-
-
-                     //Exactamente igual con puntos extra..
-                     var unitExtraNotes = totalStudentPoints.Where(x => x.Activity.IsExtra).Select(x => x.Note).ToList();
-
-                     var unitExtraAverage = (unitExtraNotes.Sum() / unit.MaxScore) * 100;
-
-                    UnitExtraNoteSum += unitAverage;
-
-                 }
-                //Estos comentarios se removeran...
-                // var unitNoteAverage = UnitNoteSum / courseUnits.Count();
-                // var unitExtraNoteAverage = UnitExtraNoteSum / courseUnits.Count();
-
-
-                 //Se guarda como nota ponderada, la suma de las sumatorias de puntos extra y no extra divididos entre la nota maxima posible del curso...
-                 var averagedNote = ((UnitNoteSum + UnitExtraNoteSum) / courseSetting.MaximumGrade) * 100;
-
-
-                 //Si la nota propedada es mayor a 100, seguarda como 100 en el dto, sino, se guarda en este directamente...
-                 if(averagedNote > 100)
-                 {
-                     studentNote.AveragedNote = 100;
-                 }
-                 else
-                 {
-                     studentNote.AveragedNote = averagedNote;
+                     studentNote.FinalNote = 100;
                  }
 
              });
@@ -234,6 +188,7 @@ namespace ClassNotes.API.Services.Notes
             {
                 var activity = activities.FirstOrDefault(u => u.Id == x.ActivityId);
                 x.IsExtra = activity.IsExtra;
+                x.Note = (x.Note / 100) * activity.MaxScore;
             });
      
 
