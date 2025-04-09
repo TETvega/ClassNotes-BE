@@ -40,6 +40,26 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+
+        [HttpGet("course/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<ActivityResponseDto>>>> GetAllActivitiesByClass(
+            Guid id,
+            string searchTerm = "",
+            int page = 1,
+            int pageSize = 10,
+            Guid? tagActivityId = null,
+            Guid? unitId = null,
+            string typeActivities = "ALL",
+            string isExtraFilter = "ALL"
+)
+        {
+            var response = await _activitiesService.GetAllActivitiesByClassAsync(id, searchTerm, page, pageSize, tagActivityId, unitId,typeActivities, isExtraFilter);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
+
         // Traer una actividad mediante su id
         [HttpGet("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]

@@ -18,6 +18,17 @@ namespace ClassNotes.API.Services.Activities
             string typeActivities = "ALL"
         );
 
+        Task<ResponseDto<PaginationDto<List<ActivityResponseDto>>>> GetAllActivitiesByClassAsync(
+            Guid id,
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = 10,
+            Guid? tagActivityId = null,
+            Guid? unitId = null,
+            string typeActivities = "ALL",
+            string isExtraFilter = "ALL"
+        );
+
         // Listar una actividad en especifico
         Task<ResponseDto<ActivityDto>> GetActivityByIdAsync(Guid id);
 
