@@ -601,9 +601,7 @@ namespace ClassNotes.API.Services.Students
                          sc.IsActive && sc.Course.IsActive &&
                          a.QualificationDate <= DateTime.UtcNow
                     // Solo traé las actividades donde el estudiante no tiene ninguna nota mayor a 0
-                    where !a.StudentNotes.Any(sn => 
-                          sn.StudentId == id &&
-                          sn.Note > 0)
+                    where !a.StudentNotes.Any(sn => sn.StudentId == id)
                     // todas las actividades que cumplan los filtros en grupos por curso
                     group a by new { sc.CourseId, sc.Course.Name } into g
                     select new PendingClassesDto

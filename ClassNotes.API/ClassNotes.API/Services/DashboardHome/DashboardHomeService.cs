@@ -67,35 +67,6 @@ public class DashboardHomeService : IDashboardHomeService
             }
         };
     }
-    //public async Task<ResponseDto<DashboardHomeDto>> GetDashboardHomeAsync()
-    //{
-    //    var userId = _auditService.GetUserId();
-
-    //    var stadistic = GeneralStadisticsAsync( userId ).Result;
-    //    var pendingActivities = GetTopCoursesWithMostPendingActivitiesAsync( userId ).Result;
-
-    //    var upcomingActivities = GetUpcomingActivitiesAsync(userId).Result;
-    //    var activeCenters = GetTopActiveCentersAsync(userId).Result;
-    //    var activeClasses = GetActiveClassesAsync(userId).Result;
-    //    var studentsPendingActivities = GetTopPendingActivitiesStudentAsync(userId).Result;
-
-    //    return new ResponseDto<DashboardHomeDto>
-    //    {
-    //        Status= true,
-    //        StatusCode= 200,
-    //        Message = "Exito",
-    //        Data = new DashboardHomeDto
-    //        {
-    //            PendingActivities = pendingActivities,
-    //            Stadistics = stadistic,
-    //            UpcomingActivities = upcomingActivities,
-    //            ActiveCenters = activeCenters,
-    //            ActiveClasses = activeClasses,
-    //            StudentPendingActivitiesList = studentsPendingActivities 
-    //        }
-    //    };
-
-    //}
 
     public async Task<List<StudentPendingActivities>> GetTopPendingActivitiesStudentAsync(string userId)
     {
@@ -140,12 +111,13 @@ public class DashboardHomeService : IDashboardHomeService
             .Take(10)
             .ToListAsync();
 
-        return result;
+        return result?? new List<StudentPendingActivities>();
     }
     public async Task<List<ActiveClasses>> GetActiveClassesAsync(string userId)
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
+        var currentDate = DateTime.UtcNow;
         var activeClasses = await context.Courses
         .AsNoTracking()
         .Where(course => course.IsActive &&
@@ -158,7 +130,7 @@ public class DashboardHomeService : IDashboardHomeService
             CourseCode = course.Code,
             CourseSection = course.Section,
 
-            // Contamos desde la tabla intermedia StudentCourse
+            // Contamos desde la tabla intermedia Student-Course
             ActiveStudentsCount = course.Students
                 .Count(sc => sc.IsActive),
 
@@ -168,15 +140,17 @@ public class DashboardHomeService : IDashboardHomeService
 
             TotalActivitiesDone = course.Units
                 .SelectMany(unit => unit.Activities)
-                .Where(activity => activity.QualificationDate < DateTime.UtcNow)
+                .Where(activity => activity.QualificationDate < currentDate)
                 .Count(activity =>
-                    activity.StudentNotes
-                        .Select(note => note.StudentId)
-                        .Distinct()
-                        .Count() >=
-                    course.Students
-                        .Count(sc => sc.IsActive)
-                ),
+                // Obtenemos los IDs de los estudiantes activos del curso
+                    !course.Students
+                        .Where(sc => sc.IsActive)
+                        .Select(sc => sc.StudentId)
+                        .Except(
+                            activity.StudentNotes.Select(sn => sn.StudentId)
+                        ).Any()
+            //si NO hay ningún estudiante activo sin nota en esta actividad se considera done
+            ),
 
             CenterId = course.Center.Id,
             CenterName = course.Center.Name,
@@ -186,7 +160,7 @@ public class DashboardHomeService : IDashboardHomeService
         .Take(4)
         .ToListAsync();
 
-        return activeClasses;
+        return activeClasses?? new List<ActiveClasses>();
     }
 
     public async Task<List<ActiveCenters>> GetTopActiveCentersAsync(string userId)
@@ -217,7 +191,7 @@ public class DashboardHomeService : IDashboardHomeService
         .Take(3)
         .ToListAsync();
 
-        return centers;
+        return centers?? new List<ActiveCenters>();
     }
 
     public async Task<List<UpcomingActivities>> GetUpcomingActivitiesAsync(string userId)
@@ -247,7 +221,7 @@ public class DashboardHomeService : IDashboardHomeService
             .Take(5)
             .ToListAsync();
 
-        return result;
+        return result ?? new List<UpcomingActivities>();
     }
 
     public async Task<List<PendingActivities>> GetTopCoursesWithMostPendingActivitiesAsync(string userId)
@@ -258,9 +232,9 @@ public class DashboardHomeService : IDashboardHomeService
 
         var result = await context.Activities
             .AsNoTracking()
-            .Where(a => a.QualificationDate < currentDate) // actividades vencidas
-            .Where(a => a.Unit.Course.IsActive) // clases activas
-            .Where(a => !a.Unit.Course.Center.IsArchived && a.Unit.Course.Center.TeacherId == userId) // centro válido y del profe
+            .Where(a => a.QualificationDate < currentDate) // Actividades cuya fecha ya pasó
+            .Where(a => a.Unit.Course.IsActive)
+            .Where(a => !a.Unit.Course.Center.IsArchived && a.Unit.Course.Center.TeacherId == userId)
             .Select(a => new
             {
                 Activity = a,
@@ -268,14 +242,18 @@ public class DashboardHomeService : IDashboardHomeService
                 CourseId = a.Unit.Course.Id,
                 CourseName = a.Unit.Course.Name,
                 CourseCode = a.Unit.Course.Code,
-                // una consulta interna
-                TotalStudentsInCourse = context.StudentsCourses
-                    .Count(sc => sc.CourseId == a.Unit.Course.Id && sc.IsActive),
 
-                StudentsWithNote = a.StudentNotes.Count()
+                // Lista de estudiantes activos en la clase
+                ActiveStudentIds = context.StudentsCourses
+                    .Where(sc => sc.CourseId == a.Unit.Course.Id && sc.IsActive)
+                    .Select(sc => sc.StudentId)
+                    .ToList(),
+
+                // Lista de estudiantes que tienen nota registrada en esta actividad
+                StudentNoteIds = a.StudentNotes.Select(sn => sn.StudentId).ToList()
             })
-            // si los alumnos con notas no cuadra con los alumnos activos en la clase
-            .Where(x => x.StudentsWithNote < x.TotalStudentsInCourse) // actividad pendiente
+            // Actividad es pendiente si falta al menos un estudiante activo sin nota
+            .Where(x => x.ActiveStudentIds.Except(x.StudentNoteIds).Any())
             .GroupBy(x => new { x.CourseId, x.CourseName, x.CourseCode })
             .Select(g => new PendingActivities
             {
@@ -288,7 +266,7 @@ public class DashboardHomeService : IDashboardHomeService
             .Take(3)
             .ToListAsync();
 
-        return result;
+        return result ?? new List<PendingActivities>();
     }
 
     public async Task<GeneralStadistics> GeneralStadisticsAsync ( string userId)
