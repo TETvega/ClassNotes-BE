@@ -274,32 +274,42 @@ public class DashboardHomeService : IDashboardHomeService
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
 
-        var query = from studentCourse in context.StudentsCourses.AsNoTracking()
-                    where studentCourse.IsActive
-                    let course = studentCourse.Course
-                    where course.IsActive
-                    let center = course.Center
-                    where center.TeacherId == userId && !center.IsArchived
-                    select new
-                    {
-                        CenterId = center.Id,         
-                        CourseId = course.Id,         
-                        StudentId = studentCourse.StudentId
-                    };
+        // centros
+        var centersQuery = context.Centers
+            .AsNoTracking()
+            .Where(c => c.TeacherId == userId && !c.IsArchived);
 
-        var result = await query
-            .GroupBy(x => 1) // Agrupar todo en uno solo para contar distintos elementos
-            .Select(g => new GeneralStadistics
-            {
-                TotalCentersCount = g.Select(x => x.CenterId).Distinct().Count(),
-                TotalClassesCount = g.Select(x => x.CourseId).Distinct().Count(),
-                TotalStudentsCount = g.Select(x => x.StudentId).Distinct().Count()
-            })
-            .FirstOrDefaultAsync();
+        var totalCenters = await centersQuery
+            .Select(c => c.Id)
+            .Distinct()
+            .CountAsync();
 
-        // Por si no hay datos (evita null)
-        return result ?? new GeneralStadistics();
+        // clases
+        var totalClasses = await context.Courses
+            .AsNoTracking()
+            .Where(course => course.IsActive && !course.Center.IsArchived && course.Center.TeacherId == userId)
+            .Select(c => c.Id)
+            .Distinct()
+            .CountAsync();
 
+        // estudiantes
+        var totalStudents = await context.StudentsCourses
+            .AsNoTracking()
+            .Where(sc =>
+                sc.IsActive &&
+                sc.Course.IsActive &&
+                !sc.Course.Center.IsArchived &&
+                sc.Course.Center.TeacherId == userId)
+            .Select(sc => sc.StudentId)
+            .Distinct()
+            .CountAsync();
+
+        return new GeneralStadistics
+        {
+            TotalCentersCount = totalCenters,
+            TotalClassesCount = totalClasses,
+            TotalStudentsCount = totalStudents
+        };
     }
 
 }
