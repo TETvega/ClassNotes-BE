@@ -39,39 +39,116 @@ namespace ClassNotes.API.Services.Activities
 
         // Traer todas las actividades (Paginadas)
         public async Task<ResponseDto<PaginationDto<List<ActivitySummaryDto>>>> GetActivitiesListAsync(
-    string searchTerm = "",
-    int page = 1)
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = 10,
+            Guid? centerId = null,
+            Guid? tagActivityId = null,
+            string typeActivities = "ALL"
+        )
         {
+            var allowedValues = new HashSet<string> { "ALL", "PENDING", "DONE" };
+
+            if (!allowedValues.Contains(typeActivities.ToUpper()))
+            {
+                return new ResponseDto<PaginationDto<List<ActivitySummaryDto>>>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "typeActivities solo puede ser  [ ALL , PENDING , DONE ]",
+                    Data = null,
+                };
+            }
             var userId = _auditService.GetUserId(); // Id de quien hace la petición
 
-            int startIndex = (page - 1) * PAGE_SIZE;
+            int MAX_PAGE_SIZE = 50;
+            int currentPageSize = Math.Min(pageSize ?? PAGE_SIZE, MAX_PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+
+            var now = DateTime.UtcNow;
+
             var activitiesQuery = _context.Activities
-                .Where(c => c.CreatedBy == userId) // Para mostrar unicamente los cursos que pertenecen al usuario que hace la petición
-                .Include(a => a.Unit) // Cargar la relación Unit
-                .ThenInclude(u => u.Course) // Cargar la relación Course desde Unit
+                .AsNoTracking() 
+                .Where(a => a.CreatedBy == userId)
+                .Select(a => new
+                {
+                    Activity = a,
+                    Course = a.Unit.Course,
+                    Center = a.Unit.Course.Center,
+                    TagActivity = a.TagActivity,
+                    ActiveStudentIds = _context.StudentsCourses
+                        .Where(sc => sc.CourseId == a.Unit.CourseId && sc.IsActive)
+                        .Select(sc => sc.StudentId)
+                        .ToList(),
+                    StudentNoteIds = a.StudentNotes.Select(sn => sn.StudentId).ToList()
+                })
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
+                searchTerm = searchTerm.ToLower();
                 activitiesQuery = activitiesQuery
-                    .Where(
-                        x => x.Name.ToLower().Contains(searchTerm.ToLower()) || // buscar por nombre de la actividad
-                        x.Unit.Course.Name.ToLower().Contains(searchTerm.ToLower()) // Buscar por el nombre del curso
-                    );
+                    .Where(x => x.Activity.Name.ToLower().Contains(searchTerm) ||
+                                x.Course.Name.ToLower().Contains(searchTerm));
             }
 
-            int totalActivities = await activitiesQuery.CountAsync(); // total de las actividades
-            int totalPages = (int)Math.Ceiling((double)totalActivities / PAGE_SIZE); // total de las paginas
+            if (centerId.HasValue)
+            {
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Course.CenterId == centerId.Value);
+            }
 
+            if (tagActivityId.HasValue)
+            {
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Activity.TagActivityId == tagActivityId.Value);
+            }
+
+            if (typeActivities?.ToUpper() == "PENDING")
+            {
+                // Actividad pendiente si falta algún estudiante sin nota
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Activity.QualificationDate < now &&
+                                x.ActiveStudentIds.Except(x.StudentNoteIds).Any());
+            }
+            if (typeActivities?.ToUpper() == "DONE")
+            {
+                // Actividad realizada si todos los estudiantes tienen notas
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Activity.QualificationDate < now &&
+                                x.ActiveStudentIds.All(studentId => x.StudentNoteIds.Contains(studentId)));
+            }
+
+            // Total y paginado
+            var totalActivities = await activitiesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalActivities / currentPageSize);
+
+            // Paginación y ordenación
             var activitiesEntity = await activitiesQuery
-                .OrderByDescending(x => x.CreatedDate) // se ordena por fecha de creación
-                .Skip(startIndex) // Omite el indice
-                .Take(PAGE_SIZE) // muestra la cantidad de items que se definio en el page size
+                .OrderByDescending(x => x.Activity.CreatedDate) // Ordenar por fecha de creación
+                .Skip(startIndex)
+                .Take(currentPageSize)
                 .ToListAsync();
 
-            var activitiesDto = _mapper.Map<List<ActivitySummaryDto>>(activitiesEntity);
+            // Mapear a DTO
+            // centro retorna nulo siempre revisar 
+            // depurar cada campo ->
+            var activitiesDto = activitiesEntity.Select(x => new ActivitySummaryDto
+            {
+                Id = x.Activity?.Id ?? Guid.Empty, 
+                Name = x.Activity?.Name ?? "Sin nombre", 
+                Description = x.Activity?.Description ?? "Sin descripción", 
+                QualificationDate = x.Activity?.QualificationDate ?? DateTime.MinValue, 
+                TagActivityId = x.Activity?.TagActivityId ?? Guid.Empty, 
+                CourseId = x.Course?.Id ?? Guid.Empty, 
+                CourseName = x.Course?.Name ?? "Sin nombre de curso",
+                CenterId = x.Course?.CenterId ?? Guid.Empty, 
+                CenterName = x.Center?.Name ?? "Sin nombre de centro", // nulo por algun arazon
+                CenterAbb = x.Center?.Abbreviation ?? "Sin ABB"
+            }).ToList();
 
-            return new ResponseDto<PaginationDto<List<ActivitySummaryDto>>> // Aqui ya se estuctura la respuesta a mostrar
+            return new ResponseDto<PaginationDto<List<ActivitySummaryDto>>>
             {
                 StatusCode = 200,
                 Status = true,
@@ -79,7 +156,7 @@ namespace ClassNotes.API.Services.Activities
                 Data = new PaginationDto<List<ActivitySummaryDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = currentPageSize,
                     TotalItems = totalActivities,
                     TotalPages = totalPages,
                     Items = activitiesDto,
