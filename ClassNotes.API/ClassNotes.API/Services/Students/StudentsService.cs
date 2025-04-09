@@ -602,22 +602,26 @@ namespace ClassNotes.API.Services.Students
                          a.QualificationDate <= DateTime.UtcNow
                     // Solo traé las actividades donde el estudiante no tiene ninguna nota mayor a 0
                     where !a.StudentNotes.Any(sn => 
-                          sn.StudentId == id &&
-                          sn.Note > 0)
+                          sn.StudentId == id)
+
                     // todas las actividades que cumplan los filtros en grupos por curso
-                    group a by new { sc.CourseId, sc.Course.Name } into g
+                    group a by new { sc.CourseId, sc.Course.Name, centerName = sc.Course.Center.Name, centerId = sc.Course.Center.Id } into g
                     select new PendingClassesDto
                     {
                         CourseId = g.Key.CourseId,
                         CourseName = g.Key.Name,
+                        CenterId = g.Key.centerId,
+                        CenterName = g.Key.centerName,
                         PendingActivities = g.Count()
                     }
+
+                   
                 )
                 .OrderByDescending(x => x.PendingActivities)
                 .Take(top ?? 10)
                 .ToListAsync();
-
-
+            var test = _context.Activities.Where(x => !x.StudentNotes.Any(sn => sn.StudentId == id) && x.Unit.Course.Name== "Dibujo");
+            Console.WriteLine(test.Count());
             return new ResponseDto<List<PendingClassesDto>>
             {
                 StatusCode = 200,
