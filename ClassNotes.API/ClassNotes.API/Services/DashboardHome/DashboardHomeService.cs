@@ -186,7 +186,8 @@ public class DashboardHomeService : IDashboardHomeService
                 .Distinct()
                 .Count()
         })
-        .OrderBy(c => c.CenterName)
+        .OrderByDescending(c => c.ActiveClasesCount) //para ordenar por los que tienen mas
+        .ThenBy(c => c.CenterName) // ordena despues por nombre 
         .Take(3)
         .ToListAsync();
 
