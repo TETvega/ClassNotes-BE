@@ -185,7 +185,6 @@ public class DashboardHomeService : IDashboardHomeService
                 .Select(student => student.Id)
                 .Distinct()
                 .Count()
-                .ToString()
         })
         .OrderBy(c => c.CenterName)
         .Take(3)
