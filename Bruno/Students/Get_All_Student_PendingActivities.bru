@@ -1,0 +1,23 @@
+meta {
+  name: Get_All_Student_PendingActivities
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{PATH}}/students/pendingsList/f6cfc25e-8259-4cde-4e74-08dd73c935a0?searchTerm&pageSize=-1&page=1&StudentType=ACTIVE&ActivityType=PENDING
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  pageSize: -1
+  page: 1
+  StudentType: ACTIVE
+  ActivityType: PENDING
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

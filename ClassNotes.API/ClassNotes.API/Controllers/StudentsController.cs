@@ -38,6 +38,20 @@ namespace ClassNotes.API.Controllers
         }
 
 
+        [HttpGet("pendingsList/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<PaginationDto<List<StudentPendingDto>>>>> GetAllStudentsPendingActivitiesAsync(Guid id,string searchTerm = "",int? pageSize = null,int page = 1, string StudentType = "ALL", string ActivityType = "ALL")
+        {
+            var response = await _studentsService.GetAllStudentsPendingActivitiesAsync(id, searchTerm, pageSize, page, StudentType, ActivityType);
+            return StatusCode(response.StatusCode, new
+            {
+                response.Status,
+                response.Message,
+                response.Data,
+            });
+
+        }
+
         [HttpGet]
         [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<PaginationDto<List<StudentDto>>>>> PaginationList(string searchTerm, int? pageSize = null, int page = 1)

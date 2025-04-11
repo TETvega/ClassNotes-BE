@@ -14,6 +14,6 @@ namespace ClassNotes.API.Services.Students
         Task<ResponseDto<StudentResultDto>> CreateStudentAsync(BulkStudentCreateDto bulkStudentCreateDto);
         Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto);
         Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds, Guid courseId);
-
+        Task<ResponseDto<PaginationDto<List<StudentPendingDto>>>> GetAllStudentsPendingActivitiesAsync(Guid id, string searchTerm = "", int? pageSize = null, int page = 1, string StudentType = "All", string ActivityType = "All");
     }
 }
