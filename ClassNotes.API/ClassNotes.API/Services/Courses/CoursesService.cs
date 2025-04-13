@@ -177,15 +177,15 @@ namespace ClassNotes.API.Services.Courses
             //(Ken) creación de unidades..
 
             //Valida que se cree correctamente el tipo de puntaje... esos son los valores que se pueden usar...
-            if (dto.CourseSetting.ScoreType.ToLower().Trim() != "oro" &&
-                dto.CourseSetting.ScoreType.ToLower().Trim() != "ponderado" &&
-                dto.CourseSetting.ScoreType.ToLower().Trim() != "aritmetico")
+            if (dto.CourseSetting.ScoreType.ToLower().Trim() != ScoreTypeConstant.GOLD_SCORE &&
+                dto.CourseSetting.ScoreType.ToLower().Trim() != ScoreTypeConstant.WEIGHTED_SCORE &&
+                dto.CourseSetting.ScoreType.ToLower().Trim() != ScoreTypeConstant.ARITHMETI_SCORE)
             {
                 return new ResponseDto<CourseWithSettingDto>
                 {
                     StatusCode = 405,
                     Status = false,
-                    Message = "Los tipos de puntaje válidos son: oro, ponderado o aritmetico."
+                    Message = $"Los tipos de puntaje válidos son: [ {ScoreTypeConstant.GOLD_SCORE} , {ScoreTypeConstant.WEIGHTED_SCORE} , {ScoreTypeConstant.ARITHMETI_SCORE}  ]"
                 };
             }
 
@@ -194,7 +194,7 @@ namespace ClassNotes.API.Services.Courses
             var UnitList = dto.Units;
 
             //Evalua que no se reciban null si no es oro...
-            if(UnitList.Select(x => x.MaxScore).ToList().Contains(null) && dto.CourseSetting.ScoreType.ToLower().Trim() != "oro")
+            if(UnitList.Select(x => x.MaxScore).ToList().Contains(null) && dto.CourseSetting.ScoreType.ToLower().Trim() != ScoreTypeConstant.GOLD_SCORE)
             {
                 return new ResponseDto<CourseWithSettingDto>
                 {
@@ -205,7 +205,7 @@ namespace ClassNotes.API.Services.Courses
             }
 
             //Si es ponderado, la suma de Maxscore de todas las unidades debe ser igual al máximo de el curso...
-            if (UnitList.Select(x => x.MaxScore).ToList().Sum() != dto.CourseSetting.MaximumGrade && dto.CourseSetting.ScoreType.ToLower().Trim() == "ponderado")
+            if (UnitList.Select(x => x.MaxScore).ToList().Sum() != dto.CourseSetting.MaximumGrade && dto.CourseSetting.ScoreType.ToLower().Trim() == ScoreTypeConstant.WEIGHTED_SCORE)
             {
                 return new ResponseDto<CourseWithSettingDto>
                 {
@@ -223,7 +223,7 @@ namespace ClassNotes.API.Services.Courses
             foreach (var unit in UnitList)
             {
                 //No se puede ingresar valores maximos  de unidad iguales o menores a 0, al menos si no es oro.
-                if (unit.MaxScore <= 0 && dto.CourseSetting.ScoreType.ToLower().Trim() != "oro")
+                if (unit.MaxScore <= 0 && dto.CourseSetting.ScoreType.ToLower().Trim() != ScoreTypeConstant.GOLD_SCORE)
                 {
                     return new ResponseDto<CourseWithSettingDto>
                     {
@@ -252,12 +252,12 @@ namespace ClassNotes.API.Services.Courses
 
                 //Si es aritmetico, se guarda la nota máxima de la unidad como la divición entre el puntaje maximo del curso
                 // y la cantidad de unidades, para asegurar que sean iguales...
-                if (dto.CourseSetting.ScoreType == "aritmetico")
+                if (dto.CourseSetting.ScoreType == ScoreTypeConstant.ARITHMETI_SCORE)
                 {
                     unitMax = dto.CourseSetting.MaximumGrade/UnitList.Count();
                 }
                 //Si es oro, forzamos null vaya lo que vaya
-                else if(dto.CourseSetting.ScoreType == "oro")
+                else if(dto.CourseSetting.ScoreType == ScoreTypeConstant.GOLD_SCORE)
                 {
                     unitMax = null;
                 }
