@@ -426,6 +426,8 @@ namespace ClassNotes.API.Services.Students
         }
 
 
+
+
         private ResponseDto<StudentResultDto> BuildFinalResponse(StudentResultDto result)
         {
             return new ResponseDto<StudentResultDto>
@@ -615,6 +617,115 @@ namespace ClassNotes.API.Services.Students
                 Status = true,
                 Message = MessagesConstant.STU_DELETE_SUCCESS,
                 Data = studentsToRemoveFromStudents.Select(s => s.Id).ToList()
+            };
+        }
+
+        //(Ken)
+        public async Task<ResponseDto<PaginationDto<List<StudentPendingDto>>>> GetAllStudentsPendingActivitiesAsync (Guid id, 
+            string searchTerm = "",
+            int? pageSize = null,
+            int page = 1,
+            string StudentType = "ALL", //Filtro: ACTIVE, INACTIVE, ALL
+            string ActivityType = "ALL"//Filtro: PENDIENTES, DONE, ALL
+            )
+        {
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Min(50, Math.Max(1, pageSize ?? PAGE_SIZE)); //Tiene Math.Min para no pasarse de 50...
+            int startIndex = (page - 1) * currentPageSize;
+
+            var userId = _auditService.GetUserId();
+
+            //Primero se crea, luego se pobla con datos para evitar error...
+            IQueryable<StudentCourseEntity> studentEntityQuery; 
+
+            switch (StudentType)
+            {
+                //Si es inactivo, se buscan los studentCourse inactivos..
+                case "INACTIVE":
+                    studentEntityQuery = _context.StudentsCourses.Include(x => x.Student).Where(x => x.CourseId == id && x.CreatedBy == userId && !x.IsActive);
+                    break;
+                case "ACTIVE": //Si es ACTIVE, se buscan los activos...
+                    studentEntityQuery = _context.StudentsCourses.Include(x => x.Student).Where(x => x.CourseId == id && x.CreatedBy == userId && x.IsActive);
+                    break;
+                default://De no ser esas dos palabras, los busca todos, asi evita errores por escribir mal algo...
+                    studentEntityQuery = _context.StudentsCourses.Include(x => x.Student).Where(x => x.CourseId == id && x.CreatedBy == userId);
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+               
+                studentEntityQuery = studentEntityQuery.Where(x =>
+                    EF.Functions.Like(x.Student.FirstName, $"%{searchTerm}%") || //Para buscar el primer nombre O correo...
+                    EF.Functions.Like(x.Student.Email, $"%{searchTerm}%") 
+                );
+            }
+
+            //Se obtienen las actividades que ya pasaron junto a sus studentNotes para verificar que actividades no hicieron....
+            var Activities =  await _context.Activities.Include(x => x.StudentNotes).Where(x => x.Unit.CourseId == id && x.QualificationDate <= DateTime.UtcNow).ToListAsync();
+
+            //En esta lista se ingresaran las dto que se retornaran...
+            List<StudentPendingDto> studentPendingList = [];
+
+            //Por cada estudiante en el curso, se busca cuantas actividades no hizo y se crea el dto...
+            foreach (var studentCourse in studentEntityQuery)
+            {
+                //De las actividades, se busca cualquiera que no este dentro de los student note del estudiante..
+                var activityCount = Activities.Where(x => !x.StudentNotes.Any(u => u.StudentId == studentCourse.StudentId));
+
+                var studentDto = new StudentPendingDto
+                {
+                    StudentId = studentCourse.StudentId,
+                    FirstName = studentCourse.Student.FirstName,
+                    IsActive = studentCourse.IsActive,
+                    EMail = studentCourse.Student.Email,
+                    PendingActivities = activityCount.Count()
+                };
+
+                //Si no esta activo el estudiante, no tiene pendientes...
+                if (!studentDto.IsActive) { studentDto.PendingActivities = 0;}
+
+                studentPendingList.Add(studentDto);
+            }
+
+            switch (ActivityType)
+            {
+                //Luego se aplica el filtro de si tiene actividades pendientes o no...
+                case "DONE"://DONE si no tiene ninguna pendiente...
+                    studentPendingList = studentPendingList.Where(x => x.PendingActivities == 0).ToList();
+                    break;
+                case "PENDIENTES"://Lo opuesto a DONE
+                    studentPendingList = studentPendingList.Where(x => x.PendingActivities > 0).ToList();
+                    break;
+                default://Para evitar errores, cualquier otro termino dara igual a todos, por lo que no se filtra...
+                    break;
+            }
+
+            var studentsDtos =studentPendingList
+                .OrderByDescending(x => x.FirstName)//Se ordena en base al primer nombre...
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .ToList();
+
+            var totalStudents = studentPendingList.Count();//Conteo luego de pasar los filtros...
+
+            // Calcular total de páginas
+            int totalPages = (int)Math.Ceiling((double)totalStudents / currentPageSize);
+
+            return new ResponseDto<PaginationDto<List<StudentPendingDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.STU_RECORD_FOUND,
+                Data = new PaginationDto<List<StudentPendingDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = currentPageSize,
+                    TotalItems = totalStudents,
+                    TotalPages = totalPages,
+                    Items = studentsDtos,
+                    HasPreviousPage = page > 1, 
+                    HasNextPage = page < totalPages, 
+                }
             };
         }
 
