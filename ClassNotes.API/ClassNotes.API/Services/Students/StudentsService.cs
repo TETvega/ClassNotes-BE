@@ -614,7 +614,6 @@ namespace ClassNotes.API.Services.Students
                 {
                     StudentId = studentCourse.StudentId,
                     FirstName = studentCourse.Student.FirstName,
-                    CreatedDate = studentCourse.CreatedDate, //Quiza lo cambie, le puse fecha de registro de alumno en la clase, no en general...
                     IsActive = studentCourse.IsActive,
                     EMail = studentCourse.Student.Email,
                     PendingActivities = activityCount.Count()
