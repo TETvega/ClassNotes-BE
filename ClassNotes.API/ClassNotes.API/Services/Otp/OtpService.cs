@@ -11,6 +11,8 @@ using ClassNotes.API.Database.Entities;
 using System.Security.Cryptography;
 using System.Text;
 using ClassNotes.API.Constants;
+using ClassNotes.API.Dtos.Emails;
+using ClassNotes.API.Services.Emails;
 
 namespace ClassNotes.API.Services.Otp
 {
@@ -19,15 +21,22 @@ namespace ClassNotes.API.Services.Otp
 		private readonly ClassNotesContext _context;
 		private readonly IConfiguration _configuration;
         private readonly IMemoryCache _memoryCache;
+        private readonly IEmailsService _emailsService;
 
         // AM: Tiempo de expiración del codigo otp (3 minutos)
         private readonly int _otpExpirationSeconds = 180; 
 
-		public OtpService(ClassNotesContext context, IConfiguration configuration, IMemoryCache memoryCache)
+		public OtpService(
+            ClassNotesContext context,
+            IConfiguration configuration,
+            IMemoryCache memoryCache,
+            IEmailsService emailsService
+            )
         {
 			this._context = context;
 			this._configuration = configuration;
             this._memoryCache = memoryCache;
+            this._emailsService = emailsService;
         }
 
 		// AM: Función para generar y enviar el codigo otp por correo
@@ -55,42 +64,29 @@ namespace ClassNotes.API.Services.Otp
             _memoryCache.Set(cacheKey, otpData, TimeSpan.FromSeconds(_otpExpirationSeconds));
 
             // AM: Generar el correo electronico que se va enviar con Smtp
-            var email = new MimeMessage();
-			email.From.Add(MailboxAddress.Parse(_configuration.GetSection("Smtp:Username").Value));
-			email.To.Add(MailboxAddress.Parse(dto.Email));
-			email.Subject = "Tu código de verificación";
-			email.Body = new TextPart(MimeKit.Text.TextFormat.Html)
-			{
-				Text = $@"
-				<div style='font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;'>
-					<div style='background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);'>
-						<h2 style='color: #333;'>Código de Verificación</h2>
-						<p style='font-size: 14px; color: #555;'>Hola {user.FirstName}, este es tu código de verificación de un solo uso:</p>
-						<div style='display: inline-block; padding: 10px 20px; font-size: 24px; color: #ffffff; background-color: #198F3D; border-radius: 5px; margin: 20px 0;'>
-							<strong>{otpCode}</strong>
-						</div>
-						<p style='font-size: 14px; color: #777;'>Este código expirará en <strong>{_otpExpirationSeconds/60} minutos</strong>.</p>
-						<p style='font-size: 12px; color: #999;'>Es importante que no compartas este código con nadie más.<br>Si no lo solicitaste, por favor ignora este mensaje.</p>
-					</div>
-					<p style='font-size: 12px; color: #aaa; margin-top: 20px;'>© ClassNotes 2025 | Todos los derechos reservados</p>
-				</div>"
-			};
+            var emailDto = new EmailDto
+            {
+                To = dto.Email,
+                Subject = "Tu código de verificación",
+                Content = $@"
+                    <div style='font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4;'>
+                        <div style='background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);'>
+                            <h2 style='color: #333;'>Código de Verificación</h2>
+                            <p style='font-size: 14px; color: #555;'>Hola {user.FirstName}, este es tu código de verificación de un solo uso:</p>
+                            <div style='display: inline-block; padding: 10px 20px; font-size: 24px; color: #ffffff; background-color: #198F3D; border-radius: 5px; margin: 20px 0;'>
+                                <strong>{otpCode}</strong>
+                            </div>
+                            <p style='font-size: 14px; color: #777;'>Este código expirará en <strong>{_otpExpirationSeconds / 60} minutos</strong>.</p>
+                            <p style='font-size: 12px; color: #999;'>Es importante que no compartas este código con nadie más.<br>Si no lo solicitaste, por favor ignora este mensaje.</p>
+                        </div>
+                        <p style='font-size: 12px; color: #aaa; margin-top: 20px;'>© ClassNotes 2025 | Todos los derechos reservados</p>
+                    </div>"
+                            };
 
+            // servicio de envio de correos directamente
+            var result = await _emailsService.SendEmailAsync(emailDto);
 
-			using var smtp = new SmtpClient();
-			smtp.Connect(
-				_configuration.GetSection("Smtp:Host").Value,
-				Convert.ToInt32(_configuration.GetSection("Smtp:Port").Value),
-				SecureSocketOptions.StartTls
-			);
-			smtp.Authenticate(
-				_configuration.GetSection("Smtp:Username").Value,
-				_configuration.GetSection("Smtp:Password").Value
-			);
-			smtp.Send(email);
-			smtp.Disconnect(true);
-
-			return new ResponseDto<OtpGenerateResponseDto>
+            return new ResponseDto<OtpGenerateResponseDto>
 			{
 				StatusCode = 200,
 				Status = true,

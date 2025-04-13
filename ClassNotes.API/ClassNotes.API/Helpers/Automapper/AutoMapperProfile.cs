@@ -39,14 +39,7 @@ namespace ClassNotes.API.Helpers.Automapper
         }
         private void MapsForActivities()
         {
-            // Mapeo para el get all (ActivitySummaryDto)
-            CreateMap<ActivityEntity, ActivitySummaryDto>()
-                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => new ActivitySummaryDto.CourseInfo
-                {
-                    Id = src.Unit.Course.Id, // Se le pasan el id del curso al que pertenece la actividad
-                    Name = src.Unit.Course.Name // Se pasa el nombre del curso al que pertenece la actividad
-                }))
-                .ForMember(dest => dest.CenterId, opt => opt.MapFrom(src => src.Unit.Course.CenterId)); // Se pasa el id del centro al que pertenece
+            
 
             // Mapeo para el get by id (ActivityDto)
             CreateMap<ActivityEntity, ActivityDto>()

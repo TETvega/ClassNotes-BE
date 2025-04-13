@@ -665,7 +665,6 @@ namespace ClassNotes.API.Services.Students
                     // Solo traé las actividades donde el estudiante no tiene ninguna nota mayor a 0
                     where !a.StudentNotes.Any(sn => 
                           sn.StudentId == id)
-
                     // todas las actividades que cumplan los filtros en grupos por curso
                     group a by new { sc.CourseId, sc.Course.Name, centerName = sc.Course.Center.Name, centerId = sc.Course.Center.Id, centerAbb = sc.Course.Center.Abbreviation} into g
                     select new PendingClassesDto

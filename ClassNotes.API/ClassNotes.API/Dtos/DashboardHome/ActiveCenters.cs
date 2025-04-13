@@ -7,6 +7,6 @@
         public string CenterAbb { get; set; }
         public string LogoUrl { get; set; }
         public int ActiveClasesCount { get; set; }
-        public string ActiveStudentsCount { get; set; }
+        public int ActiveStudentsCount { get; set; }
     }
 }

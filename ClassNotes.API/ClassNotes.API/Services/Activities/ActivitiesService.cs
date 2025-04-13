@@ -29,9 +29,9 @@ namespace ClassNotes.API.Services.Activities
         {
             _context = context;
             _mapper = mapper;
-             // Ahora la paginación se maneja de la siguiente forma:
-             // PageSize ahora es un objeto que contiene un valor especifico para los diferentes servicios
-             // Y este se usa de la manera que aparece abajo:
+            // Ahora la paginación se maneja de la siguiente forma:
+            // PageSize ahora es un objeto que contiene un valor especifico para los diferentes servicios
+            // Y este se usa de la manera que aparece abajo:
             PAGE_SIZE = configuration.GetValue<int>("PageSize:Activities");
             _auditService = auditService;
         }
@@ -39,39 +39,116 @@ namespace ClassNotes.API.Services.Activities
 
         // Traer todas las actividades (Paginadas)
         public async Task<ResponseDto<PaginationDto<List<ActivitySummaryDto>>>> GetActivitiesListAsync(
-    string searchTerm = "",
-    int page = 1)
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = 10,
+            Guid? centerId = null,
+            Guid? tagActivityId = null,
+            string typeActivities = "ALL"
+        )
         {
+            var allowedValues = new HashSet<string> { "ALL", "PENDING", "DONE" };
+
+            if (!allowedValues.Contains(typeActivities.ToUpper()))
+            {
+                return new ResponseDto<PaginationDto<List<ActivitySummaryDto>>>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "typeActivities solo puede ser  [ ALL , PENDING , DONE ]",
+                    Data = null,
+                };
+            }
             var userId = _auditService.GetUserId(); // Id de quien hace la petición
 
-            int startIndex = (page - 1) * PAGE_SIZE;
+            int MAX_PAGE_SIZE = 50;
+            int currentPageSize = Math.Min(pageSize ?? PAGE_SIZE, MAX_PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+
+            var now = DateTime.UtcNow;
+
             var activitiesQuery = _context.Activities
-                .Where(c => c.CreatedBy == userId) // Para mostrar unicamente los cursos que pertenecen al usuario que hace la petición
-                .Include(a => a.Unit) // Cargar la relación Unit
-                .ThenInclude(u => u.Course) // Cargar la relación Course desde Unit
+                .AsNoTracking()
+                .Where(a => a.CreatedBy == userId)
+                .Select(a => new
+                {
+                    Activity = a,
+                    Course = a.Unit.Course,
+                    Center = a.Unit.Course.Center,
+                    TagActivity = a.TagActivity,
+                    ActiveStudentIds = _context.StudentsCourses
+                        .Where(sc => sc.CourseId == a.Unit.CourseId && sc.IsActive)
+                        .Select(sc => sc.StudentId)
+                        .ToList(),
+                    StudentNoteIds = a.StudentNotes.Select(sn => sn.StudentId).ToList()
+                })
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
+                searchTerm = searchTerm.ToLower();
                 activitiesQuery = activitiesQuery
-                    .Where(
-                        x => x.Name.ToLower().Contains(searchTerm.ToLower()) || // buscar por nombre de la actividad
-                        x.Unit.Course.Name.ToLower().Contains(searchTerm.ToLower()) // Buscar por el nombre del curso
-                    );
+                    .Where(x => x.Activity.Name.ToLower().Contains(searchTerm) ||
+                                x.Course.Name.ToLower().Contains(searchTerm));
             }
 
-            int totalActivities = await activitiesQuery.CountAsync(); // total de las actividades
-            int totalPages = (int)Math.Ceiling((double)totalActivities / PAGE_SIZE); // total de las paginas
+            if (centerId.HasValue)
+            {
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Course.CenterId == centerId.Value);
+            }
 
+            if (tagActivityId.HasValue)
+            {
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Activity.TagActivityId == tagActivityId.Value);
+            }
+
+            if (typeActivities?.ToUpper() == "PENDING")
+            {
+                // Actividad pendiente si falta algún estudiante sin nota
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Activity.QualificationDate < now &&
+                                x.ActiveStudentIds.Except(x.StudentNoteIds).Any());
+            }
+            if (typeActivities?.ToUpper() == "DONE")
+            {
+                // Actividad realizada si todos los estudiantes tienen notas
+                activitiesQuery = activitiesQuery
+                    .Where(x => x.Activity.QualificationDate < now &&
+                                x.ActiveStudentIds.All(studentId => x.StudentNoteIds.Contains(studentId)));
+            }
+
+            // Total y paginado
+            var totalActivities = await activitiesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalActivities / currentPageSize);
+
+            // Paginación y ordenación
             var activitiesEntity = await activitiesQuery
-                .OrderByDescending(x => x.CreatedDate) // se ordena por fecha de creación
-                .Skip(startIndex) // Omite el indice
-                .Take(PAGE_SIZE) // muestra la cantidad de items que se definio en el page size
+                .OrderByDescending(x => x.Activity.CreatedDate) // Ordenar por fecha de creación
+                .Skip(startIndex)
+                .Take(currentPageSize)
                 .ToListAsync();
 
-            var activitiesDto = _mapper.Map<List<ActivitySummaryDto>>(activitiesEntity);
+            // Mapear a DTO
+            // centro retorna nulo siempre revisar 
+            // depurar cada campo ->
+            var activitiesDto = activitiesEntity.Select(x => new ActivitySummaryDto
+            {
+                Id = x.Activity?.Id ?? Guid.Empty,
+                Name = x.Activity?.Name ?? "Sin nombre",
+                Description = x.Activity?.Description ?? "Sin descripción",
+                QualificationDate = x.Activity?.QualificationDate ?? DateTime.MinValue,
+                TagActivityId = x.Activity?.TagActivityId ?? Guid.Empty,
+                CourseId = x.Course?.Id ?? Guid.Empty,
+                CourseName = x.Course?.Name ?? "Sin nombre de curso",
+                CenterId = x.Course?.CenterId ?? Guid.Empty,
+                CenterName = x.Center?.Name ?? "Sin nombre de centro", // nulo por algun arazon
+                CenterAbb = x.Center?.Abbreviation ?? "Sin ABB"
+            }).ToList();
 
-            return new ResponseDto<PaginationDto<List<ActivitySummaryDto>>> // Aqui ya se estuctura la respuesta a mostrar
+            return new ResponseDto<PaginationDto<List<ActivitySummaryDto>>>
             {
                 StatusCode = 200,
                 Status = true,
@@ -79,7 +156,7 @@ namespace ClassNotes.API.Services.Activities
                 Data = new PaginationDto<List<ActivitySummaryDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = currentPageSize,
                     TotalItems = totalActivities,
                     TotalPages = totalPages,
                     Items = activitiesDto,
@@ -186,7 +263,7 @@ namespace ClassNotes.API.Services.Activities
                 //Si no hay otras actividades, la lista solo tendra la nota de esta actividad...
                 if (studentActivities.Count() == 0)
                 {
-                    totalUnitPoints.Add((activity.Note/100)*activityEntity.MaxScore);
+                    totalUnitPoints.Add((activity.Note / 100) * activityEntity.MaxScore);
                 }
                 else
                 {
@@ -202,8 +279,8 @@ namespace ClassNotes.API.Services.Activities
                 //Aqui se realiza la sumatoria...
                 float newUnitScore = 0;
                 newUnitScore = (totalUnitPoints.Sum());
-               
-               
+
+
                 individualStudentUnit.UnitNote = newUnitScore;
                 //Se actualiza la unidad de estudiante con la nueva calificación
                 _context.StudentsUnits.Update(individualStudentUnit);
@@ -215,13 +292,13 @@ namespace ClassNotes.API.Services.Activities
                 var totalPoints = new List<float>();
                 foreach (var unit in studentUnitEntity)
                 {
-                   
+
                     //Si no es oro, las sumatorias de studentUnit deben ser promediadas a corde a lo que vale la unidad para el curso
                     if (courseSetting.ScoreType != "oro")
                     {
                         //Debe forsarse a ser float de esta forma para no dar problemas debido a que unit.maxScore
                         //permite null (para cursos con puntaje oro, aunque aqui no aplique siempre afecta el hecho de que los permita...
-                        totalPoints.Add( (float)((unit.UnitNote / 100) * unit.Unit.MaxScore) );
+                        totalPoints.Add((float)((unit.UnitNote / 100) * unit.Unit.MaxScore));
                         //la formula es basicamente una forma de regla de 3, debido a que tanto ponderado como aritmetico permiten hasta 100 puntos dentro de su unidad...
                     }
                     else
@@ -231,11 +308,11 @@ namespace ClassNotes.API.Services.Activities
                     };
                 }
 
-               
-                //Se actualiza la nota en el curso del estudiante usando los valores almacenados...
-                individualStudentUnit.StudentCourse.FinalNote = totalPoints.Sum() ;
 
-                
+                //Se actualiza la nota en el curso del estudiante usando los valores almacenados...
+                individualStudentUnit.StudentCourse.FinalNote = totalPoints.Sum();
+
+
 
                 _context.StudentsCourses.Update(individualStudentUnit.StudentCourse);
                 await _context.SaveChangesAsync();
@@ -282,7 +359,7 @@ namespace ClassNotes.API.Services.Activities
                 .Where(a => a.CreatedBy == userId) // Para que solo aparezca si lo creo quien hace la petición
                 .Include(a => a.Unit) // Incluir las unidades
                 .ThenInclude(u => u.Course) // Incluir los cursos
-                .FirstOrDefaultAsync(a => a.Id == id); 
+                .FirstOrDefaultAsync(a => a.Id == id);
 
             if (activityEntity == null) // Si no existe la actividad
             {
@@ -344,7 +421,7 @@ namespace ClassNotes.API.Services.Activities
                 //Si no es oro, se confirma que no se pasen de 100...
                 if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != "oro")
                 {
-                   
+
                     return new ResponseDto<ActivityDto>
                     {
                         StatusCode = 405,
@@ -371,14 +448,14 @@ namespace ClassNotes.API.Services.Activities
             //Cuando se agrega o modifica una actividad cuando ya se reviso a estudiantes, deben acomodarse todas esas entidades,
             //para que tomen en cuenta la nueva actividad o nuevo valor...
 
-           //Se buscan los estudiantes del curso...
+            //Se buscan los estudiantes del curso...
             var studentCourses = _context.StudentsCourses.Include(x => x.Course).Where(x => x.Course.Id == unitEntity.CourseId);
 
             //Estas son todas las relaciones estudiante a unidad que pertenescan a unidades de este curso..
             var fullStudentUnits = _context.StudentsUnits.Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
 
             //En estas listas se almacenaran los studentUnit a agregar, los que se modificaron, y los student course, estas listas son para hacer addRange o updateRange
-            List<StudentUnitEntity> newStudentUnitList =[];
+            List<StudentUnitEntity> newStudentUnitList = [];
             List<StudentUnitEntity> oldStudentUnitList = [];
             List<StudentCourseEntity> StudentCourseList = [];
 
@@ -421,7 +498,7 @@ namespace ClassNotes.API.Services.Activities
                 {
                     if (unitEntity.Course.CourseSetting.ScoreType != "oro")
                     {
-                        totalUnitPoints.Add( (float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
+                        totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
                     }
                     else
                     {
@@ -441,7 +518,7 @@ namespace ClassNotes.API.Services.Activities
                 var totalPoints = new List<float>();
                 foreach (var unit in studentUnits)
                 {
-                    totalPoints.Add(unit.UnitNote );
+                    totalPoints.Add(unit.UnitNote);
 
                 }
 
@@ -566,10 +643,10 @@ namespace ClassNotes.API.Services.Activities
             await _context.SaveChangesAsync();
 
 
-           
+
             //Se buscan los estudiantes del curso...
             var studentCourses = _context.StudentsCourses.Include(x => x.Course).Where(x => x.Course.Id == unitEntity.CourseId);
-            
+
             //Estas son todas las relaciones estudiante a unidad que pertenescan a unidades de este curso..
             var fullStudentUnits = _context.StudentsUnits.Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
 
@@ -621,7 +698,7 @@ namespace ClassNotes.API.Services.Activities
                     }
                     else
                     {
-                        totalUnitPoints.Add(thisUnit.UnitNote );
+                        totalUnitPoints.Add(thisUnit.UnitNote);
                     };
                 }
 
@@ -643,7 +720,7 @@ namespace ClassNotes.API.Services.Activities
 
 
                 //Se actualiza la nota en el curso del estudiante es igual a la suma de studentUnit...
-                studentCourse.FinalNote = totalPoints.Sum() ;
+                studentCourse.FinalNote = totalPoints.Sum();
 
 
                 StudentCourseList.Add(studentCourse);
@@ -691,6 +768,133 @@ namespace ClassNotes.API.Services.Activities
                 StatusCode = 200,
                 Status = true,
                 Message = MessagesConstant.ACT_DELETE_SUCCESS
+            };
+        }
+
+        public async Task<ResponseDto<PaginationDto<List<ActivityResponseDto>>>> GetAllActivitiesByClassAsync(
+            Guid id,
+            string searchTerm = "",
+            int page = 1,
+            int? pageSize = 10,
+            Guid? tagActivityId = null,
+            Guid? unitId = null,
+            string typeActivities = "ALL",
+            string isExtraFilter = "ALL"
+        )
+        {
+            var allowedValues = new HashSet<string> { "ALL", "PENDING", "DONE" };
+            var allowedExtraTypes = new HashSet<string> { "ALL", "TRUE", "FALSE" };
+            if (!allowedValues.Contains(typeActivities.ToUpper()))
+            {
+                return new ResponseDto<PaginationDto<List<ActivityResponseDto>>>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "typeActivities solo puede ser  [ ALL , PENDING , DONE ]",
+                    Data = null,
+                };
+            }
+
+            if (!allowedExtraTypes.Contains(isExtraFilter.ToUpper()))
+            {
+                return new ResponseDto<PaginationDto<List<ActivityResponseDto>>>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "isExtra solo puede ser [ALL, TRUE, FALSE]",
+                    Data = null
+                };
+            }
+
+            var userId = _auditService.GetUserId(); 
+
+            int MAX_PAGE_SIZE = 50;
+            int currentPageSize = Math.Min(pageSize ?? PAGE_SIZE, MAX_PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+            DateTime now = DateTime.UtcNow;
+            var query = _context.Activities
+                 .AsNoTracking()
+                 .Where(a => a.Unit.CourseId == id && a.CreatedBy == userId)
+                 .Include(a => a.Unit)
+                 .Include(a => a.TagActivity)
+                 .Include(a => a.StudentNotes)
+                 .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower();
+                query = query.Where(a =>
+                    a.Name.ToLower().Contains(searchTerm.ToLower()));
+            }
+
+            if (tagActivityId.HasValue)
+            {
+                query = query.Where(a => a.TagActivityId == tagActivityId.Value);
+            }
+
+            if (unitId.HasValue)
+            {
+                query = query.Where(a => a.UnitId == unitId.Value);
+            }
+
+            if (typeActivities.ToUpper() == "PENDING")
+            {
+                query = query.Where(a =>
+                    a.QualificationDate < now &&
+                    a.StudentNotes.Select(n => n.StudentId).Distinct().Count() <
+                    _context.StudentsCourses.Count(sc => sc.CourseId == a.Unit.CourseId && sc.IsActive));
+            }
+            if (typeActivities.ToUpper() == "DONE")
+            {
+                query = query.Where(a =>
+                    a.QualificationDate < now &&
+                    a.StudentNotes.Select(n => n.StudentId).Distinct().Count() >=
+                    _context.StudentsCourses.Count(sc => sc.CourseId == a.Unit.CourseId && sc.IsActive));
+            }
+
+            // Filtro isExtra
+            if (isExtraFilter.ToUpper() == "TRUE")
+                query = query.Where(a => a.IsExtra);
+            if (isExtraFilter.ToUpper() == "FALSE")
+                query = query.Where(a => !a.IsExtra);
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / currentPageSize);
+
+            var data = await query
+                .OrderByDescending(a => a.CreatedDate)
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .Select(a => new ActivityResponseDto
+                {
+                    ActivityId = a.Id,
+                    ActivityName = a.Name ?? "Sin nombre",
+                    ActivityDescription = a.Description ?? "",
+                    QualificationDate = a.QualificationDate,
+                    MaxScore = a.MaxScore,
+                    IsExtra = a.IsExtra,
+                    UnitId = a.UnitId,
+                    UnitNumber = a.Unit.UnitNumber,
+                    TagActivityId = a.TagActivityId
+                })
+                .ToListAsync();
+
+            return new ResponseDto<PaginationDto<List<ActivityResponseDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.ACT_RECORDS_FOUND,
+                Data = new PaginationDto<List<ActivityResponseDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = currentPageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Items = data,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
             };
         }
     }

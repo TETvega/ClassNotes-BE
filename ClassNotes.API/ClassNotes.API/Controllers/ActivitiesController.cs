@@ -27,19 +27,43 @@ namespace ClassNotes.API.Controllers
         // Traer todas las actividades (Con paginación)
         [HttpGet]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<List<ActivityDto>>>> GetAll(
+        public async Task<ActionResult<ResponseDto<List<ActivityDto>>>> GetAllActivities(
             string searchTerm = "",
-            int page = 1
+            int page = 1,
+            int pageSize = 10,
+            Guid? centerId = null,
+            Guid? tagActivityId = null,
+            string typeActivities = "ALL"
         )
         {
-            var response = await _activitiesService.GetActivitiesListAsync(searchTerm, page);
+            var response = await _activitiesService.GetActivitiesListAsync(searchTerm, page, pageSize , centerId , tagActivityId , typeActivities);
             return StatusCode(response.StatusCode, response);
         }
+
+
+        [HttpGet("course/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<ActivityResponseDto>>>> GetAllActivitiesByClass(
+            Guid id,
+            string searchTerm = "",
+            int page = 1,
+            int pageSize = 10,
+            Guid? tagActivityId = null,
+            Guid? unitId = null,
+            string typeActivities = "ALL",
+            string isExtraFilter = "ALL"
+)
+        {
+            var response = await _activitiesService.GetAllActivitiesByClassAsync(id, searchTerm, page, pageSize, tagActivityId, unitId,typeActivities, isExtraFilter);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
 
         // Traer una actividad mediante su id
         [HttpGet("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<ActivityDto>>> Get(Guid id)
+        public async Task<ActionResult<ResponseDto<ActivityDto>>> GetActivityByID(Guid id)
         {
             var response = await _activitiesService.GetActivityByIdAsync(id);
             return StatusCode(response.StatusCode, response);
