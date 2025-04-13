@@ -77,6 +77,22 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpGet("activities/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<PaginationDto<List<StudentDto>>>>> PaginatinatedPendingActivitiesList(Guid id, int? pageSize = null, int page = 1)
+        {
+            var response = await _studentsService.GetStudentPendingActivitiesAsync(id, pageSize, page);
+            return StatusCode(response.StatusCode, new
+            {
+                response.Status,
+                response.Message,
+                response.Data,
+            });
+
+        }
+
+       
+
         //EG -> Controlador de elimar estudiantes por arreglo o individual
         [HttpDelete("batch/{courseId}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]

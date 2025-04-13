@@ -96,7 +96,9 @@ namespace ClassNotes.API.Services.AllCourses
                     Id = c.Id,
                     Name = c.Name,
                     Code = c.Code,
-                    AbbCenter = c.Center.Abbreviation, 
+                    AbbCenter = c.Center.Abbreviation,
+                    CenterId = c.CenterId,
+                    CenterName = c.Center.Name,
                     ActiveStudents = c.Students.Count(),
                     IsActive = c.IsActive,
                     Activities =  new ActivitiesDto
