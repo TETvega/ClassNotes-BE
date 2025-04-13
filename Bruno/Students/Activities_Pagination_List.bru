@@ -1,0 +1,20 @@
+meta {
+  name: Activities_Pagination_List
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{PATH}}/students/activities/87f39f99-cff5-449b-ee44-08dd73cc1390?page=1&pageSize=-1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  pageSize: -1
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

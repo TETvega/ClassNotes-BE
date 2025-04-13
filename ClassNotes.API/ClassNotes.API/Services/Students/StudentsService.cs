@@ -4,7 +4,9 @@ using Azure;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
+using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.CourseFilter;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.Emails;
@@ -127,6 +129,7 @@ namespace ClassNotes.API.Services.Students
             var userId = _auditService.GetUserId();
 
             var studentEntity = await _context.Students.FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == userId);
+           
 
             if (studentEntity == null)
             {
@@ -496,6 +499,65 @@ namespace ClassNotes.API.Services.Students
             };
         }
 
+        //Servicio para obtener el listado de actividades faltantes por revisar de un alumno
+        public async Task<ResponseDto<PaginationDto<List<ActivityDto>>>> GetStudentPendingActivitiesAsync(Guid id, int? pageSize = null, int page = 1)
+        {
+            var userId = _auditService.GetUserId();
+
+            //Se busca la entidad de estudiante...
+            var studentEntity = await _context.Students.FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == userId);
+
+            //Si no existe, retornara error...
+            if (studentEntity == null)
+            {
+                return new ResponseDto<PaginationDto<List<ActivityDto>>>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.STU_RECORD_NOT_FOUND
+                };
+            }
+
+            //Paginacion...
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+            //Busca las actividades no revisadas a las que no se les pasó el tiempo de revisión...
+            var pendingActivitiesList = await _context.Activities.Where(x => !x.StudentNotes.Any(u => u.StudentId == id) && x.QualificationDate <= DateTime.UtcNow).ToListAsync();
+
+            var totalactivities = pendingActivitiesList.Count();
+
+
+            var studentsDtos = pendingActivitiesList
+                .OrderByDescending(x => x.CreatedDate)
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .ToList();
+
+            var activitiesDto = _mapper.Map<List<ActivityDto>>(pendingActivitiesList);
+
+            int totalPages = (int)Math.Ceiling((double)totalactivities / currentPageSize);
+
+            return new ResponseDto<PaginationDto<List<ActivityDto>>>
+            {
+                StatusCode = 200,
+                Status = false,
+                Message = MessagesConstant.STU_RECORD_FOUND,
+                Data = new PaginationDto<List<ActivityDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = currentPageSize,
+                    TotalItems = totalactivities,
+                    TotalPages = totalPages,
+                    Items = activitiesDto,
+                    HasPreviousPage = page > 1, 
+                    HasNextPage = page < totalPages, 
+                }
+            };
+
+        }
+
+
         public async Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds, Guid courseId)
         {
             // Obtener el ID del usuario que realiza la petición
@@ -712,21 +774,27 @@ namespace ClassNotes.API.Services.Students
                          sc.IsActive && sc.Course.IsActive &&
                          a.QualificationDate <= DateTime.UtcNow
                     // Solo traé las actividades donde el estudiante no tiene ninguna nota mayor a 0
-                    where !a.StudentNotes.Any(sn => sn.StudentId == id)
+                    where !a.StudentNotes.Any(sn => 
+                          sn.StudentId == id)
                     // todas las actividades que cumplan los filtros en grupos por curso
-                    group a by new { sc.CourseId, sc.Course.Name } into g
+                    group a by new { sc.CourseId, sc.Course.Name, centerName = sc.Course.Center.Name, centerId = sc.Course.Center.Id, centerAbb = sc.Course.Center.Abbreviation} into g
                     select new PendingClassesDto
                     {
                         CourseId = g.Key.CourseId,
                         CourseName = g.Key.Name,
+                        CenterId = g.Key.centerId,
+                        CenterName = g.Key.centerName,
+                        CenterAbb = g.Key.centerAbb,
                         PendingActivities = g.Count()
                     }
+
+                   
                 )
                 .OrderByDescending(x => x.PendingActivities)
                 .Take(top ?? 10)
                 .ToListAsync();
-
-
+            var test = _context.Activities.Where(x => !x.StudentNotes.Any(sn => sn.StudentId == id) && x.Unit.Course.Name== "Dibujo");
+            Console.WriteLine(test.Count());
             return new ResponseDto<List<PendingClassesDto>>
             {
                 StatusCode = 200,

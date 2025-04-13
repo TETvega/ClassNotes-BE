@@ -1,4 +1,5 @@
 ﻿using ClassNotes.API.Database.Entities;
+using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.Students;
@@ -15,5 +16,6 @@ namespace ClassNotes.API.Services.Students
         Task<ResponseDto<StudentDto>> UpdateStudentAsync(Guid id, StudentEditDto studentEditDto);
         Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds, Guid courseId);
         Task<ResponseDto<PaginationDto<List<StudentPendingDto>>>> GetAllStudentsPendingActivitiesAsync(Guid id, string searchTerm = "", int? pageSize = null, int page = 1, string StudentType = "All", string ActivityType = "All");
+        Task<ResponseDto<PaginationDto<List<ActivityDto>>>> GetStudentPendingActivitiesAsync(Guid id, int? pageSize = null, int page = 1);
     }
 }
