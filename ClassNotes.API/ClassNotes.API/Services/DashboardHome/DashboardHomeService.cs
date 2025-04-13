@@ -156,7 +156,8 @@ public class DashboardHomeService : IDashboardHomeService
             CenterName = course.Center.Name,
             CenterAbb = course.Center.Abbreviation
         })
-        .OrderBy(c => c.CourseName)
+        .OrderByDescending(c => c.ActiveStudentsCount) //para ordenar por los que tienen mas
+        .ThenBy(c => c.CourseName)
         .Take(4)
         .ToListAsync();
 
