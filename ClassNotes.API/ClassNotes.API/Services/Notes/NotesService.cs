@@ -240,12 +240,12 @@ namespace ClassNotes.API.Services.Notes
         {
             try
             {
-                // 1. Validación de parámetros
+                // Validación de parámetros
                 var validationResult = ValidateParameters(activeStudent, studentStateNote);
                 if (validationResult != null)
                     return validationResult;
 
-                // 2. Obtener configuración del curso
+                // Obtener configuración del curso
                 var course = await _context.Courses
                     .Include(c => c.CourseSetting)
                     .FirstOrDefaultAsync(c => c.Id == courseId);
@@ -259,11 +259,12 @@ namespace ClassNotes.API.Services.Notes
                         Data = null
                     };
 
-                // 3. Obtener tipo de puntuación del curso
+                //  Obtener tipo de puntuación del curso
+                // si no se asigna aritmetico y listo
                 var scoreType = course.CourseSetting?.ScoreType ?? ScoreTypeConstant.ARITHMETI_SCORE;
 
                 
-                // 4. Obtener datos de estudiantes y notas
+                //  Obtener datos de estudiantes y notas
                 var studentData = await GetStudentQualificationsData(
                     courseId,
                     activeStudent?.ToUpper(),
@@ -274,7 +275,8 @@ namespace ClassNotes.API.Services.Notes
                     studentStateNote
                     );
 
-                // 5. Calcular estadísticas si es necesario
+                // Calcular estadísticas si es necesario
+                // si el FE no lo pide pasa de largo
                 var statistics = new StadisticStudentsDto();
                 if (includeStats)
                 {
@@ -291,8 +293,6 @@ namespace ClassNotes.API.Services.Notes
 
 
 
-
-                // 7. Construir respuesta
                 return new ResponseDto<DasboardRequestDto>
                 {
                     StatusCode = 200,
@@ -324,7 +324,7 @@ namespace ClassNotes.API.Services.Notes
             List<StudentQualificationDto> studentData
             )
         {
-            // 1. Obtener promedios por unidad
+            // Obtener promedios por unidad
             var unitAverages = new List<UnitStatus>();
 
             var units = await _context.Units
@@ -364,7 +364,7 @@ namespace ClassNotes.API.Services.Notes
                 });
             }
 
-            // 2. Calcular estadísticas globales del curso
+            //  Calcular estadísticas globales del curso
             float overallAverage = 0f;
             float approvalRating = 0f;
 
@@ -393,19 +393,27 @@ namespace ClassNotes.API.Services.Notes
                 {
                     var avg = student.GlobalAverage;
 
-                    if (avg >= 90)
-                        excellent++;
-                    else if (avg >= 80)
-                        good++;
-                    else if (avg >= 70)
-                        stablish++;
-                    else if (avg >= 60)
-                        low++;
-                    else
-                        failed++;
+                    switch (avg)
+                    {
+                        case >= 90:
+                            excellent++;
+                            break;
+                        case >= 80:
+                            good++;
+                            break;
+                        case >= 70:
+                            stablish++;
+                            break;
+                        case >= 60:
+                            low++;
+                            break;
+                        default:
+                            failed++;
+                            break;
+                    }
                 }
             }
-            // 3. Identificar la mejor y peor unidad
+            //  Identificar la mejor y peor unidad
             UnitStatus bestUnit = null;
             UnitStatus worstUnit = null;
 
@@ -430,14 +438,14 @@ namespace ClassNotes.API.Services.Notes
                 LowTotal = low,
                 FailedTotal = failed
             };
-            // 4. Retornar el DTO con todas las estadísticas
+            // Retornar el DTO con todas las estadísticas
             return new StadisticStudentsDto
             {
                 OverallAvarage = overallAverage,
                 ApprovalRating = approvalRating,
                 BestUnit = bestUnit,
                 WorstUnit = worstUnit,
-                GraficResult = graficResult
+                GraficResult = graficResult // Estadisticas del grafico
                 
             };
         }
@@ -524,7 +532,7 @@ namespace ClassNotes.API.Services.Notes
                 };
             }
 
-            // Ya puedes usar .Value porque sabes que no son null
+            // No hay null 
             var totalItems = result.Count;
             var totalPages = (int)Math.Ceiling((double)totalItems / pageSize.Value);
             var pagedResult = result
