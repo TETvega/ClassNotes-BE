@@ -5,7 +5,21 @@ meta {
 }
 
 get {
-  url: 
+  url: {{PATH}}/activities/course/f6cfc25e-8259-4cde-4e74-08dd73c935a0?searchTerm
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  ~page: 
+  ~pageSize: 
+  ~tagActivityId: 
+  ~unitId: 
+  ~typeActivities: 
+  ~isExtraFilter: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
 }

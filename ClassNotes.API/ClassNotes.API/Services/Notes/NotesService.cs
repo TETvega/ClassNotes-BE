@@ -91,6 +91,15 @@ namespace ClassNotes.API.Services.Notes
             //Obtiene el curso del que se quieren ver las notas de todos sus estudiantes
             var course = await _context.Courses.FirstOrDefaultAsync(x => x.Id == courseId  );
 
+            if (course is null)
+            {
+                return new ResponseDto<PaginationDto<List<StudentTotalNoteDto>>>
+                {
+                    StatusCode = 401,
+                    Status = false,
+                    Message = "El curso No Existe"
+                };
+            }
             if (course.CreatedBy != userId)
             {
                 return new ResponseDto<PaginationDto<List<StudentTotalNoteDto>>>

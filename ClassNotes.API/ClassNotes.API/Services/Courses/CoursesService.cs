@@ -42,7 +42,7 @@ namespace ClassNotes.API.Services.Courses
         )
         {
             // Configuración del tamaño de página
-            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int currentPageSize =  Math.Max(1, pageSize ?? PAGE_SIZE);
             int startIndex = (page - 1) * currentPageSize;
 
             var userId = _auditService.GetUserId();

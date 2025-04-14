@@ -31,12 +31,11 @@ namespace ClassNotes.API.Controllers
 
         [HttpPost("all")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<PaginationDto<List<CourseCenterDto>>>>> GetAllCourses([FromBody] CoursesFilterDto filter)
+        public async Task<ActionResult<ResponseDto<PaginationDto<List<CourseCenterDto>>>>> GetAllCourses( CoursesFilterDto filter)
         {
             var response = await _filterService.GetFilteredCourses(filter);
             return StatusCode(response.StatusCode, response);
         }
-
 
         [HttpGet("{courseId}/info")] // En el bruno se debe de poner el id del curso y luego el /info
         [Authorize(Roles = $"{RolesConstant.USER}")]
