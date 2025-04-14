@@ -95,12 +95,14 @@ namespace ClassNotes.API.Services.Attendances
 		}
 
 		// AM: Mostrar paginación de estudiantes por Id del curso
-		public async Task<ResponseDto<PaginationDto<List<CourseAttendancesStudentDto>>>> GetStudentsAttendancesPaginationAsync(Guid courseId, bool? isActive = null, string searchTerm = "", int page = 1)
+		public async Task<ResponseDto<PaginationDto<List<CourseAttendancesStudentDto>>>> GetStudentsAttendancesPaginationAsync(Guid courseId, bool? isActive = null, string searchTerm = "", int page = 1,int? pageSize= null)
 		{
-			int startIndex = (page - 1) * PAGE_SIZE;
 
-			// AM: ID del usuario en sesión
-			var userId = _auditService.GetUserId();
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+            // AM: ID del usuario en sesión
+            var userId = _auditService.GetUserId();
 
 			// AM: Validar existencia del curso
 			var courseEntity = await _context.Courses.FirstOrDefaultAsync(c => c.Id == courseId && c.CreatedBy == userId);
@@ -149,13 +151,13 @@ namespace ClassNotes.API.Services.Attendances
 			}
 
 			int totalItems = await studentsQuery.CountAsync();
-			int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+			int totalPages = (int)Math.Ceiling((double)totalItems / currentPageSize);
 
 			// AM: Aplicar paginacion 
 			var studentsList = await studentsQuery
 				.OrderBy(s => s.StudentName) // AM: Ordenar por nombre
 				.Skip(startIndex)
-				.Take(PAGE_SIZE)
+				.Take(currentPageSize)
 				.ToListAsync();
 
 			return new ResponseDto<PaginationDto<List<CourseAttendancesStudentDto>>>
@@ -166,7 +168,7 @@ namespace ClassNotes.API.Services.Attendances
 				Data = new PaginationDto<List<CourseAttendancesStudentDto>>
 				{
 					CurrentPage = page,
-					PageSize = PAGE_SIZE,
+					PageSize = currentPageSize,
 					TotalItems = totalItems,
 					TotalPages = totalPages,
 					Items = studentsList,

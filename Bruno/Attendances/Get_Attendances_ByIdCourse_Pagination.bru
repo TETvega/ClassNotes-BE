@@ -1,0 +1,15 @@
+meta {
+  name: Get_Attendances_ByIdCourse_Pagination
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{PATH}}/attendances/course_students/f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

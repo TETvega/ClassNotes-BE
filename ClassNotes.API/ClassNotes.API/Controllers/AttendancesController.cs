@@ -30,9 +30,9 @@ namespace ClassNotes.API.Controllers
 
 		[HttpGet("course_students/{courseId}")]
 		[Authorize(Roles = $"{RolesConstant.USER}")]
-		public async Task<ActionResult<ResponseDto<List<CourseAttendancesStudentDto>>>> GetStudentsPagination(Guid courseId, bool? isActive = null, string searchTerm = "", int page = 1)
+		public async Task<ActionResult<ResponseDto<List<CourseAttendancesStudentDto>>>> GetStudentsPagination(Guid courseId, bool? isActive = null, string searchTerm = "", int page = 1,int? pageSize=null)
 		{
-			var response = await _attendancesService.GetStudentsAttendancesPaginationAsync(courseId, isActive, searchTerm, page);
+			var response = await _attendancesService.GetStudentsAttendancesPaginationAsync(courseId, isActive, searchTerm, page, pageSize);
 			return StatusCode(response.StatusCode, response);
 		}
 
