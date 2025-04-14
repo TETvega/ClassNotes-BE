@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="CloudinaryDotNet" Version="1.27.4" />
     <PackageReference Include="itext7" Version="9.0.0" />
     <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.0.0" />
