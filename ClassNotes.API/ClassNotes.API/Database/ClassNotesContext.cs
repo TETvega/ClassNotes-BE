@@ -7,6 +7,7 @@ using ClassNotes.API.Database.Configuration;
 using ClassNotes.API.Services.Audit;
 using System.Diagnostics;
 using Serilog;
+using NetTopologySuite.Geometries;
 
 
 namespace ClassNotes.API.Database
@@ -68,6 +69,33 @@ namespace ClassNotes.API.Database
         }
 
         /*El siguiente Codigo Sive para los Campos de Auditoria, saber quien esta mandando las peticiones editando o creando*/
+        /// <summary>
+        /// Guarda los cambios realizados en el contexto de base de datos de forma asincrónica, incluyendo registros detallados de auditoría (logs).
+        /// </summary>
+        /// <param name="cancellationToken">
+        /// Token de cancelación que puede usarse para cancelar la operación de guardado.
+        /// </param>
+        /// <returns>
+        /// Un <see cref="Task{TResult}"/> que representa la operación asincrónica. El resultado contiene el número de entidades escritas en la base de datos.
+        /// </returns>
+        /// <remarks>
+        /// Este método extiende el comportamiento por defecto de <see cref="DbContext.SaveChangesAsync(CancellationToken)"/> para incluir auditoría y logs
+        /// Existe otro metodo sin los registros de auditoria , ya que en el estan siendo insertados manualmente y tienen que extraerse
+        /// detallados de las entidades que han sido agregadas, modificadas o eliminadas.
+        ///
+        /// Para cada entidad que herede de <see cref="BaseEntity"/> y se encuentre en los estados <see cref="EntityState.Added"/>, 
+        /// <see cref="EntityState.Modified"/> o <see cref="EntityState.Deleted"/>, se registran los siguientes detalles:
+        ///
+        /// - Para entidades agregadas: se asignan los campos <c>CreatedBy</c> y <c>CreatedDate</c>, y se logean todos sus valores actuales.
+        /// - Para entidades modificadas: se asignan los campos <c>UpdatedBy</c> y <c>UpdatedDate</c>, y se registran únicamente las propiedades cuyo valor cambió.
+        /// - Para entidades eliminadas: se logean los valores originales antes de ser eliminadas.
+        ///
+        /// Además, se hace un tratamiento especial para propiedades de tipo <see cref="NetTopologySuite.Geometries.Geometry"/> como <see cref="Point"/>,
+        /// extrayendo únicamente coordenadas relevantes (X, Y) o el tipo de geometría para evitar problemas al serializar o registrar estructuras complejas.
+        /// En el metodo de guardado se observo un bucle infinito y al ejecutar paso por paso se llego al momento de guardado con los registros de tallados (logs) los cuales intentaban descomponer este objeto typo BSON , pero entrabajn en un bucle infinito
+        /// </remarks>
+        /// 
+
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker
@@ -91,12 +119,28 @@ namespace ClassNotes.API.Database
                     {
                         entity.CreatedBy = userId;
                         entity.CreatedDate = DateTime.Now;
+                        // diccionario seguro
+                        var safeValues = entry.CurrentValues.Properties.ToDictionary(p => p.Name, p =>
+                        {
+                            // guarga los mismos valores
+                            var val = entry.CurrentValues[p];
+                            // pero si es de tipo geometry solo extraemos X y Y
+                            if (val is Geometry geometry)
+                            {
+                                if (geometry is Point point)
+                                {
+                                    return new { point.X, point.Y };
+                                }
+                                return geometry.GeometryType; 
+                            }
+                            return val;
+                        });
 
                         Log.Information("Entidad agregada - {Entity}, Id: {Id}, Usuario: {UserId}, Valores: {@Values}",
                             entityName,
                             primaryKey ?? "Desconocido",
                             userId ?? "Anonimo",
-                            entry.CurrentValues.Properties.ToDictionary(p => p.Name, p => entry.CurrentValues[p]));
+                            safeValues);
                     }
                     else if (entry.State == EntityState.Modified)
                     {
@@ -109,11 +153,20 @@ namespace ClassNotes.API.Database
                         {
                             if (!Equals(prop.OriginalValue, prop.CurrentValue))
                             {
+                                object oldValue = prop.OriginalValue;
+                                object newValue = prop.CurrentValue;
+
+                                // Evitar serialización compleja de geometrías
+                                if (prop.OriginalValue is Geometry gOld)
+                                    oldValue = gOld is Point pOld ? new { pOld.X, pOld.Y } : gOld.GeometryType;
+                                if (prop.CurrentValue is Geometry gNew)
+                                    newValue = gNew is Point pNew ? new { pNew.X, pNew.Y } : gNew.GeometryType;
+
                                 changes.Add(new
                                 {
                                     Property = prop.Metadata.Name,
-                                    OldValue = prop.OriginalValue,
-                                    NewValue = prop.CurrentValue
+                                    OldValue = oldValue,
+                                    NewValue = newValue
                                 });
                             }
                         }
@@ -129,17 +182,32 @@ namespace ClassNotes.API.Database
                     }
                     else if (entry.State == EntityState.Deleted)
                     {
+                        var safeOldValues = entry.OriginalValues.Properties.ToDictionary(p => p.Name, p =>
+                        {
+                            var val = entry.OriginalValues[p];
+                            if (val is Geometry geometry)
+                            {
+                                if (geometry is Point point)
+                                {
+                                    return new { point.X, point.Y };
+                                }
+                                return geometry.GeometryType;
+                            }
+                            return val;
+                        });
+
                         Log.Information("Entidad eliminada - {Entity}, Id: {Id}, Usuario: {UserId}, Valores anteriores: {@OldValues}",
                             entityName,
                             primaryKey ?? "Desconocido",
                             userId ?? "Anonimo",
-                            entry.OriginalValues.Properties.ToDictionary(p => p.Name, p => entry.OriginalValues[p]));
+                            safeOldValues);
                     }
                 }
             }
 
             return base.SaveChangesAsync(cancellationToken);
         }
+
 
 
         // AM: Funcion SaveChangesAsync pero que omite el AuditService que se puede usar cuando el usuario no esta autenticado
