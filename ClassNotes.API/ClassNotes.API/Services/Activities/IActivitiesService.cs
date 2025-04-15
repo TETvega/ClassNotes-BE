@@ -2,6 +2,7 @@
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Dtos.Students;
 
 namespace ClassNotes.API.Services.Activities
 {
@@ -42,5 +43,6 @@ namespace ClassNotes.API.Services.Activities
 		Task<ResponseDto<ActivityDto>> DeleteAsync(Guid id);
 
         Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId);
+        Task<ResponseDto<PaginationDto<List<StudentAndNoteDto>>>> GetStudentsActivityScoreAsync(Guid activityId, int page = 1);
     }
 }

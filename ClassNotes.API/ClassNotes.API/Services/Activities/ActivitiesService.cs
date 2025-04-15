@@ -5,6 +5,7 @@ using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -165,6 +166,91 @@ namespace ClassNotes.API.Services.Activities
                 }
             };
         }
+
+        //Mostrar listado de estudiantes junto a su nota en una actividad...
+        public async Task<ResponseDto<PaginationDto<List<StudentAndNoteDto>>>> GetStudentsActivityScoreAsync(Guid activityId, int page = 1)
+        {
+
+            int startIndex = (page - 1) * PAGE_SIZE;
+
+            var userId = _auditService.GetUserId();
+
+            //(Ken)
+            //Obtenemos la propia actividad especificada...
+            var activityEntity = await _context.Activities.Include(a => a.Unit).FirstOrDefaultAsync(a => a.Id == activityId);
+
+            //Verificacion de existencia...
+            if (activityEntity == null)
+            {
+                return new ResponseDto<PaginationDto<List<StudentAndNoteDto>>>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = MessagesConstant.RECORD_NOT_FOUND
+                };
+            }
+
+            //Trae de la base de datos todos los esstudiantes en el curso del que sale la actividad especifica, creados por el usuario...
+            //Incluye a student para poder poblar el listado de dtos con info del estudiante y activities de student para verificar la nota...
+            var studentQuery = _context.StudentsCourses
+                .Include(x => x.Student)
+                .ThenInclude(y => y.Activities)
+                    .AsQueryable()
+                        .Where(c => c.CourseId == activityEntity.Unit.CourseId && c.CreatedBy == userId && c.IsActive);//Solo estudiantes activos...
+
+            
+            int totalItems = await studentQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+
+            var studentNotesEntities = await studentQuery
+                .OrderByDescending(n => n.Student.FirstName)
+                .Skip(startIndex)
+                .Take(PAGE_SIZE)
+                .ToListAsync();
+
+
+            //Aqui se almacenaran los dtos a devolver...
+            List<StudentAndNoteDto> studentScoreList = [];
+
+            //Por cada actividad revisada obtenida...
+            studentNotesEntities.ForEach(x =>
+            {
+                //Si existe una revision de actividad, se asigna ese valor, sino, se le pone como 0...
+                var note = x.Student.Activities.FirstOrDefault(u => u.ActivityId == activityId)?.Note ?? 0;
+
+                //Crea el dto y lo ingresa en la lista creada anteriormente...
+                var studentAndNoteDto = new StudentAndNoteDto
+                {
+                    //Se utiliza la informacion de x.Student, por eso se incluyo en la llamada original...
+                    Id = x.StudentId, 
+                    Name = x.Student.FirstName + " " + x.Student.LastName,
+                    Email = x.Student.Email,
+                    Score = note
+                };
+
+                studentScoreList.Add(studentAndNoteDto);
+            });
+
+
+            return new ResponseDto<PaginationDto<List<StudentAndNoteDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.RECORDS_FOUND,
+                Data = new PaginationDto<List<StudentAndNoteDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = PAGE_SIZE,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Items = studentScoreList,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
+            };
+        }
+
+
 
         public async Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId)
         {
