@@ -91,32 +91,51 @@ namespace ClassNotes.API.Services.AllCourses
             //}
 
             // Aplicamos paginación
-            var courses = await query
+            var courses =  query
                 .Include(c => c.Center)
-                .Include(c => c.Activities)
+                .Include(c => c.Units)
+                    .ThenInclude(c => c.Activities)
+                        .ThenInclude(c => c.StudentNotes)
                 .Include(c => c.Students)
                 .Where(c => c.Center.TeacherId == userId)
                 .OrderByDescending(c => c.Students.Count(s => s.IsActive)) 
                 .ThenBy(c => c.Name) 
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Code,
+                    c.Center.Abbreviation,
+                    c.CenterId,
+                    centerName = c.Center.Name,
+                    ActiveStudents = c.Students.Count(s => s.IsActive),
+                    c.IsActive,
+                    Units = c.Units.Select(u => new {
+                        Activities = u.Activities.Select(a => new {
+                            HasNote = a.StudentNotes.Any() //Se buscan previamente los datos para evitar errores por muchas llamadas anidadas...
+                        }).ToList()
+                    }).ToList()
+                })
+                .AsEnumerable() //Se debe materializar la info y cambiarla de iQuery para que funcione el listado de actividades...
                 .Select(c => new CourseCenterDto
                 {
                     Id = c.Id,
                     Name = c.Name,
                     Code = c.Code,
-                    AbbCenter = c.Center.Abbreviation,
+                    AbbCenter = c.Abbreviation,
                     CenterId = c.CenterId,
-                    CenterName = c.Center.Name,
-                    ActiveStudents = c.Students.Count(s => s.IsActive),
+                    CenterName = c.centerName,
+                    ActiveStudents = c.ActiveStudents,
                     IsActive = c.IsActive,
                     Activities = new ActivitiesDto
                     {
-                        Total = c.Activities.Count(),
-                        TotalEvaluated = c.Activities.Count(a => a.StudentNotes.Any())
+                        Total = c.Units.Sum(u => u.Activities.Count),
+                        TotalEvaluated = c.Units.Sum(u => u.Activities.Count(a => a.HasNote))
                     }
                 })
-                .ToListAsync();
+                .ToList();
 
 
             // Crear la respuesta de paginación con los datos obtenidos 

@@ -1,0 +1,15 @@
+meta {
+  name: GetUnitsById
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{PATH}}/courses/Units/f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

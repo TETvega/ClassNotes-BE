@@ -676,6 +676,7 @@ namespace ClassNotes.API.Services.Students
                 {
                     StudentId = studentCourse.StudentId,
                     FirstName = studentCourse.Student.FirstName,
+                    LastName = studentCourse.Student.LastName,
                     IsActive = studentCourse.IsActive,
                     EMail = studentCourse.Student.Email,
                     PendingActivities = activityCount.Count()
