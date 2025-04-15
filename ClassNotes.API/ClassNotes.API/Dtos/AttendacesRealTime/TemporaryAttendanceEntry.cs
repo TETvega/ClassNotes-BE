@@ -10,7 +10,8 @@ namespace ClassNotes.API.Dtos.AttendacesRealTime
         public string Otp {  get; set; }
         public string QrContent { get; set; }
         public DateTime ExpirationTime { get; set; }
-        public Point GeolocationToCompare { get; set; }
+        public float GeolocationLatitud { get; set; }
+        public float GeolocationLongitud { get; set; }
         public bool IsCheckedIn { get; set; } = false;
         public string AttendanceMethod { get; set; } // OTP, "QR"
     }
