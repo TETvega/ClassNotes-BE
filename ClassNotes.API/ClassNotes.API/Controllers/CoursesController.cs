@@ -67,6 +67,15 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        // Traer unidades de curso mediante su id
+        [HttpGet("units/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<UnitDto>>>> GetUnits(Guid id)
+        {
+            var response = await _coursesService.GetCourseUnits(id);
+            return StatusCode(response.StatusCode, response);
+        }
+
         // Crear un curso
         [HttpPost]
         [Authorize(Roles = $"{RolesConstant.USER}")]

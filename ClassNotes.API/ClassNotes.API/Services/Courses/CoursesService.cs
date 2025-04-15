@@ -34,7 +34,6 @@ namespace ClassNotes.API.Services.Courses
         }
 
         // EG -> Enlistar todos los cursos, paginacion
-
         public async Task<ResponseDto<PaginationDto<List<CourseWithSettingDto>>>> GetCoursesListAsync(
             string searchTerm = "",
             int page = 1,
@@ -96,6 +95,31 @@ namespace ClassNotes.API.Services.Courses
                 }
             };
         }
+
+        //(Ken)
+        //Obtener unidades...
+        public async Task<ResponseDto<List<UnitDto>>> GetCourseUnits(Guid id)
+        {
+            var userId = _auditService.GetUserId(); //Obtiene id de usuario...
+
+
+            var unitEntities = await _context.Units 
+                .Where(x => x.CourseId == id && x.CreatedBy == userId)//Busca todas las unidades del curso especificado por el id y creadas por el usuario...
+                .OrderBy(n => n.UnitNumber)//Ordena según numero de unidad...
+                .ToListAsync();
+
+            var unitDtos = _mapper.Map<List<UnitDto>>(unitEntities);
+
+            return new ResponseDto<List<UnitDto>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.CRS_RECORD_FOUND,
+                Data = unitDtos
+            };
+        }
+
+
 
         // CP -> Para listar un curso mediante su id
         public async Task<ResponseDto<CourseWithSettingDto>> GetCourseByIdAsync(Guid id)

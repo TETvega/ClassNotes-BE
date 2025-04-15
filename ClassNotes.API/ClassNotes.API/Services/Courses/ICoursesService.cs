@@ -23,5 +23,6 @@ namespace ClassNotes.API.Services.Courses
 
         // CP -> Eliminar un curso
         Task<ResponseDto<CourseWithSettingDto>> DeleteAsync(Guid id);
+        Task<ResponseDto<List<UnitDto>>> GetCourseUnits(Guid id);
     }
 }
