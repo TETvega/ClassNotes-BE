@@ -89,7 +89,7 @@ namespace ClassNotes.API.Services.DashboardCourses
             {
                 using var scope = _scopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
-                return await context.CoursesNotes.CountAsync(n => n.CourseId == courseId && (!n.isView || n.UseDate > DateTime.UtcNow.AddDays(-1)));
+                return await context.CoursesNotes.CountAsync(n => n.CourseId == courseId && (!n.isView ));
             });
 
             // el total evaluado por el docente en actividades

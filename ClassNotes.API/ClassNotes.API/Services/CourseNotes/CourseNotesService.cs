@@ -49,7 +49,7 @@ namespace ClassNotes.API.Services.CourseNotes
             *  Math.Max(1, valor) garantiza que currentPageSize nunca sea menor que 1 excepto el -1 al inicio
             *  si pageSize es nulo toma el valor de PAGE_SIZE
             */
-            int currentPageSize = dto.PageSize == -1 ? int.MaxValue : Math.Max(1, dto.PageSize ?? PAGE_SIZE);
+            int currentPageSize =  Math.Max(1, dto.PageSize ?? PAGE_SIZE);
             int startIndex = (dto.Page - 1) * currentPageSize;
 
             var userId = _auditService.GetUserId();
@@ -72,7 +72,7 @@ namespace ClassNotes.API.Services.CourseNotes
             if (dto.Filter.ToUpper() == "PENDING")
             {
                 courseNoteQuery = courseNoteQuery
-                    .Where(c => c.UseDate >= yesterday && !c.isView)
+                    .Where(c => !c.isView)
                     .OrderBy(c => c.UseDate); // Más cercano en fecha de uso primero
             }
             else if (dto.Filter.ToUpper() == "HISTORY")
