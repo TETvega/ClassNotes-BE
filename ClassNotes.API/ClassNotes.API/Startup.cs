@@ -139,7 +139,24 @@ public class Startup
                 ClockSkew = TimeSpan.Zero,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
             };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    var path = context.HttpContext.Request.Path;
+
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/attendance"))// cambiar por la URL al final 
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
+
 
         // CORS Configuration
         services.AddCors(opt =>
@@ -173,13 +190,12 @@ public class Startup
         app.UseAuthentication();
 
         app.UseAuthorization();
-
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
 
 			// conexion al cual estara directamente FE
-            endpoints.MapHub<AttendanceHub>("/attendanceHub");
+            endpoints.MapHub<AttendanceHub>("/hubs/attendance");
         });
     }
 }

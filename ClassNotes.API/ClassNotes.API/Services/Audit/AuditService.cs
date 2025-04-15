@@ -1,6 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using ClassNotes.API.Database;
+using iText.Commons.Actions.Contexts;
 
 namespace ClassNotes.API.Services.Audit
 {
@@ -9,12 +8,16 @@ namespace ClassNotes.API.Services.Audit
         // --------------------- CP --------------------- //
 
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ClassNotesContext _context;
 
         public AuditService(
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            ClassNotesContext context
+
             )
         {
             this._httpContextAccessor = httpContextAccessor;
+            _context = context;
         }
 
         public string GetUserId()
@@ -23,6 +26,13 @@ namespace ClassNotes.API.Services.Audit
                .User.Claims.Where(x => x.Type == "UserId").FirstOrDefault();
 
             return idClaim.Value;
+        }
+
+        bool IAuditService.isTheOwtherOfTheCourse(Guid courseId)
+        {
+            var userId = GetUserId();
+            var isOwner = _context.Courses.FirstOrDefault(c => c.Id == courseId).Center.TeacherId == userId;
+            return isOwner;
         }
 
         // --------------------- CP --------------------- //

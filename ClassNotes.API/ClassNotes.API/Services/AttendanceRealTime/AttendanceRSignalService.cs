@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.AttendacesRealTime;
@@ -9,15 +10,16 @@ using ClassNotes.API.Hubs;
 using ClassNotes.API.Services.Audit;
 using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
+using iText.Commons.Actions.Contexts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Geometries;
-using Org.BouncyCastle.Asn1.Ocsp;
+using Microsoft.Extensions.Caching.Memory;
 using OtpNet;
+using ProjNet.CoordinateSystems;
 using QRCoder;
-using System.Security.Cryptography;
-using System.Text;
-using static System.Net.WebRequestMethods;
+using static QRCoder.PayloadGenerator;
+using Point = NetTopologySuite.Geometries.Point;
+
 
 namespace ClassNotes.API.Services.AttendanceRealTime
 {
@@ -29,6 +31,9 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         private readonly IEmailsService _emailsService;
         private readonly IOtpService _otpService;
         private readonly IMapper _mapper;
+        private readonly IMemoryCache _cache;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILoggerFactory _logger;
 
         public AttendanceRSignalService(
             ClassNotesContext context,
@@ -36,7 +41,10 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             IHubContext<AttendanceHub> hubContext,
             IEmailsService emailsService,
             IOtpService otpService,
-            IMapper mapper
+            IMapper mapper,
+            IMemoryCache cache,
+            IServiceScopeFactory serviceScopeFactory,
+            ILoggerFactory logger
 
             )
         {
@@ -46,38 +54,41 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             _emailsService = emailsService;
             _otpService = otpService;
             _mapper = mapper;
+            _cache = cache;
+            _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
-        //public async Task<ResponseDto> ValidateAttendanceAsync(ValidateOtpDto dto)
-        //{
-        //    var validOtp = _otpCache.Get(dto.OTP); // Revisa que sea válido
-        //    if (validOtp == null || validOtp.StudentId != dto.StudentId)
-        //    {
-        //        return new ResponseDto { Status = false, Message = "OTP inválido" };
-        //    }
+        ///<summary>
+        ///    Procesa la asistencia de estudiantes a un curso, generando códigos QR y/o OTP por email según configuración.
+        ///</summary>
+        ///<remarks>
+        ///    Este endpoint realiza las siguientes operaciones principales:
+        ///    1. Valida que el curso exista, esté activo y pertenezca al docente
+        ///    2. Verifica que se haya seleccionado al menos un método de asistencia (QR o email)
+        ///    3. Determina la ubicación a usar para validar asistencia(geolocalización predeterminada o nueva)
+        ///    4. Genera códigos QR y/o OTP según configuración
+        ///    5. Almacena temporalmente la información en caché para validación posterior
+        ///    6. Notifica a los clientes conectados via SignalR sobre el estado de asistencia
+        ///</remarks>
+        ///  <param name = "request" > Objeto con los parámetros de la solicitud de asistencia</param>
+        ///<returns>
+        ///    Objeto ResponseDto con:
+        ///    - StatusCode: 200 si éxito, códigos de error en caso contrario
+        ///    - Data: Información del curso, estudiantes y QR generado (si aplica)
+        ///</returns>
+        ///    <response code = "200" > Asistencia procesada correctamente</response>
+        ///    <response code = "400" > Error en parámetros de entrada o configuración</response>
+        ///    <response code = "404" > Curso no encontrado o no accesible</response>
+        /// Si quiere entender correctamente este endpoint le suguiero ver los siguientes enlaces
+        /// para entendimiento de memoria https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-6.0
+        /// https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.caching.memory.memorycacheentryextensions.registerpostevictioncallback?view=net-9.0-pp
+        /// metodos aplicables a la cache https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.caching.memory.memorycacheentryoptions?view=net-9.0-pp&viewFallbackFrom=dotnet-plat-ext-6.0
+        /// enviar mensajes fuera del hub 
+        /// https://learn.microsoft.com/en-us/aspnet/core/signalr/hubcontext?view=aspnetcore-6.0
+        /// 
 
-        //    var attendance = await _context.Attendances
-        //        .FirstOrDefaultAsync(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId);
 
-        //    if (attendance == null)
-        //    {
-        //        return new ResponseDto { Status = false, Message = "Asistencia no encontrada" };
-        //    }
 
-        //    attendance.Attended = true;
-        //    attendance.Status = "PRESENT";
-        //    attendance.UpdatedAt = DateTime.UtcNow;
-
-        //    await _context.SaveChangesAsync();
-
-        //    await _hubContext.Clients.Group(dto.CourseId.ToString())
-        //        .SendAsync("UpdateAttendanceStatus", new
-        //        {
-        //            studentId = dto.StudentId,
-        //            status = "PRESENT"
-        //        });
-
-        //    return new ResponseDto { Status = true, Message = "Asistencia registrada correctamente." };
-        //}
 
         public async Task<ResponseDto<object>> ProcessAttendanceAsync(AttendanceRequestDto request)
         {
@@ -117,10 +128,24 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Data = null
                 };
             }
+            if( request.StrictMode &&  request.AttendanceType.Qr && request.AttendanceType.Email)
+            {
+                return new ResponseDto<object>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "En modo Estricto solo puede seleccionar un Metodo para eitar asistencias cruzadas entre estudiantes",
+                    Data = null
+                };
+            }
 
-            // Validaciones de 
+            
+            
             Point locationToUse = null;
-
+            // Determina qué ubicación usar para validar asistencia:
+            // - Si es HomePlace: usa la geolocalización predeterminada del curso
+            // - Si no es HomePlace: usa la nueva geolocalización proporcionada
+            // - Valida que se proporcione nueva ubicación si no es HomePlace
             if (!request.HomePlace)
             {
                 if (request.NewGeolocation == null)
@@ -165,66 +190,147 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             {
                 locationToUse = courseSetting.GeoLocation;
             }
-            if (request.AttendanceType.Email)
-            {
-                foreach (var sc in course.Students)
-                {
-                    var student = sc.Student;
-                    var secretKey = _otpService.GenerateSecretKey(student.Email.ToString(), student.Id.ToString());
-
-                    // CG: Guardar el OTP en memoria
-                    var otpCode = _otpService.GenerateOtp(secretKey, courseSetting.MinimumAttendanceTime);
-                    var emailDto = CreateEmailDto(student, course, otpCode, courseSetting.MinimumAttendanceTime);
-                    //await _emailsService.SendEmailAsync(emailDto);
-                }
-            }
             // Generar QR si se seleccionó
             string qrBase64 = null;
             string qrContent = null;
 
-            if (request.AttendanceType.Qr)
+            DateTime expiration = DateTime.Now.AddMinutes(courseSetting.MinimumAttendanceTime);
+
+            if (request.AttendanceType.Qr && request.StrictMode)
             {
-                var expirationTime = DateTime.UtcNow.AddMinutes(courseSetting.MinimumAttendanceTime);
-                var expirationString = expirationTime.ToString("o"); 
-                var content = $"{course.Id}|{locationToUse.X}|{locationToUse.Y}|{request.StrictMode}|{courseSetting.ValidateRangeMeters}|{expirationString}";
-
-                using (var qrGenerator = new QRCodeGenerator())
+                var macControlKey = $"mac_global_{course.Id}";
+                if (!_cache.TryGetValue(macControlKey, out Dictionary<string, Guid> macDictionary))
                 {
-                    var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
-                    using (var qrCode = new PngByteQRCode(qrCodeData))
+                    macDictionary = new Dictionary<string, Guid>();
+                    _cache.Set(macControlKey, macDictionary, new MemoryCacheEntryOptions
                     {
-                        byte[] qrCodeImage = qrCode.GetGraphic(20);
-                        qrBase64 = Convert.ToBase64String(qrCodeImage);
-                        qrContent = content;
-                    }
+                        AbsoluteExpiration = expiration,
+                        PostEvictionCallbacks =
+                        {
+                            new PostEvictionCallbackRegistration
+                            {
+                                EvictionCallback = async (key, value, reason, state) =>
+                                {
+                                    if (reason == EvictionReason.Expired)
+                                    {
+                                        var courseId = (Guid)state;
+                                        var keyToRemove = $"mac_global_{courseId}";
+                                        _cache.Remove(keyToRemove); 
+                                    }
+                                },
+                                State = course.Id 
+                            }
+                        }
+                    });
                 }
-
             }
 
-            // Registrar asistencia en estado 'WAITING'
-            foreach (var student in course.Students)
+
+            // Creamos el Qr por si se va utilizar mas adelante
+            // Formato: "courseId|X|Y|strictMode|validateRangeMeters|expiration"
+            // Esto permite que el QR contenga toda la información necesaria para validar
+            // la asistencia cuando sea escaneado posteriormente
+            if (request.AttendanceType.Qr)
             {
-                var attendance = new AttendanceEntity
+                qrContent = $"{course.Id}|{locationToUse.X}|{locationToUse.Y}|{request.StrictMode}|{courseSetting.ValidateRangeMeters}|{expiration}";
+
+                using var qrGenerator = new QRCodeGenerator();
+                var qrCodeData = qrGenerator.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.Q);
+                using var qrCode = new PngByteQRCode(qrCodeData);
+                byte[] qrCodeImage = qrCode.GetGraphic(20);
+                qrBase64 = Convert.ToBase64String(qrCodeImage);
+            }
+
+            // Procesamiento por cada estudiante:
+            // - Genera OTP si está habilitado el método por email
+            // - Almacena en caché la información temporal de asistencia
+            // - Configura callback para manejar expiración (marca como no presente si no confirma)
+            foreach (var sc in course.Students)
+            {
+                var student = sc.Student;
+                string otpCode = null;
+
+                if (request.AttendanceType.Email)
                 {
+                    var secretKey = _otpService.GenerateSecretKey(student.Email.ToString(), student.Id.ToString());
+                    otpCode = _otpService.GenerateOtp(secretKey, courseSetting.MinimumAttendanceTime);
+
+                    var emailDto = CreateEmailDto(student, course, otpCode, courseSetting.MinimumAttendanceTime);
+                    // await _emailsService.SendEmailAsync(emailDto);
+                }
+
+                var memoryEntry = new TemporaryAttendanceEntry
+                {
+                    StudentId = student.Id,
                     CourseId = course.Id,
-                    StudentId = student.StudentId,
-                    Attended = false,
-                    Status = "WAITING",
-                    RegistrationDate = DateTime.UtcNow
+                    Otp = otpCode,
+                    QrContent = qrContent,
+                    ExpirationTime = expiration,
+                    GeolocationLatitud = (float)(locationToUse?.Y?? 0f),
+                    GeolocationLongitud = (float)(locationToUse?.X?? 0f) 
                 };
 
-                _context.Attendances.Add(attendance);
+                var memoryKey = $"{student.Id}_{course.Id}";
+                _cache.Set(
+                    memoryKey,
+                    memoryEntry,
+                    new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpiration = expiration,
+                        PostEvictionCallbacks =
+                        {
+                            new PostEvictionCallbackRegistration
+                            {
+                               EvictionCallback = async (key, value, reason, state) =>
+                                {
+                                    // Callback importante que se ejecuta al expirar la entrada en caché
+                                    // Si el estudiante no confirmó asistencia, se registra como no presente
+                                    if (reason == EvictionReason.Expired) //Verifica si la expiración fue por tiempo
+                                    {
+                                        var data = (TemporaryAttendanceEntry)value;
+                                        if (!data.IsCheckedIn)
+                                        {
+                                            // Guardar como no asistió
+                                            using var scope = _serviceScopeFactory.CreateScope();
+                                            var db = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
 
+                                            var missed = new AttendanceEntity
+                                            {
+                                                CourseId = data.CourseId,
+                                                StudentId = data.StudentId,
+                                                Attended = false,
+                                                Status = MessageConstant_Attendance.NOT_PRESENT,
+                                                RegistrationDate = DateTime.UtcNow
+                                            };
+
+                                            db.Attendances.Add(missed);
+                                            await db.SaveChangesAsync();
+
+                                             // Obtener el hubContext dentro del nuevo scope
+                                            var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<AttendanceHub>>();
+            
+                                            // Notificar via SignalR
+                                            await hubContext.Clients.Group(data.CourseId.ToString())
+                                                .SendAsync("UpdateAttendanceStatus", new
+                                                {
+                                                    studentId = data.StudentId,
+                                                    status = MessageConstant_Attendance.NOT_PRESENT
+                                                });
+
+                                        }
+                                    }
+                               }
+                            }
+                        }
+                    }
+                );
                 await _hubContext.Clients.Group(course.Id.ToString())
                     .SendAsync("UpdateAttendanceStatus", new
                     {
-                        studentId = student.StudentId,
-                        status = "WAITING"
+                        studentId = student.Id,
+                        status = MessageConstant_Attendance.WEATING
                     });
             }
-
-            await _context.SaveChangesAsync();
-
 
             // Mapeamos la respuesta con los datos requeridos
             var result = new
@@ -282,7 +388,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 <p style='margin-top: 20px;'>
                     O puedes hacer clic en el siguiente botón para validar tu asistencia automáticamente:
                 </p>
-                <a href='https://tudominio.com/asistencia/{otp}' 
+                <a href='https://tudominio.com/asistencia/{otp}-{clase.Id}' 
                    style='display: inline-block; background: #4A90E2; color: white; padding: 10px 20px; 
                           text-decoration: none; border-radius: 5px; font-size: 18px;'>
                     ✅ Validar Asistencia
@@ -292,6 +398,211 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 </p>
             </div>"
             };
+        }
+
+        public async Task<ResponseDto<object>> SendAttendanceByOtpAsync(
+            string email,
+            string OTP,
+            float x,
+            float y ,
+            Guid courseId)
+        {
+            try
+            {
+                var student = await _context.Students
+                    .Include(s => s.Courses.Where(sc => sc.CourseId == courseId && sc.IsActive))
+                    .FirstOrDefaultAsync(s => s.Email == email);
+
+                if (student == null)
+                {
+                    return new ResponseDto<object>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = "Estudiante no encontrado o no está inscrito en el curso.",
+                        Data = null
+                    };
+                }
+                var cacheKey = $"{student.Id}_{courseId}";
+                var attendanceEntry = _cache.Get<TemporaryAttendanceEntry>(cacheKey);
+                if (attendanceEntry == null)
+                {
+                    return new ResponseDto<object>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = "No se encontró el registro de asistencia temporal. o Esta ya Expiro",
+                        Data = null
+                    };
+                }
+                
+                var cachedLocation = new Point(attendanceEntry.GeolocationLongitud, attendanceEntry.GeolocationLatitud)
+                {
+                    SRID = 4326 
+                };
+
+                
+                var receivedLocation = new Point(x, y)
+                {
+                    SRID = 4326
+                };
+                var courseSetting = await _context.CoursesSettings
+                    .FirstOrDefaultAsync(cs => cs.Id == attendanceEntry.CourseId);
+
+
+                double distanceInMeters = CalculateHaversineDistance(cachedLocation, receivedLocation);
+
+                if (distanceInMeters > courseSetting.ValidateRangeMeters)
+                {
+                    return new ResponseDto<object>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = $"Fuera del rango. Distancia: {distanceInMeters:F2}m / Límite: {courseSetting.ValidateRangeMeters}m",
+                        Data = null
+                    };
+                }
+
+                // Validar OTP
+                var secretKey = _otpService.GenerateSecretKey(email, student.Id.ToString());
+
+                if (! await ValidateOtpAsync(secretKey, OTP , cacheKey))
+                {
+                    return new ResponseDto<object>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "OTP inválido o expirado.",
+                        Data = null
+                    };
+                }
+
+                // Registrar asistencia
+                var attendance = new AttendanceEntity
+                {
+                    CourseId = courseId,
+                    StudentId = student.Id,
+                    Attended = true,
+                    Status = MessageConstant_Attendance.PRESENT,
+                    RegistrationDate = DateTime.UtcNow,
+                    Method = "OTP"
+                };
+
+                _context.Attendances.Add(attendance);
+                await _context.SaveChangesAsync();
+
+                // se elimina de la cache
+                _cache.Remove(cacheKey);
+
+
+                await _hubContext.Clients.Group(courseId.ToString())
+                    .SendAsync("UpdateAttendanceStatus", new
+                    {
+                        studentId = student.Id,
+                        status = MessageConstant_Attendance.PRESENT
+                    });
+
+                // Retornar éxito
+                return new ResponseDto<object>
+                {
+                    StatusCode = 200,
+                    Status = true,
+                    Message = "Asistencia registrada exitosamente.",
+                    Data = new
+                    {
+                        Student = new { student.Id, student.FirstName, student.LastName },
+                        CourseId = courseId,
+                        Location = new { x, y },
+                        Distance = distanceInMeters,
+                        Method = "OTP"
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                var logger = _logger.CreateLogger<AttendanceRSignalService>();
+                
+                logger.LogError(ex, "Error al registrar asistencia por OTP");
+                return new ResponseDto<object>
+                {
+                    StatusCode = 500,
+                    Status = false,
+                    Message = "Error interno al procesar la asistencia.",
+                    Data = null
+                };
+            }
+        }
+        /// <summary>
+        /// Calcula la distancia en metros entre dos puntos geográficos usando la fórmula de Haversine.
+        /// </summary>
+        /// <param name="point1">Primer punto (coordenadas WGS84). X=Longitud, Y=Latitud</param>
+        /// <param name="point2">Segundo punto (coordenadas WGS84). X=Longitud, Y=Latitud</param>
+        /// <returns>Distancia en metros entre los puntos</returns>
+        /// <remarks>
+        /// Implementación basada en la fórmula de Haversine para cálculo de distancias en esferas.
+        ///     Precisión: ~99.5% para distancias cortas/moderadas (menos de 500km).
+        /// Referencias:
+        ///     <seealso href="https://www.neovasolutions.com/2019/10/04/haversine-vs-vincenty-which-is-the-best/"/>
+        ///     <see href="https://en.wikipedia.org/wiki/Haversine_formula"/>
+        ///     <see href="https://www.movable-type.co.uk/scripts/latlong.html"/>
+        ///     <see href="https://www.movable-type.co.uk/scripts/latlong.html"/>
+        ///     <see href="https://stackoverflow.com/questions/55092618/gps-is-the-haversine-formula-accurate-for-distance-between-two-nearby-gps-poin"/>
+        ///     <see href="https://forum.arduino.cc/t/fasthaversine-an-approximation-of-haversine-for-short-distances/324628/5"/>
+        /// </remarks>
+        static double CalculateHaversineDistance(Point point1, Point point2)
+        {
+            const double EarthRadiusMeters = 6_371_000; 
+            var lat1 = point1.Y * Math.PI / 180.0;
+            var lon1 = point1.X * Math.PI / 180.0;
+            var lat2 = point2.Y * Math.PI / 180.0;
+            var lon2 = point2.X * Math.PI / 180.0;
+
+            var dLat = lat2 - lat1;
+            var dLon = lon2 - lon1;
+
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(lat1) * Math.Cos(lat2) *
+                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            return EarthRadiusMeters * c;
+        }
+
+        /// <summary>
+        /// Valida un código OTP contra una clave secreta con manejo de intentos fallidos
+        /// </summary>
+        /// <param name="secretKey">Clave secreta generada para el usuario</param>
+        /// <param name="otp">Código OTP a validar</param>
+        /// <returns>True si el OTP es válido, False en caso contrario</returns>
+        private async Task<bool> ValidateOtpAsync(string secretKey, string otp, string cacheKey)
+        {
+            if (string.IsNullOrWhiteSpace(secretKey))
+                throw new ArgumentNullException(nameof(secretKey));
+
+            if (string.IsNullOrWhiteSpace(otp))
+                return false;
+
+            bool isValid = ValidateOtp(secretKey, otp);
+
+            if (!isValid)
+                return false;
+
+            _cache.Remove(cacheKey);
+
+
+            return true;
+        }
+        public bool ValidateOtp(string secretKey, string otpToValidate, int otpExpirationSeconds = 60)
+        {
+            var totp = new Totp(Base32Encoding.ToBytes(secretKey), step: otpExpirationSeconds);
+
+            // Permite un margen de error de ±1 intervalo 
+            return totp.VerifyTotp(otpToValidate, out long timeStepMatched, new VerificationWindow(previous: 1, future: 1));
+        }
+
+        public Task<ResponseDto<object>> SendAttendanceByQr(string Email, float x, float y, string MAC, Guid courseId)
+        {
+            throw new NotImplementedException();
         }
     }
 }
