@@ -1,5 +1,5 @@
 ﻿using ClassNotes.API.Constants;
-using ClassNotes.API.Services.Audit;
+using ClassNotes.API.Services.Audit.Owner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 namespace ClassNotes.API.Hubs
@@ -40,14 +40,14 @@ namespace ClassNotes.API.Hubs
 
 
     {
-        private readonly IAuditService _auditService;
+        private readonly IsOwnerAcces _ownerAcces;
 
         public AttendanceHub(
-            IAuditService auditService
+            IsOwnerAcces ownerAcces
             
             )
         {
-            _auditService = auditService;
+            _ownerAcces = ownerAcces;
         }
         // No es necesario agregar métodos adicionales aquí,
         // ya que el controlador enviará mensajes directamente a los clientes.
@@ -79,7 +79,7 @@ namespace ClassNotes.API.Hubs
         public async Task JoinCourseGroup(Guid courseId)
         {
 
-            var isOwner = _auditService.isTheOwtherOfTheCourse(courseId);
+            var isOwner = _ownerAcces.IsTheOwtherOfTheCourse(courseId);
 
             if(!isOwner)
                 throw new HubException("Usuario no autenticado o No esta Authorizado a este curso");

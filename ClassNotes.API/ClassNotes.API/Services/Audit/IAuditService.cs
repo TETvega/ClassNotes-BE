@@ -4,6 +4,6 @@
 	{
         string GetUserId();
 
-        bool isTheOwtherOfTheCourse(Guid courseId);
+        
     }
 }

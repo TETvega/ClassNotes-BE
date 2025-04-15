@@ -8,16 +8,13 @@ namespace ClassNotes.API.Services.Audit
         // --------------------- CP --------------------- //
 
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ClassNotesContext _context;
 
         public AuditService(
-            IHttpContextAccessor httpContextAccessor,
-            ClassNotesContext context
+            IHttpContextAccessor httpContextAccessor
 
             )
         {
             this._httpContextAccessor = httpContextAccessor;
-            _context = context;
         }
 
         public string GetUserId()
@@ -28,12 +25,7 @@ namespace ClassNotes.API.Services.Audit
             return idClaim.Value;
         }
 
-        bool IAuditService.isTheOwtherOfTheCourse(Guid courseId)
-        {
-            var userId = GetUserId();
-            var isOwner = _context.Courses.FirstOrDefault(c => c.Id == courseId).Center.TeacherId == userId;
-            return isOwner;
-        }
+
 
         // --------------------- CP --------------------- //
     }
