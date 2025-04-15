@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Dtos.Activities;
+using ClassNotes.API.Dtos.Centers;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
+using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Activities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +59,17 @@ namespace ClassNotes.API.Controllers
             var response = await _activitiesService.GetAllActivitiesByClassAsync(id, searchTerm, page, pageSize, tagActivityId, unitId,typeActivities, isExtraFilter);
             return StatusCode(response.StatusCode, response);
         }
+
+
+        //(Ken)
+        [HttpGet("students_scores/{id}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<StudentAndNoteDto>>>> GetStudentAndScoreAsync(Guid id, int page = 1)
+        {
+            var response = await _activitiesService.GetStudentsActivityScoreAsync(id, page);
+            return StatusCode(response.StatusCode, response);
+        }
+
 
 
 
