@@ -423,7 +423,14 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     }
                 });
         }
-
+        /// <summary>
+        /// Almacena temporalmente en caché la lista de estudiantes y configuración de asistencia para un curso,
+        /// permitiendo el procesamiento posterior de registros de asistencia.
+        /// </summary>
+        /// <param name="cacheKey">Clave única para identificación en caché (formato recomendado: "attendance_active_{courseId}_{userId}")</param>
+        /// <param name="courseId">Identificador único del curso asociado</param>
+        /// <param name="strictMode">Habilita validaciones estrictas de geolocalización/temporización cuando es true</param>
+        /// <param name="attendanceType">Configuración de métodos permitidos para registro (Email/QR/
         private void SaveActiveAttendanceToCache(
             string cacheKey,
             Guid courseId,
@@ -451,7 +458,20 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 // No hace falta PostEvictionCallback aquí, solo queremos que se elimine de memoria
             });
         }
-
+        /// <summary>
+        /// Inicializa la caché de control MAC (Message Authentication Code) para un curso específico.
+        /// </summary>
+        /// <param name="courseId">Identificador único del curso</param>
+        /// <param name="expiration">Fecha y hora de expiración para la entrada en caché</param>
+        /// <remarks>
+        /// Esta función gestiona un diccionario en caché para controlar tokens MAC globales por curso.
+        /// Cuando la entrada expira, se ejecuta automáticamente una limpieza mediante callback.
+        /// Solo cuando el modo estricto esta activado 
+        /// 
+        /// Estructura de la caché:
+        /// - Clave: Formato "mac_global_{courseId}"
+        /// - Valor: Dictionary(string, Guid) para almacenar tokens MAC asociados
+        /// </remarks>
         private void InitializeMacControlCache(Guid courseId, DateTime expiration)
         {
             var macControlKey = $"mac_global_{courseId}";
