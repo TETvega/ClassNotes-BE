@@ -43,6 +43,6 @@ namespace ClassNotes.API.Services.Activities
 		Task<ResponseDto<ActivityDto>> DeleteAsync(Guid id);
 
         Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId);
-        Task<ResponseDto<PaginationDto<List<StudentAndNoteDto>>>> GetStudentsActivityScoreAsync(Guid activityId, int page = 1);
+        Task<ResponseDto<PaginationDto<List<StudentAndNoteDto>>>> GetStudentsActivityScoreAsync(Guid activityId, int page = 1, string searchTerm = "", int? pageSize = null);
     }
 }
