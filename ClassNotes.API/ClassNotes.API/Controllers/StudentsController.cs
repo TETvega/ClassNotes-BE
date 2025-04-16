@@ -84,6 +84,15 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpPost("create-from-excel")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<StudentDto>>>> ReadStudentsFromExcel(IFormFile file, bool strictMode = true)
+        {
+            var response = await _studentsService.ReadExcelFileAsync(file, strictMode);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
         [HttpPut("{id}")]
         public async Task<ActionResult<ResponseDto<StudentDto>>> UpdateStudent(Guid id, StudentEditDto studentEditDto)
         {
