@@ -3,5 +3,7 @@
 	public interface IAuditService
 	{
         string GetUserId();
+
+        
     }
 }

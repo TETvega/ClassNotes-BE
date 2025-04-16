@@ -1,6 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using ClassNotes.API.Database;
+using iText.Commons.Actions.Contexts;
 
 namespace ClassNotes.API.Services.Audit
 {
@@ -12,6 +11,7 @@ namespace ClassNotes.API.Services.Audit
 
         public AuditService(
             IHttpContextAccessor httpContextAccessor
+
             )
         {
             this._httpContextAccessor = httpContextAccessor;
@@ -24,6 +24,8 @@ namespace ClassNotes.API.Services.Audit
 
             return idClaim.Value;
         }
+
+
 
         // --------------------- CP --------------------- //
     }
