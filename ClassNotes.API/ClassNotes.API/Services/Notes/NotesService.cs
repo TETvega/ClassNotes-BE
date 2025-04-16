@@ -270,7 +270,7 @@ namespace ClassNotes.API.Services.Notes
 
                 //  Obtener tipo de puntuación del curso
                 // si no se asigna aritmetico y listo
-                var scoreType = course.CourseSetting?.ScoreType ?? ScoreTypeConstant.ARITHMETI_SCORE;
+                var scoreType = course.CourseSetting?.ScoreType ?? ScoreTypeConstant.ARITHMETIC_SCORE;
 
                 
                 //  Obtener datos de estudiantes y notas
@@ -359,7 +359,7 @@ namespace ClassNotes.API.Services.Notes
                 {
                     if (scoreType == ScoreTypeConstant.GOLD_SCORE)
                         average = sums.SumNotes;
-                    if (scoreType == ScoreTypeConstant.ARITHMETI_SCORE && sums.SumMaxScores > 0)
+                    if (scoreType == ScoreTypeConstant.ARITHMETIC_SCORE && sums.SumMaxScores > 0)
                         average = (sums.SumNotes / sums.SumMaxScores) * 100;
                     if (scoreType == ScoreTypeConstant.WEIGHTED_SCORE && sums.SumMaxScores > 0 && unit.MaxScore.HasValue)
                         average = (sums.SumNotes * unit.MaxScore.Value) / (sums.SumMaxScores * unit.MaxScore.Value) * 100;
@@ -612,7 +612,7 @@ namespace ClassNotes.API.Services.Notes
             return scoreType switch
             {
                 ScoreTypeConstant.GOLD_SCORE => sumNotes,
-                ScoreTypeConstant.ARITHMETI_SCORE => (sumNotes / sumMaxScores) * 100,
+                ScoreTypeConstant.ARITHMETIC_SCORE => (sumNotes / sumMaxScores) * 100,
                 ScoreTypeConstant.WEIGHTED_SCORE => (sumNotes * unitWeight) / (sumMaxScores * unitWeight) * 100,
                 _ => 0f
             };
