@@ -519,7 +519,7 @@ namespace ClassNotes.API.Services.Students
             }
 
             //Paginacion...
-            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int currentPageSize = Math.Max(1, pageSize ?? PAGE_SIZE);
             int startIndex = (page - 1) * currentPageSize;
 
             //Busca las actividades no revisadas a las que no se les pasó el tiempo de revisión...
@@ -794,8 +794,8 @@ namespace ClassNotes.API.Services.Students
                 .OrderByDescending(x => x.PendingActivities)
                 .Take(top ?? 10)
                 .ToListAsync();
-            var test = _context.Activities.Where(x => !x.StudentNotes.Any(sn => sn.StudentId == id) && x.Unit.Course.Name== "Dibujo");
-            Console.WriteLine(test.Count());
+            //var test = _context.Activities.Where(x => !x.StudentNotes.Any(sn => sn.StudentId == id) && x.Unit.Course.Name== "Dibujo");
+            //Console.WriteLine(test.Count());
             return new ResponseDto<List<PendingClassesDto>>
             {
                 StatusCode = 200,

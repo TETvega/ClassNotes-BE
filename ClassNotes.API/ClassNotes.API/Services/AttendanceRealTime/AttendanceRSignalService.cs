@@ -103,6 +103,18 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                  .Include(c => c.Students.Where(sc => sc.IsActive))
                      .ThenInclude(sc => sc.Student)
                  .FirstOrDefaultAsync();
+            var courseKey = $"attendance_active_{course.Id}";
+
+            if (_cache.TryGetValue(courseKey, out _))
+            {
+                return new ResponseDto<object>
+                {
+                    Status = false,
+                    StatusCode = 400,
+                    Message = "Ya hay una asistencia activa en este curso.",
+                };
+            }
+
 
 
             // Validaciones
@@ -176,18 +188,19 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 };
             }
 
-            if (courseSetting.GeoLocation == null)
-            {
-                return new ResponseDto<object>
-                {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = "No se encontró una ubicación predeterminada configurada para el curso.",
-                    Data = null
-                };
-            }
+            
             if (request.HomePlace)
             {
+                if (courseSetting.GeoLocation == null)
+                {
+                    return new ResponseDto<object>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "No se encontró una ubicación predeterminada configurada para el curso.",
+                        Data = null
+                    };
+                }
                 locationToUse = courseSetting.GeoLocation;
             }
             // Generar QR si se seleccionó
@@ -195,35 +208,33 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             string qrContent = null;
 
             DateTime expiration = DateTime.Now.AddMinutes(courseSetting.MinimumAttendanceTime);
+            // marcamos como activa con duración hasta el vencimiento
+            var studentsList = course.Students
+                .Select(sc => new AttendanceStudentStatus
+                {
+                    StudentId = sc.StudentId,
+                    FullName = $"{sc.Student.FirstName} {sc.Student.LastName}",
+                    Email = sc.Student.Email,
+                    Status = MessageConstant_Attendance.WAITING // todos inician en espera
+                }).ToList();
+
+
+            // Guardado en cache para recuperacion del docente cada que entra al endpoint 
+            SaveActiveAttendanceToCache(
+                courseKey,
+                course.Id,
+                request.StrictMode,
+                request.AttendanceType,
+                expiration,
+                studentsList
+                );
+
 
             if (request.AttendanceType.Qr && request.StrictMode)
             {
-                var macControlKey = $"mac_global_{course.Id}";
-                if (!_cache.TryGetValue(macControlKey, out Dictionary<string, Guid> macDictionary))
-                {
-                    macDictionary = new Dictionary<string, Guid>();
-                    _cache.Set(macControlKey, macDictionary, new MemoryCacheEntryOptions
-                    {
-                        AbsoluteExpiration = expiration,
-                        PostEvictionCallbacks =
-                        {
-                            new PostEvictionCallbackRegistration
-                            {
-                                EvictionCallback = async (key, value, reason, state) =>
-                                {
-                                    if (reason == EvictionReason.Expired)
-                                    {
-                                        var courseId = (Guid)state;
-                                        var keyToRemove = $"mac_global_{courseId}";
-                                        _cache.Remove(keyToRemove); 
-                                    }
-                                },
-                                State = course.Id 
-                            }
-                        }
-                    });
-                }
+                InitializeMacControlCache(course.Id, expiration);
             }
+
 
 
             // Creamos el Qr por si se va utilizar mas adelante
@@ -270,65 +281,14 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     GeolocationLongitud = (float)(locationToUse?.X?? 0f) 
                 };
 
-                var memoryKey = $"{student.Id}_{course.Id}";
-                _cache.Set(
-                    memoryKey,
-                    memoryEntry,
-                    new MemoryCacheEntryOptions
-                    {
-                        AbsoluteExpiration = expiration,
-                        PostEvictionCallbacks =
-                        {
-                            new PostEvictionCallbackRegistration
-                            {
-                               EvictionCallback = async (key, value, reason, state) =>
-                                {
-                                    // Callback importante que se ejecuta al expirar la entrada en caché
-                                    // Si el estudiante no confirmó asistencia, se registra como no presente
-                                    if (reason == EvictionReason.Expired) //Verifica si la expiración fue por tiempo
-                                    {
-                                        var data = (TemporaryAttendanceEntry)value;
-                                        if (!data.IsCheckedIn)
-                                        {
-                                            // Guardar como no asistió
-                                            using var scope = _serviceScopeFactory.CreateScope();
-                                            var db = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
+                SetStudentAttendanceCache( userId, student, course.Id, memoryEntry, expiration);
 
-                                            var missed = new AttendanceEntity
-                                            {
-                                                CourseId = data.CourseId,
-                                                StudentId = data.StudentId,
-                                                Attended = false,
-                                                Status = MessageConstant_Attendance.NOT_PRESENT,
-                                                RegistrationDate = DateTime.UtcNow
-                                            };
-
-                                            db.Attendances.Add(missed);
-                                            await db.SaveChangesAsync();
-
-                                             // Obtener el hubContext dentro del nuevo scope
-                                            var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<AttendanceHub>>();
-            
-                                            // Notificar via SignalR
-                                            await hubContext.Clients.Group(data.CourseId.ToString())
-                                                .SendAsync("UpdateAttendanceStatus", new
-                                                {
-                                                    studentId = data.StudentId,
-                                                    status = MessageConstant_Attendance.NOT_PRESENT
-                                                });
-
-                                        }
-                                    }
-                               }
-                            }
-                        }
-                    }
-                );
-                await _hubContext.Clients.Group(course.Id.ToString())
-                    .SendAsync("UpdateAttendanceStatus", new
+                await _hubContext.Clients
+                    .Group(course.Id.ToString())
+                    .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
                     {
                         studentId = student.Id,
-                        status = MessageConstant_Attendance.WEATING
+                        status = MessageConstant_Attendance.WAITING
                     });
             }
 
@@ -352,7 +312,8 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     sc.Student.Id,
                     sc.Student.FirstName,
                     sc.Student.LastName,
-                    sc.Student.Email
+                    sc.Student.Email,
+                    status = MessageConstant_Attendance.WAITING
                 }).ToList(),
                 Qr = request.AttendanceType.Qr ? new
                 {
@@ -398,6 +359,128 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 </p>
             </div>"
             };
+        }
+
+        private void SetStudentAttendanceCache(
+            string userId,
+            StudentEntity student,
+            Guid courseId,
+            TemporaryAttendanceEntry memoryEntry,
+            DateTime expiration)
+        {
+            var memoryKey = $"{student.Id}_{courseId}";
+
+            _cache.Set(
+                memoryKey,
+                memoryEntry,
+                new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = expiration,
+                    PostEvictionCallbacks =
+                    {
+                new PostEvictionCallbackRegistration
+                {
+                    EvictionCallback = async (key, value, reason, state) =>
+                    {
+                        if (reason == EvictionReason.Expired)
+                        {
+                            var data = (TemporaryAttendanceEntry)value;
+
+                            if (!data.IsCheckedIn)
+                            {
+                                using var scope = _serviceScopeFactory.CreateScope();
+                                var db = scope.ServiceProvider.GetRequiredService<ClassNotesContext>();
+
+                                var missed = new AttendanceEntity
+                                {
+                                    CourseId = data.CourseId,
+                                    StudentId = data.StudentId,
+                                    Attended = false,
+                                    Status = MessageConstant_Attendance.NOT_PRESENT,
+                                    RegistrationDate = DateTime.UtcNow,
+                                    CreatedBy = userId,
+                                    CreatedDate = DateTime.UtcNow,
+                                    ChangeBy = Attendance_Helpers.SYSTEM
+
+                                    
+                                };
+
+                                db.Attendances.Add(missed);
+                                await db.SaveChangesWithoutAuditAsync();
+
+                                var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<AttendanceHub>>();
+
+                                await hubContext.Clients.Group(data.CourseId.ToString())
+                                    .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
+                                    {
+                                        studentId = data.StudentId,
+                                        status = MessageConstant_Attendance.NOT_PRESENT
+                                    });
+                            }
+                        }
+                    }
+                }
+                    }
+                });
+        }
+
+        private void SaveActiveAttendanceToCache(
+            string cacheKey,
+            Guid courseId,
+            bool strictMode,
+            AttendanceTypeDto attendanceType,
+            DateTime expiration,
+            List<AttendanceStudentStatus> studentsList)
+        {
+            var method = attendanceType.Email && attendanceType.Qr ? "BOTH"
+                       : attendanceType.Email ? "EMAIL"
+                       : "QR";
+
+            var cacheData = new ActiveAttendanceCacheDto
+            {
+                CourseId = courseId,
+                StrictMode = strictMode,
+                AttendanceMethod = method,
+                Expiration = expiration,
+                Students = studentsList
+            };
+
+            _cache.Set(cacheKey, cacheData, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpiration = expiration
+                // No hace falta PostEvictionCallback aquí, solo queremos que se elimine de memoria
+            });
+        }
+
+        private void InitializeMacControlCache(Guid courseId, DateTime expiration)
+        {
+            var macControlKey = $"mac_global_{courseId}";
+
+            if (!_cache.TryGetValue(macControlKey, out Dictionary<string, Guid> _))
+            {
+                var macDictionary = new Dictionary<string, Guid>();
+
+                _cache.Set(macControlKey, macDictionary, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = expiration,
+                    PostEvictionCallbacks =
+            {
+                new PostEvictionCallbackRegistration
+                {
+                    EvictionCallback = async (key, value, reason, state) =>
+                    {
+                        if (reason == EvictionReason.Expired)
+                        {
+                            var expiredCourseId = (Guid)state;
+                            var keyToRemove = $"mac_global_{expiredCourseId}";
+                            _cache.Remove(keyToRemove);
+                        }
+                    },
+                    State = courseId
+                }
+            }
+                });
+            }
         }
 
         public async Task<ResponseDto<object>> SendAttendanceByOtpAsync(
@@ -496,7 +579,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
 
 
                 await _hubContext.Clients.Group(courseId.ToString())
-                    .SendAsync("UpdateAttendanceStatus", new
+                    .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
                     {
                         studentId = student.Id,
                         status = MessageConstant_Attendance.PRESENT

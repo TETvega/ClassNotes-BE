@@ -5,6 +5,6 @@
         public const string PRESENT = nameof(PRESENT);
         public const string NOT_PRESENT = nameof(NOT_PRESENT);
         public const string EXCUSED = nameof(EXCUSED);
-        public const string WEATING = nameof(WEATING);
+        public const string WAITING = nameof(WAITING);
     }
 }

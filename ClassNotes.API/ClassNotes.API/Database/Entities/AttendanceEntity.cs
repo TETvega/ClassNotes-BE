@@ -26,6 +26,9 @@ namespace ClassNotes.API.Database.Entities
         [ForeignKey(nameof(CourseId))]
         public virtual CourseEntity Course { get; set; }
 
+        [Required]
+        [Column("change_by")]
+        public string ChangeBy { get; set; }
 
         [Required]
         [Column("student_id")]
