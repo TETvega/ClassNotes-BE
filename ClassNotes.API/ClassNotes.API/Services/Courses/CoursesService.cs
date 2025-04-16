@@ -203,13 +203,13 @@ namespace ClassNotes.API.Services.Courses
             //Valida que se cree correctamente el tipo de puntaje... esos son los valores que se pueden usar...
             if (dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE &&
                 dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.WEIGHTED_SCORE &&
-                dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.ARITHMETI_SCORE)
+                dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.ARITHMETIC_SCORE)
             {
                 return new ResponseDto<CourseWithSettingDto>
                 {
                     StatusCode = 405,
                     Status = false,
-                    Message = $"Los tipos de puntaje válidos son: [ {ScoreTypeConstant.GOLD_SCORE} , {ScoreTypeConstant.WEIGHTED_SCORE} , {ScoreTypeConstant.ARITHMETI_SCORE}  ]"
+                    Message = $"Los tipos de puntaje válidos son: [ {ScoreTypeConstant.GOLD_SCORE} , {ScoreTypeConstant.WEIGHTED_SCORE} , {ScoreTypeConstant.ARITHMETIC_SCORE}  ]"
                 };
             }
 
@@ -276,7 +276,7 @@ namespace ClassNotes.API.Services.Courses
 
                 //Si es aritmetico, se guarda la nota máxima de la unidad como la divición entre el puntaje maximo del curso
                 // y la cantidad de unidades, para asegurar que sean iguales...
-                if (dto.CourseSetting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.ARITHMETI_SCORE)
+                if (dto.CourseSetting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.ARITHMETIC_SCORE)
                 {
                     unitMax = dto.CourseSetting.MaximumGrade/UnitList.Count();
                 }
@@ -361,6 +361,7 @@ namespace ClassNotes.API.Services.Courses
                     MaximumGrade = existingSetting.MaximumGrade,
                     MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
                     GeoLocation = existingSetting.GeoLocation,
+                    ValidateRangeMeters = existingSetting.ValidateRangeMeters,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = false // Marcamos como copia
@@ -379,6 +380,7 @@ namespace ClassNotes.API.Services.Courses
                     EndDate = dto.CourseSetting.EndDate,
                     MinimumGrade = dto.CourseSetting.MinimumGrade,
                     MaximumGrade = dto.CourseSetting.MaximumGrade,
+                    ValidateRangeMeters = dto.CourseSetting.ValidateRangeMeters,
                     MinimumAttendanceTime = dto.CourseSetting.MinimumAttendanceTime,
                     GeoLocation = point,
                     CreatedBy = userId,
