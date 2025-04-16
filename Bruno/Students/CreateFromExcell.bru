@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: https://localhost:7047/api/students/bulk-create
-  body: json
+  url: https://localhost:7047/api/students/create-from-excel?strictMode=false
+  body: multipartForm
   auth: bearer
+}
+
+params:query {
+  strictMode: false
 }
 
 auth:bearer {
@@ -177,4 +181,8 @@ body:json {
     ]
   }
   
+}
+
+body:multipart-form {
+  file: @file()
 }

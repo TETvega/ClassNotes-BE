@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ClassNotes.API.Services.Students
 {
@@ -623,10 +624,12 @@ namespace ClassNotes.API.Services.Students
         }
 
 
-
         //(Ken)
         public async Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync(IFormFile file, bool strictMode = true)
         {
+            //Se obtiene el id de usuario para poner como teacher id y para validaciones...
+            var userId = _auditService.GetUserId();
+
             //Si el archivo es nulo o esta vacio...
             if (file == null || file.Length == 0)
             {
@@ -654,6 +657,12 @@ namespace ClassNotes.API.Services.Students
                     Data = null
                 };
             }
+
+            //Listado de titulos validos para columnas...
+            var allowedFirstNameColumns = new HashSet<string> { "primer nombre", "nombre", "nombres", "name", "names", "first name"};
+            var allowedLastNameColumns = new HashSet<string> { "apellido", "apellidos", "last name", "surname", "surnames" };
+            var allowedEmailColumns = new HashSet<string> { "email", "correo", "correo electrónico", "e-mail", "mail" };
+
 
             //Aqui se guardaran los studentCreateDto, se usan para aprovechar sus validaciones individuales de propiedades...
             var dataList = new List<StudentCreateDto>();
@@ -686,33 +695,55 @@ namespace ClassNotes.API.Services.Students
                     var firstRow = worksheet.FirstRowUsed()?.RowNumber() ?? 1;
                     //Lo mismo con la misma fila usada dentro del archivo, si es 0 se considera que no habia ningún alumno en la lista...
                     var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+                    
+                    //Para tener un listado de celdas editadas de la primera fila (La de los titulos)...
+                    var EditedCells = worksheet.FirstRowUsed()?.CellsUsed();
 
                     //Contador de filas si agregadas...
                     int u = 0;
 
+                    //Se buscan las celdas cuyo contenido encaje con los titulos válidos, una para cada propiedad...
+                    var FirstNameCell = EditedCells.FirstOrDefault(x => allowedFirstNameColumns.Contains(x.Value.ToString().Trim().ToLower()));
+                    var LastNameCell = EditedCells.FirstOrDefault(x => allowedLastNameColumns.Contains(x.Value.ToString().Trim().ToLower()));
+                    var EMailCell = EditedCells.FirstOrDefault(x => allowedEmailColumns.Contains(x.Value.ToString().Trim().ToLower()));
+
+                    //Si al menos una celda no corresponde se lanza el error...
+                    if (FirstNameCell == null || LastNameCell == null || EMailCell == null)
+                    {
+                        return new ResponseDto<List<StudentDto>>
+                        {
+                            StatusCode = 405,
+                            Status = false,
+                            Message = "Estructura de columnas incorrecta, asegurese que su documento contenga solo 1 fila de titulos, y que conste unicamente de 3 columnas tituladas 'Nombre', 'Apellido' y 'Correo'.",
+                            Data = null
+                        };
+                    }
+
                     //El bucle termina con la ultima fila de alumnos, y empieza una fila despues de la primera no vacia en el archivo, asumiendo que la primera son titulos de columna...
                     for (int i = firstRow + 1; i <= lastRow; i++)
                     {
-                        //row cambia en cada iteracion, cell1, 2 y 3 son siempre las primeras 3 columnas de cada fila...
+                        //row cambia en cada iteracion...
                         var row = worksheet.Row(i);
-                        var cell1 = row.Cell(1).GetValue<string>();
-                        var cell2 = row.Cell(2).GetValue<string>();
-                        var cell3 = row.Cell(3).GetValue<string>();
-
+                        
+                        //De las celdas con el titulo correspondiente, se toma su columna, y la fila se toma de i, para obbtener el valor de las propiedades en esta iteracion...
+                        var firstName = FirstNameCell.WorksheetColumn().Cell(i).Value.ToString().Trim();
+                        var lastName = LastNameCell.WorksheetColumn().Cell(i).Value.ToString().Trim();
+                        var eMail = EMailCell.WorksheetColumn().Cell(i).Value.ToString().Trim();
 
                         //Si todas las propiedades son nulas, se salta la fila...
-                        if (string.IsNullOrWhiteSpace(cell1) && string.IsNullOrWhiteSpace(cell2) && string.IsNullOrWhiteSpace(cell3))
+                        if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName) && string.IsNullOrWhiteSpace(eMail))
                         {
                             continue;
                         }
                         else
                         {   //Si solo una propiedad es nula, dara error para evitar estudiantes incompletos...
-                            if (string.IsNullOrWhiteSpace(cell1) || string.IsNullOrWhiteSpace(cell2) || string.IsNullOrWhiteSpace(cell3))
-                            {
-                                return new ResponseDto<List<StudentDto>>{ 
+                            if(string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(eMail))
+                            {    
+                                return new ResponseDto<List<StudentDto>>
+                                {
                                     StatusCode = 405,
                                     Status = false,
-                                    Message = "Envio una propiedad de estudiante vacía dentro de la lista.",
+                                    Message = $"La fila número {row.RowNumber()} contiene propiedades vacías, asegúrese de llenar toda la información.",
                                     Data = null
                                 };
                             }
@@ -736,20 +767,19 @@ namespace ClassNotes.API.Services.Students
                         //Se crea el StudentCreateDto y se agrega a la lista, asi, si hay un error en una iteracion la lista no sera agregada..
                         var createdStudentDto = new StudentCreateDto
                         {
-                            FirstName = cell1,
-                            LastName = cell2,
-                            Email = cell3
+                            FirstName = firstName,
+                            LastName = lastName,
+                            Email = eMail
                         };
 
-                       dataList.Add(createdStudentDto);
+                        dataList.Add(createdStudentDto);
                     }
                 }
             }
 
             //Se pasa de create dto a entity
             var studentEntities = _mapper.Map<List<StudentEntity>>(dataList);
-            //Se obtiene el id de usuario para poner como teacher id...
-            var userId = _auditService.GetUserId();
+
 
             //Por cada entidad, se valida email y se agrega..
             foreach (var item in studentEntities)
@@ -764,14 +794,14 @@ namespace ClassNotes.API.Services.Students
                 else
                 {
                     //Si esta activo, se validara normalmente...
-                    var existingStudent = await _context.Students.FirstOrDefaultAsync(s => s.Email == item.Email);
+                    var existingStudent = await _context.Students.FirstOrDefaultAsync(s => s.Email == item.Email && s.TeacherId == userId);
                     if (existingStudent != null)
                     {
                         return new ResponseDto<List<StudentDto>>
                         {
                             StatusCode = 405,
                             Status = false,
-                            Message = "Se ingreso en modo estricto un correo que ya esta siendo utilizado.",
+                            Message = $"El correo '{item.Email}' de el estudiante '{item.FirstName + " " + item.LastName}' ya esta siendo utilizado por '{existingStudent.FirstName + " " + existingStudent.LastName}'.",
                             Data = null
                         };
                     }
@@ -780,7 +810,7 @@ namespace ClassNotes.API.Services.Students
                 //Se guarda el estudentEntity de esta iteracion, asegurando que generateUniqueEmail lo tome en cuenta posteriormente..
                 _context.Students.Add(item);
                 await _context.SaveChangesAsync();
-             
+
             };
 
 
