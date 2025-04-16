@@ -91,9 +91,8 @@ public class Startup
         services.AddSingleton<IDateTimeService, DateTimeService>();
 
 
-
-		//Para Asistencias en Tiepo real
-		services.AddTransient<IAttendanceRSignalService, AttendanceRSignalService>();
+        //Para Asistencias en Tiepo real
+        services.AddTransient<IAttendanceRSignalService, AttendanceRSignalService>();
 
 
 

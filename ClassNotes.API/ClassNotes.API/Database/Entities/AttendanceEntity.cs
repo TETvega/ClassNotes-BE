@@ -18,7 +18,7 @@ namespace ClassNotes.API.Database.Entities
         public DateTime RegistrationDate { get; set; }
 
         [Column("method")]
-        public string Method { get; set; } // "email" o "qr"
+        public string Method { get; set; } ///<see cref="ClassNotes.API\ClassNotes.API\Constants\Attendance_Helpers.cs"/>
 
         [Required]
         [Column("course_id")]
@@ -26,7 +26,7 @@ namespace ClassNotes.API.Database.Entities
         [ForeignKey(nameof(CourseId))]
         public virtual CourseEntity Course { get; set; }
 
-        [Required]
+       // [Required]
         [Column("change_by")]
         public string ChangeBy { get; set; }
 

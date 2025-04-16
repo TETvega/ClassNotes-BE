@@ -361,6 +361,7 @@ namespace ClassNotes.API.Services.Courses
                     MaximumGrade = existingSetting.MaximumGrade,
                     MinimumAttendanceTime = existingSetting.MinimumAttendanceTime,
                     GeoLocation = existingSetting.GeoLocation,
+                    ValidateRangeMeters = existingSetting.ValidateRangeMeters,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = false // Marcamos como copia
@@ -380,6 +381,7 @@ namespace ClassNotes.API.Services.Courses
                     MinimumGrade = dto.CourseSetting.MinimumGrade,
                     MaximumGrade = dto.CourseSetting.MaximumGrade,
                     MinimumAttendanceTime = dto.CourseSetting.MinimumAttendanceTime,
+                    ValidateRangeMeters = dto.CourseSetting.ValidateRangeMeters,
                     GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,
@@ -400,6 +402,7 @@ namespace ClassNotes.API.Services.Courses
                     MinimumGrade = originalSettingEntity.MinimumGrade,
                     MaximumGrade = originalSettingEntity.MaximumGrade,
                     MinimumAttendanceTime = originalSettingEntity.MinimumAttendanceTime,
+                    ValidateRangeMeters= originalSettingEntity.ValidateRangeMeters,
                     GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,

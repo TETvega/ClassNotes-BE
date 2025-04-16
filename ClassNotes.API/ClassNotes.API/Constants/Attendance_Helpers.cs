@@ -8,7 +8,7 @@
         public const string SYSTEM = nameof(SYSTEM);
 
         // para saber el metodo que se utilizo para registrar la asistencia
-        public const string TYPE_EMAIL = nameof(TYPE_EMAIL);
+        public const string TYPE_OTP = nameof(TYPE_OTP);
         public const string TYPE_QR = nameof(TYPE_QR);
         public const string TYPE_MANUALLY = nameof(TYPE_MANUALLY);
 
