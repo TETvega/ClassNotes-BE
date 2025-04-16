@@ -1,4 +1,5 @@
-﻿using NetTopologySuite.Geometries;
+﻿using ClassNotes.API.Constants;
+using NetTopologySuite.Geometries;
 
 namespace ClassNotes.API.Dtos.AttendacesRealTime
 {
@@ -6,6 +7,7 @@ namespace ClassNotes.API.Dtos.AttendacesRealTime
     {
         public Guid StudentId { get; set; }
         public Guid CourseId { get; set; }
+        public string Email { get; set; }
 
         public string Otp {  get; set; }
         public string QrContent { get; set; }
@@ -13,6 +15,8 @@ namespace ClassNotes.API.Dtos.AttendacesRealTime
         public float GeolocationLatitud { get; set; }
         public float GeolocationLongitud { get; set; }
         public bool IsCheckedIn { get; set; } = false;
+
+        public string Status { get; set; } = $"{MessageConstant_Attendance.WAITING}";
         public string AttendanceMethod { get; set; } // OTP, "QR"
     }
 }
