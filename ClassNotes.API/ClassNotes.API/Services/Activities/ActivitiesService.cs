@@ -167,15 +167,17 @@ namespace ClassNotes.API.Services.Activities
             };
         }
 
-        //Mostrar listado de estudiantes junto a su nota en una actividad...
-        public async Task<ResponseDto<PaginationDto<List<StudentAndNoteDto>>>> GetStudentsActivityScoreAsync(Guid activityId, int page = 1)
+        //Mostrar listado de estudiantes junto a su nota en una actividad...            
+        public async Task<ResponseDto<PaginationDto<List<StudentAndNoteDto>>>> GetStudentsActivityScoreAsync(Guid activityId, int page = 1, string searchTerm = "", int? pageSize = null)
         {
 
-            int startIndex = (page - 1) * PAGE_SIZE;
+            int currentPageSize = Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+
 
             var userId = _auditService.GetUserId();
 
-            //(Ken)
             //Obtenemos la propia actividad especificada...
             var activityEntity = await _context.Activities.Include(a => a.Unit).FirstOrDefaultAsync(a => a.Id == activityId);
 
@@ -198,16 +200,20 @@ namespace ClassNotes.API.Services.Activities
                     .AsQueryable()
                         .Where(c => c.CourseId == activityEntity.Unit.CourseId && c.CreatedBy == userId && c.IsActive);//Solo estudiantes activos...
 
-            
+            // Filtro por término de búsqueda
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                string pattern = $"%{searchTerm}%";
+                studentQuery = studentQuery.Where(c =>
+                    EF.Functions.Like((c.Student.FirstName/* + " "+c.Student.LastName*/), pattern) ||
+                    EF.Functions.Like(c.Student.Email, pattern));
+            }
+
+
             int totalItems = await studentQuery.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+            int totalPages = (int)Math.Ceiling((double)totalItems / currentPageSize);
 
-            var studentNotesEntities = await studentQuery
-                .OrderByDescending(n => n.Student.FirstName)
-                .Skip(startIndex)
-                .Take(PAGE_SIZE)
-                .ToListAsync();
-
+            var studentNotesEntities = await studentQuery.ToListAsync();
 
             //Aqui se almacenaran los dtos a devolver...
             List<StudentAndNoteDto> studentScoreList = [];
@@ -232,6 +238,10 @@ namespace ClassNotes.API.Services.Activities
             });
 
 
+            studentScoreList = studentScoreList.OrderBy(n => (n.Name))
+            .Skip(startIndex)
+            .Take(currentPageSize).ToList();
+
             return new ResponseDto<PaginationDto<List<StudentAndNoteDto>>>
             {
                 StatusCode = 200,
@@ -240,7 +250,7 @@ namespace ClassNotes.API.Services.Activities
                 Data = new PaginationDto<List<StudentAndNoteDto>>
                 {
                     CurrentPage = page,
-                    PageSize = PAGE_SIZE,
+                    PageSize = currentPageSize,
                     TotalItems = totalItems,
                     TotalPages = totalPages,
                     Items = studentScoreList,
