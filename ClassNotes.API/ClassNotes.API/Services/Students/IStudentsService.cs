@@ -9,6 +9,9 @@ namespace ClassNotes.API.Services.Students
 	public interface IStudentsService
 	{
         Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsListAsync(string searchTerm = "", int? pageSize = null ,int page = 1);
+
+        Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsByCourseAsync(Guid courseId, string searchTerm = "", int? pageSize = null, int page = 1);
+
         Task<ResponseDto<StudentDto>> GetStudentByIdAsync(Guid id);
 
         Task<ResponseDto<List<PendingClassesDto>>>   GetPendingActivitiesClasesListAsync(Guid id, int? top = null  );

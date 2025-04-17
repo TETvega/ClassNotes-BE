@@ -66,6 +66,19 @@ namespace ClassNotes.API.Controllers
 
         }
 
+        [HttpGet("byCourse/{courseId}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<PaginationDto<List<StudentDto>>>>> GetStudentsByCourse(Guid courseId, string searchTerm = "", int? pageSize = null, int page = 1)
+        {
+            var response = await _studentsService.GetStudentsByCourseAsync(courseId, searchTerm, pageSize, page);
+            return StatusCode(response.StatusCode, new
+            {
+                response.Status,
+                response.Message,
+                response.Data,
+            });
+        }
+
         // EG -> Controlador de obtener estudiante por id
         [HttpGet("{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]

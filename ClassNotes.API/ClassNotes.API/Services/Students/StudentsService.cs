@@ -124,6 +124,69 @@ namespace ClassNotes.API.Services.Students
             };
         }
 
+        // CP -> Obtener estudiantes de un curso en especifico
+        public async Task<ResponseDto<PaginationDto<List<StudentDto>>>> GetStudentsByCourseAsync(
+            Guid courseId,
+            string searchTerm = "",
+            int? pageSize = null,
+            int page = 1
+            )
+        {
+            // Determinar el tamaño de página
+            int currentPageSize = pageSize == -1 ? int.MaxValue : Math.Max(1, pageSize ?? PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+            // Obtener el ID del usuario que realiza la petición
+            var userId = _auditService.GetUserId();
+
+            // Consulta base para obtener los estudiantes del curso específico
+            var studentEntityQuery = _context.StudentsCourses
+                .Include(sc => sc.Student) // Incluir el estudiante relacionado
+                .Where(sc => sc.CourseId == courseId && sc.Student.TeacherId == userId);
+
+            // Aplicar búsqueda si hay un término
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                studentEntityQuery = studentEntityQuery.Where(sc =>
+                    EF.Functions.Like(sc.Student.FirstName + " " + sc.Student.LastName, $"%{searchTerm}%") ||
+                    EF.Functions.Like(sc.Student.Email, $"%{searchTerm}%")
+                );
+            }
+
+            // Obtener el total de elementos antes de la paginación
+            var totalStudents = await studentEntityQuery.CountAsync();
+
+            // Obtener datos paginados y mapear a DTOs directamente en la consulta
+            var studentsDtos = await studentEntityQuery
+                .OrderByDescending(sc => sc.Student.CreatedDate)
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .Select(sc => sc.Student) // Seleccionar solo el estudiante
+                .ProjectTo<StudentDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            // Calcular el número total de páginas
+            int totalPages = (int)Math.Ceiling((double)totalStudents / currentPageSize);
+
+            // Retornar la respuesta con los datos paginados
+            return new ResponseDto<PaginationDto<List<StudentDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.STU_RECORD_FOUND,
+                Data = new PaginationDto<List<StudentDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = currentPageSize,
+                    TotalItems = totalStudents,
+                    TotalPages = totalPages,
+                    Items = studentsDtos,
+                    HasPreviousPage = page > 1, // Indica si hay una página anterior disponible
+                    HasNextPage = page < totalPages, // Indica si hay una página siguiente disponible
+                }
+            };
+        }
+
         // EG -> Obtener estudiante por Id
 
         public async Task<ResponseDto<StudentDto>> GetStudentByIdAsync(Guid id)
