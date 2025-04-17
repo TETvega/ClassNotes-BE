@@ -9,7 +9,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         // Servicio para procesar que tipo de asistencia Tomar
         Task<ResponseDto<object>> ProcessAttendanceAsync(AttendanceRequestDto request);
 
-
+        Task<ResponseDto<PaginationDto<List<StudentsAttendanceEntries>>>> GetStudentsAttendancesToday(Guid courseId);
         Task<ResponseDto<StudentAttendanceResponse>> SendAttendanceByOtpAsync(string email,  string OTP, float x, float y,Guid courseId);
         Task<ResponseDto<Object>> SendAttendanceByQr(string Email, float x, float y, string MAC , Guid courseId); 
     }

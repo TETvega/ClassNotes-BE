@@ -27,7 +27,7 @@ using Point = NetTopologySuite.Geometries.Point;
 
 namespace ClassNotes.API.Services.AttendanceRealTime
 {
-    public class AttendanceRSignalService: IAttendanceRSignalService
+    public class AttendanceRSignalService : IAttendanceRSignalService
     {
         private readonly ClassNotesContext _context;
         private readonly IAuditService _auditService;
@@ -37,7 +37,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         private readonly IMapper _mapper;
         private readonly IMemoryCache _cache;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly ILoggerFactory _logger;
+        private readonly ILogger<AttendanceRSignalService> _logger;
         private readonly ConcurrentDictionary<Guid, AttendanceGroupCache> _groupCache;
         private readonly IAttendanceGroupCacheManager _groupCacheManager;
 
@@ -50,7 +50,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             IMapper mapper,
             IMemoryCache cache,
             IServiceScopeFactory serviceScopeFactory,
-            ILoggerFactory logger,
+            ILogger<AttendanceRSignalService> logger,
             ConcurrentDictionary<Guid, AttendanceGroupCache> groupCache,
             IAttendanceGroupCacheManager groupCacheManager
 
@@ -150,7 +150,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Data = null
                 };
             }
-            if( request.StrictMode &&  request.AttendanceType.Qr && request.AttendanceType.Email)
+            if (request.StrictMode && request.AttendanceType.Qr && request.AttendanceType.Email)
             {
                 return new ResponseDto<object>
                 {
@@ -161,8 +161,8 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 };
             }
 
-            
-            
+
+
             Point locationToUse = null;
             // Determina qué ubicación usar para validar asistencia:
             // - Si es HomePlace: usa la geolocalización predeterminada del curso
@@ -181,7 +181,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     };
                 }
 
-                locationToUse =  _mapper.Map<Point>(request.NewGeolocation);
+                locationToUse = _mapper.Map<Point>(request.NewGeolocation);
             }
 
             var courseSetting = await _context.CoursesSettings
@@ -197,7 +197,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Data = null
                 };
             }
-            if(courseSetting.MinimumAttendanceTime < 5)
+            if (courseSetting.MinimumAttendanceTime < 5)
             {
                 return new ResponseDto<object>
                 {
@@ -207,7 +207,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Data = null
                 };
             }
-            
+
             if (request.HomePlace)
             {
                 if (courseSetting.GeoLocation == null)
@@ -293,7 +293,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     otpCode = _otpService.GenerateOtp(secretKey, courseSetting.MinimumAttendanceTime);
 
                     var emailDto = CreateEmailDto(student, course, otpCode, courseSetting.MinimumAttendanceTime);
-                   // await _emailsService.SendEmailAsync(emailDto);
+                    // await _emailsService.SendEmailAsync(emailDto);
                 }
 
                 var memoryEntry = new TemporaryAttendanceEntry
@@ -304,8 +304,11 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     QrContent = qrContent,
                     ExpirationTime = expiration,
                     Email = student.Email,
-                    GeolocationLatitud = (float)(locationToUse?.Y?? 0f),
-                    GeolocationLongitud = (float)(locationToUse?.X?? 0f) 
+                    GeolocationLatitud = (float)(locationToUse?.Y ?? 0f),
+                    GeolocationLongitud = (float)(locationToUse?.X ?? 0f),
+                    StudentFirstName = student.FirstName,
+                    StudentLastName = student.LastName,
+                    
                 };
 
                 //SetStudentAttendanceCache( userId, student, course.Id, memoryEntry, expiration);
@@ -318,7 +321,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                         status = MessageConstant_Attendance.WAITING
                     });
             }
-             _groupCacheManager.RegisterGroup(course.Id, groupCache);
+            _groupCacheManager.RegisterGroup(course.Id, groupCache);
             // Mapeamos la respuesta con los datos requeridos
             var result = new
             {
@@ -465,10 +468,10 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                                         studentId = data.StudentId,
                                         status = MessageConstant_Attendance.NOT_PRESENT
                                     });
-                                
+
                             }
 
-                            
+
                         }
                     }
                 }
@@ -559,8 +562,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                         if (reason == EvictionReason.Expired)
                         {
                             var expiredCourseId = (Guid)state;
-                            _logger.CreateLogger("CacheLogger")
-                                .LogInformation($"MAC cache expirado para curso {expiredCourseId}");
+                            
                         }
                     },
                     State = courseId
@@ -575,13 +577,13 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             string email,
             string OTP,
             float x,
-            float y ,
+            float y,
             Guid courseId)
         {
             try
             {
                 //var groupCacheKey = courseId;
-               // var activeAttendance = _cache.Get<AttendanceGroupCache>(groupCacheKey);
+                // var activeAttendance = _cache.Get<AttendanceGroupCache>(groupCacheKey);
                 var activeAttendance = _groupCacheManager.GetGroupCache(courseId);
 
                 if (activeAttendance == null)
@@ -720,7 +722,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 await _context.SaveChangesWithoutAuditAsync();
                 ////////////////////////////////////////////////////////////////////////////////////
                 activeAttendance.Entries.Remove(studentEntry);
-                _logger.CreateLogger($"Estudiante eliminado del grupo {courseId}. Quedan {activeAttendance.Entries.Count} estudiantes");
+                _logger.LogInformation($"Estudiante eliminado del grupo {courseId}. Quedan {activeAttendance.Entries.Count} estudiantes");
 
                 // Notificar cambio de estado
                 await _hubContext.Clients.Group(courseId.ToString())
@@ -745,16 +747,16 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                         Status = MessageConstant_Attendance.PRESENT,
                         Email = student.Email,
                         CourseName = courseName
-                        
+
 
                     }
                 };
             }
             catch (Exception ex)
             {
-                var logger = _logger.CreateLogger<AttendanceRSignalService>();
                 
-                logger.LogError(ex, "Error al registrar asistencia por OTP");
+
+                _logger.LogError(ex, "Error al registrar asistencia por OTP");
                 return new ResponseDto<StudentAttendanceResponse>
                 {
                     StatusCode = 500,
@@ -783,7 +785,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         /// </remarks>
         static double CalculateHaversineDistance(Point point1, Point point2)
         {
-            const double EarthRadiusMeters = 6_371_000; 
+            const double EarthRadiusMeters = 6_371_000;
             var lat1 = point1.Y * Math.PI / 180.0;
             var lon1 = point1.X * Math.PI / 180.0;
             var lat2 = point2.Y * Math.PI / 180.0;
@@ -801,7 +803,8 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         }
 
         /// <summary>
-        /// Valida un código OTP contra una clave secreta con manejo de intentos fallidos
+        /// DEPRECADO 
+        /// Valida un código OTP contra una clave secreta 
         /// </summary>
         /// <param name="secretKey">Clave secreta generada para el usuario</param>
         /// <param name="otp">Código OTP a validar</param>
@@ -835,6 +838,159 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         public Task<ResponseDto<object>> SendAttendanceByQr(string Email, float x, float y, string MAC, Guid courseId)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Obtiene el registro de asistencias de estudiantes para un curso específico,
+        /// implementando una estrategia de Cache-First con fallback a base de datos.
+        /// 
+        /// Cuando hay datos en caché (memoria), indica que el proceso de asistencia está activo.
+        /// Cuando se consulta desde base de datos, indica que el proceso ya finalizó.
+        /// </summary>
+        /// <param name="courseId">Identificador único del curso</param>
+        /// <returns>
+        /// Respuesta paginada que contiene:
+        /// - Lista de estudiantes con su estado de asistencia
+        /// - Metadatos de paginación
+        /// - Estado de la operación
+        /// </returns>
+        /// <remarks>
+        /// Comportamiento según origen de datos:
+        /// 
+        /// [DATOS DESDE CACHÉ (Memoria)]:
+        /// - Indica que el proceso de asistencia está en curso
+        /// - Los campos pueden contener valores temporales/no definitivos
+        /// - Estudiantes sin registrar mostrarán:
+        ///   - attendanceEntryDatee: Fecha actual (DateTime.Now)
+        ///   - isCheckedIn: false
+        ///   - status: "WAITING"
+        ///   - attendanceMethod: null
+        ///   - changeBy: null
+        /// 
+        /// [DATOS DESDE BASE DE DATOS]:
+        /// - Indica que el proceso de asistencia finalizó
+        /// - Todos los valores son definitivos
+        /// - Estudiantes sin asistencia registrada mostrarán:
+        ///   - attendanceEntryDatee: DateTime.MinValue
+        ///   - isCheckedIn: false
+        ///   - status: "NOT_PRESENT"
+        ///   - attendanceMethod: "MANUALLY" (valor por defecto)
+        ///   - changeBy: "SYSTEM" (valor por defecto)
+        /// </remarks>
+        public async Task<ResponseDto<PaginationDto<List<StudentsAttendanceEntries>>>> GetStudentsAttendancesToday(Guid courseId)
+        {
+            var userId = _auditService.GetUserId();
+
+            // Verificar si el usuario es dueño del curso
+            var isOwner = await _context.Courses
+                .Where(c => c.Center.TeacherId == userId)
+                .AnyAsync(c => c.Id == courseId);
+
+            if (!isOwner)
+            {
+                return new ResponseDto<PaginationDto<List<StudentsAttendanceEntries>>>()
+                {
+                    Status = false,
+                    StatusCode = 404,
+                    Message = "No es el dueño del curso",
+                    Data = null
+                };
+            }
+
+            // Intentar obtener datos de la cache
+            var activeAttendanceCache = _groupCacheManager.GetGroupCache(courseId);
+            List<StudentsAttendanceEntries> attendanceEntries;
+
+            if (activeAttendanceCache != null && activeAttendanceCache.Entries.Any())
+            {
+                _logger.LogInformation("[ GET_CACHE ] : Registros desde la Cache");
+                // Si hay datos en cache, mapearlos al DTO
+                attendanceEntries = activeAttendanceCache.Entries.Select(entry =>
+                    new StudentsAttendanceEntries
+                    {
+                        StudentId = entry.StudentId,
+                        StudentName = entry.StudentFirstName ?? "Desconocido", // Obtener de cache si est disponible
+                        StdentLastName = entry.StudentLastName ?? "Desconocido", // Obtener de cache si est disponible
+                        Email = entry.Email,
+                        AttendanceEntryDatee = entry.AttendanceEntry ?? DateTime.Now, // fecha actual , no se manda de cache por el momento
+                        IsCheckedIn = entry.IsCheckedIn,
+                        Status = entry.Status,
+                        AttendanceMethod = entry.AttendanceMethod,
+                        ChangeBy = entry.ChangeBy ?? null
+                    }).ToList();
+            }
+            else
+            {
+                var today = DateTime.UtcNow.Date;
+                var tomorrow = today.AddDays(1);
+
+                _logger.LogInformation("[ GET_BD ]: get desde la Base de datos");
+                _logger.LogWarning($"[ GET_BD ] : Fecha para filtrar será {today}");
+
+                var studentsInCourse = await _context.StudentsCourses
+                    .Where(sc => sc.CourseId == courseId && sc.IsActive)
+                    .Select(sc => new
+                    {
+                        StudentId = sc.Student.Id,
+                        StudentName = sc.Student.FirstName,
+                        StudentLastName = sc.Student.LastName,
+                        Email = sc.Student.Email,
+                        Attendance = sc.Student.Attendances
+                            .Where(a => a.CourseId == courseId &&
+                                        a.RegistrationDate >= today &&
+                                        a.RegistrationDate < tomorrow)
+                            .OrderByDescending(a => a.RegistrationDate)
+                            .FirstOrDefault()
+                    })
+                    .ToListAsync();
+
+                // Validar si ningun estudiante tiene asistencia registrada hoy
+                bool TodayPassAttendnace = studentsInCourse.All(s => s.Attendance == null);
+
+                if (TodayPassAttendnace)
+                {
+                    _logger.LogInformation("[ GET_BD ]: No se ha pasado asistencia -> se retorna lista []");
+                    return new ResponseDto<PaginationDto<List<StudentsAttendanceEntries>>>()
+                    {
+                        Status = false,
+                        StatusCode = 200,
+                        Message = "No Hay Asistencias Vigentes este Dia",
+                        Data = null
+                    };
+                }
+                _logger.LogInformation($" [ BD_EXCECUTION ] : {studentsInCourse.Count()}");
+                attendanceEntries = studentsInCourse.Select(s =>
+                    new StudentsAttendanceEntries
+                    {
+                        StudentId = s.StudentId,
+                        StudentName = s.StudentName,
+                        StdentLastName = s.StudentLastName,
+                        Email = s.Email,
+                        AttendanceEntryDatee = s.Attendance?.RegistrationDate ?? DateTime.MinValue,
+                        IsCheckedIn = s.Attendance?.Attended ?? false,
+                        Status = s.Attendance?.Status ?? MessageConstant_Attendance.NOT_PRESENT,
+                        AttendanceMethod = s.Attendance?.Method ?? Attendance_Helpers.TYPE_MANUALLY,
+                        ChangeBy = s.Attendance?.ChangeBy ?? Attendance_Helpers.SYSTEM
+                    }).ToList();
+            }
+                // Paginar resultados 
+                var paginatedResponse = new PaginationDto<List<StudentsAttendanceEntries>>
+                {
+                    Items = attendanceEntries,
+                    TotalItems = attendanceEntries.Count,
+                    CurrentPage = 1,
+                    PageSize = 1,
+                    HasNextPage = false,
+                    HasPreviousPage = false,
+                    TotalPages = 1
+                };
+                return new ResponseDto<PaginationDto<List<StudentsAttendanceEntries>>>()
+                {
+                    Status = true,
+                    StatusCode = 200,
+                    Message = "Datos de asistencia obtenidos correctamente",
+                    Data = paginatedResponse
+                };
         }
     }
 }

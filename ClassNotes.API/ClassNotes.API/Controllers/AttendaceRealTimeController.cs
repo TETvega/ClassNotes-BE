@@ -37,5 +37,15 @@ namespace ClassNotes.API.Controllers
 
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpGet("attendances_status_today/{courseId}")]
+        public async Task<ActionResult<ResponseDto<StudentAttendanceResponse>>> GetMyStudentsStatusToday(
+            Guid courseId
+            )
+        {
+            var result = await _attendanceRSignalService.GetStudentsAttendancesToday(courseId);
+
+            return StatusCode(result.StatusCode, result);
+        }
     }
 }
