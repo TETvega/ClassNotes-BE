@@ -29,14 +29,18 @@ namespace ClassNotes.API.BackgroundServices
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                var now = DateTime.UtcNow;
+
+                var now = DateTime.Now;
                 var expiredGroups = _groupCache
                     .Where(g => g.Value.ExpirationTime <= now)
                     .Select(g => g.Key)
                     .ToList();
-                _logger.LogInformation("Ejecutando servicio en Segundo Plano ");
+                _logger.LogInformation($"[ATTENDANCE EXPIRATION SERVICE]: Ejecutando servicio en Segundo Plano");
+                _logger.LogWarning($"[ATTENDANCE EXPIRATION SERVICE]: Grupos Expirados:{expiredGroups.Count()} ");
+                //_logger.LogInformation($"[ATTENDANCE EXPIRATION SERVICE]: cache {_groupCache }");
                 foreach (var groupId in expiredGroups)
                 {
+                    _logger.LogInformation($"[ATTENDANCE EXPIRATION SERVICE] Entrada al grupo {groupId}");
                     if (_groupCache.TryRemove(groupId, out var group))
                     {
                         _logger.LogInformation($"{groupId} , Eliminando Datos");
@@ -46,6 +50,7 @@ namespace ClassNotes.API.BackgroundServices
 
                         foreach (var entry in group.Entries.Where(e => !e.IsCheckedIn))
                         {
+                           // _logger.LogInformation($"[ATTENDANCE EXPIRATION SERVICE]:  Entrada {entry}");
                             var attendance = new AttendanceEntity
                             {
                                 CourseId = entry.CourseId,
@@ -60,7 +65,7 @@ namespace ClassNotes.API.BackgroundServices
                             };
 
                             db.Attendances.Add(attendance);
-
+                            _logger.LogWarning($"[ATTENDANCE EXPIRATION SERVICE]: Actualizacion en la Base de Datos {attendance}");
                             await hub.Clients.Group(entry.CourseId.ToString())
                                 .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
                                 {

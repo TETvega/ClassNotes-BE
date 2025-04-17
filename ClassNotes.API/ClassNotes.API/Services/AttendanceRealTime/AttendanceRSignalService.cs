@@ -197,7 +197,16 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Data = null
                 };
             }
-
+            if(courseSetting.MinimumAttendanceTime < 5)
+            {
+                return new ResponseDto<object>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "No se Encontro una Configuracion Por Defecto",
+                    Data = null
+                };
+            }
             
             if (request.HomePlace)
             {
@@ -269,7 +278,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             // - Configura callback para manejar expiración (marca como no presente si no confirma)
             var groupCache = new AttendanceGroupCache
             {
-                ExpirationTime = expiration,
+                ExpirationTime = expiration.AddSeconds(20),
                 UserId = userId
             };
 
@@ -284,7 +293,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     otpCode = _otpService.GenerateOtp(secretKey, courseSetting.MinimumAttendanceTime);
 
                     var emailDto = CreateEmailDto(student, course, otpCode, courseSetting.MinimumAttendanceTime);
-                    await _emailsService.SendEmailAsync(emailDto);
+                   // await _emailsService.SendEmailAsync(emailDto);
                 }
 
                 var memoryEntry = new TemporaryAttendanceEntry
