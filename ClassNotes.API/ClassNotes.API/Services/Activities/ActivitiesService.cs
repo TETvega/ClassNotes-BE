@@ -390,7 +390,7 @@ namespace ClassNotes.API.Services.Activities
                 {
 
                     //Si no es oro, las sumatorias de studentUnit deben ser promediadas a corde a lo que vale la unidad para el curso
-                    if (courseSetting.ScoreType != "oro")
+                    if (courseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                     {
                         //Debe forsarse a ser float de esta forma para no dar problemas debido a que unit.maxScore
                         //permite null (para cursos con puntaje oro, aunque aqui no aplique siempre afecta el hecho de que los permita...
@@ -515,7 +515,7 @@ namespace ClassNotes.API.Services.Activities
             if (!dto.IsExtra)
             {
                 //Si no es oro, se confirma que no se pasen de 100...
-                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != "oro")
+                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
 
                     return new ResponseDto<ActivityDto>
@@ -525,7 +525,7 @@ namespace ClassNotes.API.Services.Activities
                         Message = "No puede agregar más puntos de el 100% de la unidad"
                     };
                 }//Si son oro, se confirma que no se pasen de el maximo del curso...
-                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == "oro")
+                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
                     return new ResponseDto<ActivityDto>
                     {
@@ -592,7 +592,7 @@ namespace ClassNotes.API.Services.Activities
                 //Por cada actividad, si no es de puntaje "oro", Se pondera de 100 a su valor en el valor maximo real de la unidad, al igual que en el endpoint ReviewEntity, antes de este...
                 foreach (var revisedActivity in studentActivities)
                 {
-                    if (unitEntity.Course.CourseSetting.ScoreType != "oro")
+                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                     {
                         totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
                     }
@@ -713,7 +713,7 @@ namespace ClassNotes.API.Services.Activities
             if (!dto.IsExtra)
             {
                 //Si no es oro, se confirma que no se pasen de 100...
-                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != "oro")
+                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
 
                     return new ResponseDto<ActivityDto>
@@ -723,7 +723,7 @@ namespace ClassNotes.API.Services.Activities
                         Message = "No puede agregar más puntos de el 100% de la unidad"
                     };
                 }//Si es oro, confirma pero de que no se pase del maximo de puntos de el curso...
-                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == "oro")
+                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
                     return new ResponseDto<ActivityDto>
                     {
@@ -788,7 +788,7 @@ namespace ClassNotes.API.Services.Activities
                 foreach (var revisedActivity in studentActivities)
                 {
                     //por cada actividad, si no se evalua como oro, se pondera de 100 a la nota maxima de la unidad, para solo necesitar se sumada a studentCourse, si se evalua como oro se suma en bruto
-                    if (unitEntity.Course.CourseSetting.ScoreType != "oro")
+                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                     {
                         totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
                     }
