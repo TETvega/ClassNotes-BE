@@ -6,5 +6,7 @@
         public int UnitNumber { get; set; }
         public float Note { get; set; }
 
+        public float UnitWeight { get; set; }
+
     }
 }
