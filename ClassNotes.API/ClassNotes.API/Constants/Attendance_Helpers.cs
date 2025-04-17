@@ -11,6 +11,7 @@
         public const string TYPE_OTP = nameof(TYPE_OTP);
         public const string TYPE_QR = nameof(TYPE_QR);
         public const string TYPE_MANUALLY = nameof(TYPE_MANUALLY);
+        public const string TYPE_BOUGTH = nameof(TYPE_BOUGTH);
 
         //Para enviar mensaje de Signal
 

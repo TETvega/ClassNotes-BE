@@ -31,14 +31,30 @@ namespace ClassNotes.API.Controllers
             return StatusCode(result.StatusCode, result);
         }
         [HttpPost("create_my_attendance_OTP")]
+        [AllowAnonymous]
         public async Task<ActionResult<ResponseDto<StudentAttendanceResponse>>>  CreateAttendanceOTP(string email, string OTP, float x, float y , Guid courseId)
         {
           var result = await  _attendanceRSignalService.SendAttendanceByOtpAsync(email,OTP,x,y,courseId);
 
             return StatusCode(result.StatusCode, result);
         }
+        [HttpPost("create_my_attendance_QR")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ResponseDto<StudentAttendanceResponse>>> CreateAttendanceQR(
+            Guid courseId,
+            string email,
+            float x,
+            float y,
+            string MAC=""
+            )
+        {
+            var result = await _attendanceRSignalService.SendAttendanceByQr(courseId, email, x, y , MAC);
+
+            return StatusCode(result.StatusCode, result);
+        }
 
         [HttpGet("attendances_status_today/{courseId}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<StudentAttendanceResponse>>> GetMyStudentsStatusToday(
             Guid courseId
             )

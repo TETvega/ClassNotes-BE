@@ -6,22 +6,19 @@ using ClassNotes.API.Dtos.AttendacesRealTime;
 using ClassNotes.API.Dtos.AttendacesRealTime.ForStudents;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.Emails;
-using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Hubs;
 using ClassNotes.API.Models;
 using ClassNotes.API.Services.Audit;
 using ClassNotes.API.Services.ConcurrentGroups;
 using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
-using iText.Commons.Actions.Contexts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using OtpNet;
-using ProjNet.CoordinateSystems;
 using QRCoder;
 using System.Collections.Concurrent;
-using static QRCoder.PayloadGenerator;
+using System.Text.RegularExpressions;
 using Point = NetTopologySuite.Geometries.Point;
 
 
@@ -68,38 +65,83 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             _groupCache = groupCache;
             _groupCacheManager = groupCacheManager;
         }
-        ///<summary>
-        ///    Procesa la asistencia de estudiantes a un curso, generando códigos QR y/o OTP por email según configuración.
-        ///</summary>
-        ///<remarks>
-        ///    Este endpoint realiza las siguientes operaciones principales:
-        ///    1. Valida que el curso exista, esté activo y pertenezca al docente
-        ///    2. Verifica que se haya seleccionado al menos un método de asistencia (QR o email)
-        ///    3. Determina la ubicación a usar para validar asistencia(geolocalización predeterminada o nueva)
-        ///    4. Genera códigos QR y/o OTP según configuración
-        ///    5. Almacena temporalmente la información en caché para validación posterior
-        ///    6. Notifica a los clientes conectados via SignalR sobre el estado de asistencia
-        ///</remarks>
-        ///  <param name = "request" > Objeto con los parámetros de la solicitud de asistencia</param>
-        ///<returns>
-        ///    Objeto ResponseDto con:
-        ///    - StatusCode: 200 si éxito, códigos de error en caso contrario
-        ///    - Data: Información del curso, estudiantes y QR generado (si aplica)
-        ///</returns>
-        ///    <response code = "200" > Asistencia procesada correctamente</response>
-        ///    <response code = "400" > Error en parámetros de entrada o configuración</response>
-        ///    <response code = "404" > Curso no encontrado o no accesible</response>
-        /// Si quiere entender correctamente este endpoint le suguiero ver los siguientes enlaces
-        /// para entendimiento de memoria https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-6.0
-        /// https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.caching.memory.memorycacheentryextensions.registerpostevictioncallback?view=net-9.0-pp
-        /// metodos aplicables a la cache https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.caching.memory.memorycacheentryoptions?view=net-9.0-pp&viewFallbackFrom=dotnet-plat-ext-6.0
-        /// enviar mensajes fuera del hub 
-        /// https://learn.microsoft.com/en-us/aspnet/core/signalr/hubcontext?view=aspnetcore-6.0
+        /// <summary>
+        /// Inicia un proceso de asistencia para un curso, generando los mecanismos de autenticación configurados (QR y/o OTP por email).
+        /// </summary>
+        /// <remarks>
+        /// <para>Este endpoint gestiona el flujo completo de inicio de asistencia:</para>
         /// 
-
-
-
-
+        /// <list type="number">
+        ///     <item>
+        ///         <term>Validaciones iniciales</term>
+        ///         <description>
+        ///             Verifica que el curso exista, esté activo y pertenezca al docente solicitante.
+        ///             Confirma que se haya seleccionado al menos un método de asistencia (QR o Email).
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Configuración geográfica</term>
+        ///         <description>
+        ///             Establece el área geográfica de validación, usando la ubicación predeterminada del curso
+        ///             o una nueva proporcionada en la solicitud.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Generación de credenciales</term>
+        ///         <description>
+        ///             Crea los códigos QR (en formato Base64) y/o OTP (para envío por email)
+        ///             según la configuración solicitada.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Almacenamiento temporal</term>
+        ///         <description>
+        ///             Guarda en caché distribuida la información de la sesión de asistencia con
+        ///             un tiempo de expiración configurable.
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Notificaciones</term>
+        ///         <description>
+        ///             Emite eventos via SignalR para actualizar el estado en clientes conectados.
+        ///         </description>
+        ///     </item>
+        /// </list>
+        /// 
+        /// <para><strong>Referencias técnicas:</strong></para>
+        /// <list type="bullet">
+        ///     <item><see href="https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory">Memoria Caching en ASP.NET Core</see></item>
+        ///     <item><see href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.caching.memory.memorycacheentryoptions">Opciones de caché</see></item>
+        ///     <item><see href="https://learn.microsoft.com/en-us/aspnet/core/signalr/hubcontext">SignalR HubContext</see></item>
+        /// </list>
+        /// </remarks>
+        /// <param name="request">
+        /// <see cref="AttendanceRequestDto"/> que contiene:
+        /// <list type="bullet">
+        ///     <item><description>CourseId: Identificador único del curso</description></item>
+        ///     <item><description>AttendanceType: Configuración de métodos de asistencia</description></item>
+        ///     <item><description>StrictMode: Habilita validación estricta con MAC address</description></item>
+        ///     <item><description>NewGeolocation: Opcional - Nueva ubicación para validación</description></item>
+        /// </list>
+        /// </param>
+        /// <returns>
+        /// <see cref="ResponseDto{AttendanceResponseDto}"/> con:
+        /// <list type="bullet">
+        ///     <item><description>StatusCode: Código HTTP de resultado</description></item>
+        ///     <item><description>Data: Información detallada de la sesión iniciada</description></item>
+        ///     <item><description>Message: Mensaje descriptivo del resultado</description></item>
+        /// </list>
+        /// </returns>
+        /// <response code="200">Proceso completado correctamente. Retorna datos de la sesión creada.</response>
+        /// <response code="400">
+        ///     Error en parámetros de entrada. Puede ser por:
+        ///     <list type="bullet">
+        ///         <item><description>Ningún método de asistencia seleccionado</description></item>
+        ///         <item><description>Configuración geográfica inválida</description></item>
+        ///     </list>
+        /// </response>
+        /// <response code="404">Curso no encontrado o no accesible para el usuario.</response>
+        /// <response code="500">Error interno del servidor al procesar la solicitud.</response>
         public async Task<ResponseDto<object>> ProcessAttendanceAsync(AttendanceRequestDto request)
         {
             var userId = _auditService.GetUserId();
@@ -391,27 +433,101 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             };
         }
         /// <summary>
-        /// Establece en caché temporal los datos de asistencia de un estudiante para un curso específico,
-        /// con manejo automático de ausencias cuando expira el registro no marcado.
+        /// Almacena en caché distribuida los datos de asistencia de un estudiante para un curso específico,
+        /// implementando un sistema de expiración automática con registro de ausencias.
         /// </summary>
-        /// <param name="userId">ID del usuario docente que realiza la operación (para auditoría)</param>
-        /// <param name="student">Entidad del estudiante con sus datos completos</param>
-        /// <param name="courseId">ID del curso relacionado</param>
-        /// <param name="memoryEntry">Datos temporales de asistencia a almacenar</param>
-        /// <param name="expiration">Fecha/hora de expiración del registro</param>
         /// <remarks>
-        /// Comportamiento clave:
-        /// - Crea una entrada en caché por cada par estudiante-curso
-        /// - Registra automáticamente ausencia si el estudiante no marca asistencia antes de la expiración
-        /// - Notifica a clientes conectados via SignalR cuando ocurren cambios
-        /// 
-        /// Estructura de la clave: "{studentId}_{courseId}"
-        /// 
-        /// Flujo de expiración:
-        /// 1. Al expirar, verifica si no hubo check-in (IsCheckedIn=false)
-        /// 2. Registra automáticamente como "NO PRESENTE" en base de datos
-        /// 3. Notifica a todos los dispositivos suscritos al grupo del curso
+        /// <para>Este método proporciona un sistema completo de gestión temporal de asistencias con:</para>
+        ///
+        /// <list type="bullet">
+        ///     <item>
+        ///         <term>Almacenamiento temporal</term>
+        ///         <description>
+        ///             Guarda en memoria los datos de asistencia pendiente usando el formato de clave:
+        ///             <c>"{studentId}_{courseId}"</c>
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Mecanismo de expiración automática</term>
+        ///         <description>
+        ///             Implementa un callback que se ejecuta al expirar el registro para:
+        ///             <list type="number">
+        ///                 <item>Verificar si el estudiante no marcó asistencia</item>
+        ///                 <item>Registrar automáticamente como "AUSENTE" en base de datos</item>
+        ///                 <item>Notificar a todos los clientes suscritos al grupo SignalR del curso</item>
+        ///             </list>
+        ///         </description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Sistema de notificaciones</term>
+        ///         <description>
+        ///             Emite eventos via SignalR utilizando <see cref="IHubContext{T}"/> para:
+        ///             <list type="bullet">
+        ///                 <item>Actualizaciones en tiempo real del estado de asistencia</item>
+        ///                 <item>Sincronización entre múltiples dispositivos</item>
+        ///             </list>
+        ///         </description>
+        ///     </item>
+        /// </list>
+        /// <para><strong>Referencias técnicas:</strong></para>
+        /// <list type="bullet">
+        ///     <item><see href="https://learn.microsoft.com/en-us/aspnet/core/performance/caching/distributed">Caché distribuida en ASP.NET Core</see></item>
+        ///     <item><see href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.caching.memory.memorycacheentryoptions">MemoryCacheEntryOptions</see></item>
+        ///     <item><see href="https://learn.microsoft.com/en-us/aspnet/core/signalr/hubcontext">SignalR HubContext</see></item>
+        /// </list>
         /// </remarks>
+        /// <param name="userId">
+        /// Identificador del usuario docente que realiza la operación.
+        /// <para>Usado para:</para>
+        /// <list type="bullet">
+        ///     <item>Auditoría de registros</item>
+        ///     <item>Validación de permisos</item>
+        ///     <item>Registro de cambios</item>
+        /// </list>
+        /// </param>
+        /// <param name="student">
+        /// Entidad completa del estudiante con:
+        /// <list type="bullet">
+        ///     <item>Datos personales</item>
+        ///     <item>Relación con el curso</item>
+        ///     <item>Estado académico</item>
+        /// </list>
+        /// </param>
+        /// <param name="courseId">
+        /// Identificador único del curso relacionado.
+        /// <para>Formato: GUID</para>
+        /// </param>
+        /// <param name="memoryEntry">
+        /// Datos temporales de asistencia a almacenar, incluyendo:
+        /// <list type="bullet">
+        ///     <item>Estado actual (WAITING/PRESENT/ABSENT)</item>
+        ///     <item>Método de registro (QR/OTP)</item>
+        ///     <item>Datos geolocalización</item>
+        ///     <item>Timestamp de creación</item>
+        /// </list>
+        /// </param>
+        /// <param name="expiration">
+        /// Fecha/hora exacta de expiración del registro.
+        /// <para>Determina:</para>
+        /// <list type="bullet">
+        ///     <item>Duración máxima de la sesión de asistencia</item>
+        ///     <item>Momento para el callback de expiración</item>
+        /// </list>
+        /// </param>
+        /// <returns>
+        /// Operación asíncrona sin retorno de valor.
+        /// <para>Efectos secundarios:</para>
+        /// <list type="bullet">
+        ///     <item>Entrada almacenada en caché distribuida</item>
+        ///     <item>Callback registrado para manejo de expiración</item>
+        /// </list>
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Cuando alguno de los parámetros requeridos es nulo.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Cuando los formatos de ID son inválidos.
+        /// </exception>
         private void SetStudentAttendanceCache(
             string userId,
             StudentEntity student,
@@ -508,9 +624,9 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             DateTime expiration,
             List<AttendanceStudentStatus> studentsList)
         {
-            var method = attendanceType.Email && attendanceType.Qr ? "BOTH"
-                       : attendanceType.Email ? "EMAIL"
-                       : "QR";
+            var method = attendanceType.Email && attendanceType.Qr ? Attendance_Helpers.TYPE_BOUGTH
+                       : attendanceType.Email ? Attendance_Helpers.TYPE_OTP
+                       : Attendance_Helpers.TYPE_QR;
 
             var cacheData = new ActiveAttendanceCacheDto
             {
@@ -596,6 +712,34 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                         Data = null
                     };
                 }
+
+                var activeCacheKey = $"attendance_active_{courseId}";
+                var activeCacheAttendance = _cache.Get<ActiveAttendanceCacheDto>(activeCacheKey);
+
+                // Validar que el metodo OTP este permitido
+                if (activeCacheAttendance == null ||
+                    (activeCacheAttendance.AttendanceMethod != Attendance_Helpers.TYPE_OTP &&
+                     activeCacheAttendance.AttendanceMethod != Attendance_Helpers.TYPE_BOUGTH))
+                {
+                    return new ResponseDto<StudentAttendanceResponse>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "Metodo de asistencia via OTP no esta habilitado para esta sesion.",
+                        Data = null
+                    };
+                }
+
+                if (OTP == "" || OTP == null )
+                {
+                    return new ResponseDto<StudentAttendanceResponse>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = "No se ha Ingresado un Codigo OTP",
+                        Data = null
+                    };
+                }
                 // datos del estudiante 
                 var student = await _context.Students
                     .Include(s => s.Courses
@@ -610,7 +754,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     {
                         StatusCode = 404,
                         Status = false,
-                        Message = "Estudiante no encontrado o no está inscrito en el curso.",
+                        Message = "Estudiante no encontrado o no esta inscrito en el curso.",
                         Data = null
                     };
                 }
@@ -623,7 +767,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     {
                         StatusCode = 400,
                         Status = false,
-                        Message = "El estudiante no está registrado en la lista de asistencia o ya ha sido marcado.",
+                        Message = "El estudiante no esta registrado en la lista de asistencia o ya ha sido marcado.",
                         Data = null
                     };
                 }
@@ -634,7 +778,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     {
                         StatusCode = 400,
                         Status = false,
-                        Message = "OTP inválido o expirado.",
+                        Message = "OTP invalido o expirado.",
                         Data = null
                     };
                 }
@@ -835,9 +979,383 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             return totp.VerifyTotp(otpToValidate, out long timeStepMatched, new VerificationWindow(previous: 1, future: 1));
         }
 
-        public Task<ResponseDto<object>> SendAttendanceByQr(string Email, float x, float y, string MAC, Guid courseId)
+        /// <summary>
+        /// Registra la asistencia de un estudiante mediante código QR, validando múltiples factores de seguridad.
+        /// </summary>
+        /// <remarks>
+        /// Este método realiza las siguientes operaciones:
+        /// 1. Valida que exista una sesión de asistencia activa para el curso
+        /// 2. Verifica que el estudiante esté matriculado en el curso
+        /// 3. Comprueba que el estudiante esté en estado "waiting" (en caché)
+        /// 4. Valida la ubicación geográfica dentro del rango permitido
+        /// 5. En modo estricto, verifica y registra la dirección MAC del dispositivo
+        /// 6. Actualiza todos los registros de asistencia
+        /// </remarks>
+        /// <param name="courseId">Identificador único del curso</param>
+        /// <param name="Email">Correo electrónico del estudiante</param>
+        /// <param name="x">Coordenada X (longitud) de la ubicación del estudiante</param>
+        /// <param name="y">Coordenada Y (latitud) de la ubicación del estudiante</param>
+        /// <param name="MAC">Dirección MAC del dispositivo (requerida solo en modo estricto)</param>
+        /// <returns>
+        /// Objeto ResponseDto con:
+        /// - StatusCode: 200 si es exitoso, otros códigos para errores
+        /// - Status: booleano indicando éxito/fracaso
+        /// - Message: Mensaje descriptivo del resultado
+        /// - Data: Detalles de la asistencia registrada
+        /// </returns>
+        public async Task<ResponseDto<StudentAttendanceResponse>> SendAttendanceByQr(
+            Guid courseId,
+            string Email,
+            float x,
+            float y,
+            string MAC = "")
         {
-            throw new NotImplementedException();
+            var activeCacheKey = $"attendance_active_{courseId}";
+            var activeCacheAttendance = _cache.Get<ActiveAttendanceCacheDto>(activeCacheKey);
+
+            // Validar que el metodo QR este permitido
+            if (activeCacheAttendance == null ||
+                (activeCacheAttendance.AttendanceMethod != Attendance_Helpers.TYPE_QR &&
+                 activeCacheAttendance.AttendanceMethod != Attendance_Helpers.TYPE_BOUGTH))
+            {
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El metodo QR no este habilitado para esta sesion de asistencia",
+                    Data = null
+                };
+            }
+            // Validacion de el grupo de asistencia 
+            var activeAttendance = _groupCacheManager.GetGroupCache(courseId);
+            var validationResult = ValidateActiveAttendance(activeAttendance);
+            if (validationResult != null) return validationResult;
+
+            // Validacion de pertenecia al curso
+            var (student, courseName, studentValidationResult) = await GetAndValidateStudent(courseId, Email);
+            if (studentValidationResult != null) return studentValidationResult;
+
+            // validacion con la cache  
+            // validacion que el estidante este es estado weating (este en la cache todavia)
+            var studentEntry = _groupCacheManager.TryGetStudentEntryByEmail(courseId, Email);
+            var entryValidationResult = ValidateStudentEntry(studentEntry);
+            if (entryValidationResult != null) return entryValidationResult;
+
+            // Validaciones respecto a distancias
+            // esta dentro de los parametrso del curso en si 
+            var locationValidationResult = await ValidateLocation(studentEntry, x, y);
+            if (locationValidationResult.Message != null) return locationValidationResult;
+
+            // Validar modo estricto (solo verificación, sin registro 
+            var docCacheKey = $"attendance_active_{courseId}";
+            var activeDocAttendance = _cache.Get<ActiveAttendanceCacheDto>(docCacheKey);
+            var macValidationResult = await CheckMacAddressRequirements(activeDocAttendance, MAC);
+            if (macValidationResult != null) return macValidationResult;
+
+            // Actualizar registros (incluye registro de MAC si esta en modo estricto )
+            var updateResult = await UpdateAttendanceRecordsWithMac(
+                activeDocAttendance,
+                Email,
+                courseId,
+                student,
+                activeAttendance,
+                MAC);
+
+            if (updateResult != null) return updateResult;
+
+            // Retorno de la respuesta 
+            return new ResponseDto<StudentAttendanceResponse>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = "Asistencia registrada exitosamente.",
+                Data = new StudentAttendanceResponse
+                {
+                    FullName = $"{student.FirstName} {student.LastName}",
+                    CourseId = courseId,
+                    Distance = locationValidationResult.Data.Distance,
+                    Method = Attendance_Helpers.TYPE_QR,
+                    Status = MessageConstant_Attendance.PRESENT,
+                    Email = student.Email,
+                    CourseName = courseName
+                }
+            };
+        }
+
+        // ----------------------------------------------------------------------------------------------------------------------------------------------------------
+        // Metdos separados de ayuda 
+
+        private ResponseDto<StudentAttendanceResponse> ValidateActiveAttendance(AttendanceGroupCache activeAttendance)
+        {
+            if (activeAttendance == null)
+            {
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "No hay asistencia activa para este curso.",
+                    Data = null
+                };
+            }
+            return null;
+        }
+
+        private async Task<(StudentEntity student, string courseName, ResponseDto<StudentAttendanceResponse> validationResult)>
+            GetAndValidateStudent(Guid courseId, string email)
+        {
+            var student = await _context.Students
+                .Include(s => s.Courses.Where(sc => sc.CourseId == courseId && sc.IsActive))
+                .ThenInclude(sc => sc.Course)
+                .FirstOrDefaultAsync(s => s.Email == email);
+
+            var courseName = student?.Courses.FirstOrDefault()?.Course?.Name ?? "No hay nombre";
+
+            if (student == null)
+            {
+                return (null, null, new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "Estudiante no encontrado o no está inscrito en el curso.",
+                    Data = null
+                });
+            }
+
+            return (student, courseName, null);
+        }
+
+        private ResponseDto<StudentAttendanceResponse> ValidateStudentEntry(TemporaryAttendanceEntry studentEntry)
+        {
+            if (studentEntry == null || studentEntry.IsCheckedIn == true)
+            {
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El estudiante no está registrado en la lista de asistencia o ya ha sido marcado.",
+                    Data = null
+                };
+            }
+            return null;
+        }
+
+        private async Task<ResponseDto<StudentAttendanceResponse>> ValidateLocation(TemporaryAttendanceEntry studentEntry, float x, float y)
+        {
+            var cachedLocation = new Point(studentEntry.GeolocationLongitud, studentEntry.GeolocationLatitud) { SRID = 4326 };
+            var receivedLocation = new Point(x, y) { SRID = 4326 };
+
+            var course = await _context.Courses
+                .Include(c => c.CourseSetting)
+                .FirstOrDefaultAsync(c => c.Id == studentEntry.CourseId);
+
+            if (course?.CourseSetting == null)
+            {
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "No se encontró configuración de asistencia para este curso.",
+                    Data = null
+                };
+            }
+
+            double distanceInMeters = CalculateHaversineDistance(cachedLocation, receivedLocation);
+
+            if (distanceInMeters > course.CourseSetting.ValidateRangeMeters)
+            {
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = $"Fuera del rango. Distancia: {distanceInMeters:F2}m / Límite: {course.CourseSetting.ValidateRangeMeters}m",
+                    Data = null
+                };
+            }
+
+            // Creamos un Objeto para poder mandar la respuesta de la distacioa
+            // esto para que si podamos mandar cualquiera de las validaciones o el objeto de distancia
+            return new ResponseDto<StudentAttendanceResponse>
+            {
+                Data = new StudentAttendanceResponse { Distance = distanceInMeters }
+            };
+        }
+
+        // Nuevo método solo para verificar requisitos MAC (sin registro)
+        /// <summary>
+        ///     Verifica los requisitos de dirección MAC para el registro de asistencia en modo estricto.
+        ///     Las validaciones de MAC se Utilizo  para generar el REGEX 
+        /// </summary>
+        /// <remarks>
+        ///     Este método realiza las siguientes validaciones:
+        ///     <list type="number">
+        ///         <item><description>Verifica que exista una sesión de asistencia activa</description></item>
+        ///         <item><description>En modo estricto, valida que la dirección MAC tenga el formato correcto</description></item>
+        ///     </list>
+        /// 
+        ///     El formato válido para direcciones MAC debe seguir los estándares IEEE 802:
+        ///         <see href="https://standards.ieee.org/wp-content/uploads/import/documents/tutorials/macgrp.pdf"/>
+        ///         <see href="https://chatgpt.com/share/68017c8c-4f34-8007-b1c9-5a1d08533cf5"/>
+        ///     Formatos aceptados: XX:XX:XX:XX:XX:XX o XX-XX-XX-XX-XX-XX (hexadecimal)
+        /// </remarks>
+        ///     <param name="activeDocAttendance">Datos de la sesión de asistencia activa</param>
+        ///     <param name="MAC">Dirección MAC proporcionada por el dispositivo</param>
+        /// <returns>
+        ///     <para><see cref="ResponseDto{StudentAttendanceResponse}"/> con error si:</para>
+        ///     <list type="bullet">
+        ///     <item><description>No hay sesión activa (400)</description></item>
+        ///     <item><description>MAC es requerida pero no válida (400)</description></item>
+        ///     </list>
+        ///     <para>Null si todas las validaciones son exitosas</para>
+        /// </returns>
+        /// <example>
+        /// Ejemplo de respuesta con error:
+        /// <code>
+        /// {
+        ///   StatusCode: 400,
+        ///   Status: false,
+        ///   Message: "Se requiere una dirección MAC válida...",
+        ///   Data: null
+        /// }
+        /// </code>
+        /// </example>
+        private async Task<ResponseDto<StudentAttendanceResponse>> CheckMacAddressRequirements(
+            ActiveAttendanceCacheDto activeDocAttendance,
+            string MAC)
+        {
+            _logger.BeginScope(nameof(CheckMacAddressRequirements),  activeDocAttendance.Students.ToArray());
+            if (activeDocAttendance == null)
+            {
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Ya no hay mas registros por validar",
+                    Data = null
+                };
+            }
+
+            // para obtener in registro de tipo mac
+
+            if (activeDocAttendance.StrictMode &&
+                (string.IsNullOrWhiteSpace(MAC) || !Regex.IsMatch(MAC, @"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")))
+            {
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "Se requiere una dirección MAC válida en formato XX:XX:XX:XX:XX:XX o XX-XX-XX-XX-XX-XX",
+                    Data = null
+                };
+            }
+
+            return null;
+        }
+
+        private async Task<ResponseDto<StudentAttendanceResponse>> UpdateAttendanceRecordsWithMac(
+                ActiveAttendanceCacheDto activeDocAttendance,
+                string email,
+                Guid courseId,
+                StudentEntity student,
+                AttendanceGroupCache activeAttendance,
+                string MAC)
+        {
+            try
+            {
+                _logger.BeginScope(nameof(UpdateAttendanceRecordsWithMac));
+                //  Verificar MAC solo si estamos en modo estricto
+                if (activeDocAttendance?.StrictMode == true && !string.IsNullOrEmpty(MAC))
+                {
+                    var macControlKey = $"mac_global_{courseId}";
+                    var macDictionary = _cache.Get<Dictionary<string, Guid>>(macControlKey) ?? new Dictionary<string, Guid>();
+
+                    if (macDictionary.ContainsKey(MAC))
+                    {
+                        return new ResponseDto<StudentAttendanceResponse>
+                        {
+                            StatusCode = 400,
+                            Status = false,
+                            Message = "Este dispositivo ya ha registrado una asistencia en este curso.",
+                            Data = null
+                        };
+                    }
+                }
+
+                //  Actualizar cache del docente
+                if (activeDocAttendance != null)
+                {
+                    var docStudentEntry = activeDocAttendance.Students.FirstOrDefault(s => s.Email == email);
+                    if (docStudentEntry != null)
+                    {
+                        docStudentEntry.Status = MessageConstant_Attendance.PRESENT;
+                        docStudentEntry.Attendend = true;
+                    }
+
+                    _cache.Set($"attendance_active_{courseId}", activeDocAttendance, new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpiration = activeDocAttendance.Expiration
+                    });
+                }
+
+                //  Registrar en base de datos
+                var attendance = new AttendanceEntity
+                {
+                    CourseId = courseId,
+                    StudentId = student.Id,
+                    Attended = true,
+                    Status = MessageConstant_Attendance.PRESENT,
+                    RegistrationDate = DateTime.UtcNow,
+                    Method = Attendance_Helpers.TYPE_QR,
+                    CreatedBy = activeAttendance.UserId,
+                    ChangeBy = Attendance_Helpers.STUDENT,
+                    CreatedDate = DateTime.UtcNow,
+                };
+
+                _context.Attendances.Add(attendance);
+                await _context.SaveChangesWithoutAuditAsync();
+                _logger.LogInformation($"[ QR_Service ] : Registro en la Base de Datos de {attendance}");
+
+                //  Registrar MAC SOLO despus de confirmar el registro en BD
+                if (activeDocAttendance?.StrictMode == true && !string.IsNullOrEmpty(MAC))
+                {
+                    
+                    _logger.LogInformation("[ UPDATE_ATTENDANCE_QR ] : Modo Stricto -> registrando MAC");
+                    var macControlKey = $"mac_global_{courseId}";
+                    var macDictionary = _cache.Get<Dictionary<string, Guid>>(macControlKey) ?? new Dictionary<string, Guid>();
+                    macDictionary[MAC] = student.Id;
+
+
+
+                    _cache.Set(macControlKey, macDictionary, new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpiration = activeDocAttendance.Expiration
+                    });
+                }
+
+                // Eliminar de la cache del grupo
+                activeAttendance.Entries.RemoveAll(e => e.Email == email);
+                _logger.LogInformation($"Estudiante eliminado del grupo {courseId}. Quedan {activeAttendance.Entries.Count} estudiantes");
+
+                // Notificar cambio de estado
+                await _hubContext.Clients.Group(courseId.ToString())
+                    .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
+                    {
+                        studentId = student.Id,
+                        status = MessageConstant_Attendance.PRESENT
+                    });
+
+                return null; 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar registros de asistencia");
+                return new ResponseDto<StudentAttendanceResponse>
+                {
+                    StatusCode = 500,
+                    Status = false,
+                    Message = "Error interno al registrar la asistencia",
+                    Data = null
+                };
+            }
         }
 
         /// <summary>
@@ -952,7 +1470,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     _logger.LogInformation("[ GET_BD ]: No se ha pasado asistencia -> se retorna lista []");
                     return new ResponseDto<PaginationDto<List<StudentsAttendanceEntries>>>()
                     {
-                        Status = false,
+                        Status = true,
                         StatusCode = 200,
                         Message = "No Hay Asistencias Vigentes este Dia",
                         Data = null
