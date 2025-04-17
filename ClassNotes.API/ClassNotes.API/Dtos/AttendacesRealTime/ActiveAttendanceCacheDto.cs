@@ -3,6 +3,7 @@
     public class ActiveAttendanceCacheDto
     {
         public Guid CourseId { get; set; }
+        public string UserId { get; set; }
         public bool StrictMode { get; set; }
         public string AttendanceMethod { get; set; }
         public DateTime Expiration { get; set; }

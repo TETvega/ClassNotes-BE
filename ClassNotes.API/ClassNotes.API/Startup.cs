@@ -33,6 +33,10 @@ using ClassNotes.API.Services.AllCourses;
 using Serilog;
 using ClassNotes.API.Services.AttendanceRealTime;
 using ClassNotes.API.Hubs;
+using ClassNotes.API.BackgroundServices;
+using ClassNotes.API.Models;
+using System.Collections.Concurrent;
+using ClassNotes.API.Services.ConcurrentGroups;
 
 
 namespace ClassNotes.API;
@@ -62,8 +66,13 @@ public class Startup
             x => x.UseNetTopologySuite() // para almacenar datos para geolocalizacion en el formato necesitado
             ));
 
-		// Servicios personalizados
-		services.AddTransient<IActivitiesService, ActivitiesService>();
+        // para monitoreo de la cache de las asistencias
+        services.AddSingleton<ConcurrentDictionary<Guid, AttendanceGroupCache>>();
+        services.AddHostedService<AttendanceExpirationService>();
+        services.AddSingleton<IAttendanceGroupCacheManager, AttendanceGroupCacheManager>();
+
+        // Servicios personalizados
+        services.AddTransient<IActivitiesService, ActivitiesService>();
 		services.AddTransient<IAttendancesService, AttendancesService>();
 		services.AddTransient<INotesService, NotesService>();
 		services.AddTransient<ICourseNotesService, CourseNotesService>();
@@ -91,9 +100,8 @@ public class Startup
         services.AddSingleton<IDateTimeService, DateTimeService>();
 
 
-
-		//Para Asistencias en Tiepo real
-		services.AddTransient<IAttendanceRSignalService, AttendanceRSignalService>();
+        //Para Asistencias en Tiepo real
+        services.AddTransient<IAttendanceRSignalService, AttendanceRSignalService>();
 
 
 

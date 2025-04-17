@@ -3,11 +3,14 @@ using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.AttendacesRealTime;
+using ClassNotes.API.Dtos.AttendacesRealTime.ForStudents;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Hubs;
+using ClassNotes.API.Models;
 using ClassNotes.API.Services.Audit;
+using ClassNotes.API.Services.ConcurrentGroups;
 using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
 using iText.Commons.Actions.Contexts;
@@ -17,6 +20,7 @@ using Microsoft.Extensions.Caching.Memory;
 using OtpNet;
 using ProjNet.CoordinateSystems;
 using QRCoder;
+using System.Collections.Concurrent;
 using static QRCoder.PayloadGenerator;
 using Point = NetTopologySuite.Geometries.Point;
 
@@ -34,6 +38,8 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         private readonly IMemoryCache _cache;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILoggerFactory _logger;
+        private readonly ConcurrentDictionary<Guid, AttendanceGroupCache> _groupCache;
+        private readonly IAttendanceGroupCacheManager _groupCacheManager;
 
         public AttendanceRSignalService(
             ClassNotesContext context,
@@ -44,7 +50,9 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             IMapper mapper,
             IMemoryCache cache,
             IServiceScopeFactory serviceScopeFactory,
-            ILoggerFactory logger
+            ILoggerFactory logger,
+            ConcurrentDictionary<Guid, AttendanceGroupCache> groupCache,
+            IAttendanceGroupCacheManager groupCacheManager
 
             )
         {
@@ -57,6 +65,8 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             _cache = cache;
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
+            _groupCache = groupCache;
+            _groupCacheManager = groupCacheManager;
         }
         ///<summary>
         ///    Procesa la asistencia de estudiantes a un curso, generando códigos QR y/o OTP por email según configuración.
@@ -187,7 +197,16 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Data = null
                 };
             }
-
+            if(courseSetting.MinimumAttendanceTime < 5)
+            {
+                return new ResponseDto<object>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "No se Encontro una Configuracion Por Defecto",
+                    Data = null
+                };
+            }
             
             if (request.HomePlace)
             {
@@ -222,10 +241,11 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             // Guardado en cache para recuperacion del docente cada que entra al endpoint 
             SaveActiveAttendanceToCache(
                 courseKey,
+                userId,
                 course.Id,
                 request.StrictMode,
                 request.AttendanceType,
-                expiration,
+                expiration.AddMinutes(2),// agrege 2 minutos para manejar un desface de tiempo y no tener problemas con otps buscados
                 studentsList
                 );
 
@@ -256,6 +276,12 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             // - Genera OTP si está habilitado el método por email
             // - Almacena en caché la información temporal de asistencia
             // - Configura callback para manejar expiración (marca como no presente si no confirma)
+            var groupCache = new AttendanceGroupCache
+            {
+                ExpirationTime = expiration.AddSeconds(20),
+                UserId = userId
+            };
+
             foreach (var sc in course.Students)
             {
                 var student = sc.Student;
@@ -267,7 +293,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     otpCode = _otpService.GenerateOtp(secretKey, courseSetting.MinimumAttendanceTime);
 
                     var emailDto = CreateEmailDto(student, course, otpCode, courseSetting.MinimumAttendanceTime);
-                    // await _emailsService.SendEmailAsync(emailDto);
+                   // await _emailsService.SendEmailAsync(emailDto);
                 }
 
                 var memoryEntry = new TemporaryAttendanceEntry
@@ -277,12 +303,13 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Otp = otpCode,
                     QrContent = qrContent,
                     ExpirationTime = expiration,
+                    Email = student.Email,
                     GeolocationLatitud = (float)(locationToUse?.Y?? 0f),
                     GeolocationLongitud = (float)(locationToUse?.X?? 0f) 
                 };
 
-                SetStudentAttendanceCache( userId, student, course.Id, memoryEntry, expiration);
-
+                //SetStudentAttendanceCache( userId, student, course.Id, memoryEntry, expiration);
+                groupCache.Entries.Add(memoryEntry);
                 await _hubContext.Clients
                     .Group(course.Id.ToString())
                     .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
@@ -291,7 +318,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                         status = MessageConstant_Attendance.WAITING
                     });
             }
-
+             _groupCacheManager.RegisterGroup(course.Id, groupCache);
             // Mapeamos la respuesta con los datos requeridos
             var result = new
             {
@@ -360,7 +387,28 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             </div>"
             };
         }
-
+        /// <summary>
+        /// Establece en caché temporal los datos de asistencia de un estudiante para un curso específico,
+        /// con manejo automático de ausencias cuando expira el registro no marcado.
+        /// </summary>
+        /// <param name="userId">ID del usuario docente que realiza la operación (para auditoría)</param>
+        /// <param name="student">Entidad del estudiante con sus datos completos</param>
+        /// <param name="courseId">ID del curso relacionado</param>
+        /// <param name="memoryEntry">Datos temporales de asistencia a almacenar</param>
+        /// <param name="expiration">Fecha/hora de expiración del registro</param>
+        /// <remarks>
+        /// Comportamiento clave:
+        /// - Crea una entrada en caché por cada par estudiante-curso
+        /// - Registra automáticamente ausencia si el estudiante no marca asistencia antes de la expiración
+        /// - Notifica a clientes conectados via SignalR cuando ocurren cambios
+        /// 
+        /// Estructura de la clave: "{studentId}_{courseId}"
+        /// 
+        /// Flujo de expiración:
+        /// 1. Al expirar, verifica si no hubo check-in (IsCheckedIn=false)
+        /// 2. Registra automáticamente como "NO PRESENTE" en base de datos
+        /// 3. Notifica a todos los dispositivos suscritos al grupo del curso
+        /// </remarks>
         private void SetStudentAttendanceCache(
             string userId,
             StudentEntity student,
@@ -400,7 +448,8 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                                     RegistrationDate = DateTime.UtcNow,
                                     CreatedBy = userId,
                                     CreatedDate = DateTime.UtcNow,
-                                    ChangeBy = Attendance_Helpers.SYSTEM
+                                    Method = Attendance_Helpers.TYPE_MANUALLY,
+                                    ChangeBy = Attendance_Helpers.SYSTEM // marcado como sistema solo para el manejo de logs a futuro
 
                                     
                                 };
@@ -409,14 +458,17 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                                 await db.SaveChangesWithoutAuditAsync();
 
                                 var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<AttendanceHub>>();
-
+                                // Notificar a todos los dispositivos suscritos
                                 await hubContext.Clients.Group(data.CourseId.ToString())
                                     .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
                                     {
                                         studentId = data.StudentId,
                                         status = MessageConstant_Attendance.NOT_PRESENT
                                     });
+                                
                             }
+
+                            
                         }
                     }
                 }
@@ -430,9 +482,23 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         /// <param name="cacheKey">Clave única para identificación en caché (formato recomendado: "attendance_active_{courseId}_{userId}")</param>
         /// <param name="courseId">Identificador único del curso asociado</param>
         /// <param name="strictMode">Habilita validaciones estrictas de geolocalización/temporización cuando es true</param>
-        /// <param name="attendanceType">Configuración de métodos permitidos para registro (Email/QR/
+        /// <param name="attendanceType">Configuración de métodos permitidos para registro (Email/QR/Ambos)</param>
+        /// <param name="expiration">Fecha/hora de expiración automática de la caché (normalmente fin de la sesión de clase)</param>
+        /// <param name="studentsList">Lista de estudiantes con sus estados actuales de asistencia</param>
+        /// <remarks>
+        /// Estructura de almacenamiento:
+        /// - Los datos se guardan como objeto <see cref="ActiveAttendanceCacheDto"/>
+        /// - La expiración es absoluta según el horario de fin de clase
+        /// - No incluye callbacks de limpieza ya que es autónomo
+        /// 
+        /// Tipos de método:
+        /// - "EMAIL": Solo verificación por correo
+        /// - "QR": Solo código QR
+        /// - "BOTH": Requiere ambos métodos simultáneamente
+        /// </remarks>
         private void SaveActiveAttendanceToCache(
             string cacheKey,
+            string userId,
             Guid courseId,
             bool strictMode,
             AttendanceTypeDto attendanceType,
@@ -446,6 +512,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             var cacheData = new ActiveAttendanceCacheDto
             {
                 CourseId = courseId,
+                UserId = userId,
                 StrictMode = strictMode,
                 AttendanceMethod = method,
                 Expiration = expiration,
@@ -476,7 +543,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         {
             var macControlKey = $"mac_global_{courseId}";
 
-            if (!_cache.TryGetValue(macControlKey, out Dictionary<string, Guid> _))
+            if (!_cache.TryGetValue(macControlKey, out _))
             {
                 var macDictionary = new Dictionary<string, Guid>();
 
@@ -487,13 +554,13 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             {
                 new PostEvictionCallbackRegistration
                 {
-                    EvictionCallback = async (key, value, reason, state) =>
+                    EvictionCallback = (key, value, reason, state) =>
                     {
                         if (reason == EvictionReason.Expired)
                         {
                             var expiredCourseId = (Guid)state;
-                            var keyToRemove = $"mac_global_{expiredCourseId}";
-                            _cache.Remove(keyToRemove);
+                            _logger.CreateLogger("CacheLogger")
+                                .LogInformation($"MAC cache expirado para curso {expiredCourseId}");
                         }
                     },
                     State = courseId
@@ -503,7 +570,8 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             }
         }
 
-        public async Task<ResponseDto<object>> SendAttendanceByOtpAsync(
+
+        public async Task<ResponseDto<StudentAttendanceResponse>> SendAttendanceByOtpAsync(
             string email,
             string OTP,
             float x,
@@ -512,13 +580,31 @@ namespace ClassNotes.API.Services.AttendanceRealTime
         {
             try
             {
+                //var groupCacheKey = courseId;
+               // var activeAttendance = _cache.Get<AttendanceGroupCache>(groupCacheKey);
+                var activeAttendance = _groupCacheManager.GetGroupCache(courseId);
+
+                if (activeAttendance == null)
+                {
+                    return new ResponseDto<StudentAttendanceResponse>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = "No hay asistencia activa para este curso.",
+                        Data = null
+                    };
+                }
+                // datos del estudiante 
                 var student = await _context.Students
-                    .Include(s => s.Courses.Where(sc => sc.CourseId == courseId && sc.IsActive))
+                    .Include(s => s.Courses
+                        .Where(sc => sc.CourseId == courseId && sc.IsActive)) // Filtras aquí
+                    .ThenInclude(sc => sc.Course) // Solo accedes a la propiedad Course
                     .FirstOrDefaultAsync(s => s.Email == email);
+                var courseName = student?.Courses.FirstOrDefault()?.Course?.Name ?? "No hay nombre";
 
                 if (student == null)
                 {
-                    return new ResponseDto<object>
+                    return new ResponseDto<StudentAttendanceResponse>
                     {
                         StatusCode = 404,
                         Status = false,
@@ -526,52 +612,23 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                         Data = null
                     };
                 }
-                var cacheKey = $"{student.Id}_{courseId}";
-                var attendanceEntry = _cache.Get<TemporaryAttendanceEntry>(cacheKey);
-                if (attendanceEntry == null)
-                {
-                    return new ResponseDto<object>
-                    {
-                        StatusCode = 404,
-                        Status = false,
-                        Message = "No se encontró el registro de asistencia temporal. o Esta ya Expiro",
-                        Data = null
-                    };
-                }
-                
-                var cachedLocation = new Point(attendanceEntry.GeolocationLongitud, attendanceEntry.GeolocationLatitud)
-                {
-                    SRID = 4326 
-                };
 
-                
-                var receivedLocation = new Point(x, y)
+                // lista de estudiantes en memoria 
+                var studentEntry = _groupCacheManager.TryGetStudentEntryByEmail(courseId, email);
+                if (studentEntry == null || studentEntry.IsCheckedIn == true)
                 {
-                    SRID = 4326
-                };
-                var courseSetting = await _context.CoursesSettings
-                    .FirstOrDefaultAsync(cs => cs.Id == attendanceEntry.CourseId);
-
-
-                double distanceInMeters = CalculateHaversineDistance(cachedLocation, receivedLocation);
-
-                if (distanceInMeters > courseSetting.ValidateRangeMeters)
-                {
-                    return new ResponseDto<object>
+                    return new ResponseDto<StudentAttendanceResponse>
                     {
                         StatusCode = 400,
                         Status = false,
-                        Message = $"Fuera del rango. Distancia: {distanceInMeters:F2}m / Límite: {courseSetting.ValidateRangeMeters}m",
+                        Message = "El estudiante no está registrado en la lista de asistencia o ya ha sido marcado.",
                         Data = null
                     };
                 }
 
-                // Validar OTP
-                var secretKey = _otpService.GenerateSecretKey(email, student.Id.ToString());
-
-                if (! await ValidateOtpAsync(secretKey, OTP , cacheKey))
+                if (studentEntry.Otp != OTP)
                 {
-                    return new ResponseDto<object>
+                    return new ResponseDto<StudentAttendanceResponse>
                     {
                         StatusCode = 400,
                         Status = false,
@@ -580,7 +637,72 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     };
                 }
 
-                // Registrar asistencia
+                // Validar ubicación
+                var cachedLocation = new Point(studentEntry.GeolocationLongitud, studentEntry.GeolocationLatitud)
+                {
+                    SRID = 4326
+                };
+                var receivedLocation = new Point(x, y)
+                {
+                    SRID = 4326
+                };
+
+                var course = await _context.Courses
+                    .Include(c => c.CourseSetting) // este es el CourseSettingEntity
+                    .FirstOrDefaultAsync(c => c.Id == studentEntry.CourseId);
+
+                var courseSetting = course?.CourseSetting;
+                if (courseSetting == null)
+                {
+                    return new ResponseDto<StudentAttendanceResponse>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = "No se encontró configuración de asistencia para este curso.",
+                        Data = null
+                    };
+                }
+
+                // calculo de distacias
+                double distanceInMeters = CalculateHaversineDistance(cachedLocation, receivedLocation);
+
+                if (distanceInMeters > courseSetting.ValidateRangeMeters)
+                {
+                    return new ResponseDto<StudentAttendanceResponse>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = $"Fuera del rango. Distancia: {distanceInMeters:F2}m / Límite: {courseSetting.ValidateRangeMeters}m",
+                        Data = null
+                    };
+                }
+
+
+                //studentEntry.Status = MessageConstant_Attendance.PRESENT;
+                //studentEntry.IsCheckedIn = true;
+
+                var docCacheKey = $"attendance_active_{courseId}";
+                var activeDocAttendance = _cache.Get<ActiveAttendanceCacheDto>(docCacheKey);
+
+                if (activeDocAttendance != null)
+                {
+                    var docStudentEntry = activeDocAttendance.Students
+                        .FirstOrDefault(s => s.Email == email);
+
+                    if (docStudentEntry != null)
+                    {
+                        docStudentEntry.Status = MessageConstant_Attendance.PRESENT;
+                        docStudentEntry.Attendend = true;
+                    }
+
+                    // Reescribir el cache del docente actualizado
+                    _cache.Set(docCacheKey, activeDocAttendance, new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpiration = activeDocAttendance.Expiration
+                    });
+                }
+
+                // Registrar asistencia en BD
                 var attendance = new AttendanceEntity
                 {
                     CourseId = courseId,
@@ -588,16 +710,19 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Attended = true,
                     Status = MessageConstant_Attendance.PRESENT,
                     RegistrationDate = DateTime.UtcNow,
-                    Method = "OTP"
+                    Method = Attendance_Helpers.TYPE_OTP,
+                    CreatedBy = activeAttendance.UserId,
+                    ChangeBy = Attendance_Helpers.STUDENT,
+                    CreatedDate = DateTime.UtcNow,
                 };
 
                 _context.Attendances.Add(attendance);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesWithoutAuditAsync();
+                ////////////////////////////////////////////////////////////////////////////////////
+                activeAttendance.Entries.Remove(studentEntry);
+                _logger.CreateLogger($"Estudiante eliminado del grupo {courseId}. Quedan {activeAttendance.Entries.Count} estudiantes");
 
-                // se elimina de la cache
-                _cache.Remove(cacheKey);
-
-
+                // Notificar cambio de estado
                 await _hubContext.Clients.Group(courseId.ToString())
                     .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
                     {
@@ -606,18 +731,22 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     });
 
                 // Retornar éxito
-                return new ResponseDto<object>
+                return new ResponseDto<StudentAttendanceResponse>
                 {
                     StatusCode = 200,
                     Status = true,
                     Message = "Asistencia registrada exitosamente.",
-                    Data = new
+                    Data = new StudentAttendanceResponse
                     {
-                        Student = new { student.Id, student.FirstName, student.LastName },
+                        FullName = $"{student.FirstName} {student.LastName}",
                         CourseId = courseId,
-                        Location = new { x, y },
                         Distance = distanceInMeters,
-                        Method = "OTP"
+                        Method = Attendance_Helpers.TYPE_OTP,
+                        Status = MessageConstant_Attendance.PRESENT,
+                        Email = student.Email,
+                        CourseName = courseName
+                        
+
                     }
                 };
             }
@@ -626,7 +755,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 var logger = _logger.CreateLogger<AttendanceRSignalService>();
                 
                 logger.LogError(ex, "Error al registrar asistencia por OTP");
-                return new ResponseDto<object>
+                return new ResponseDto<StudentAttendanceResponse>
                 {
                     StatusCode = 500,
                     Status = false,
