@@ -1,0 +1,23 @@
+meta {
+  name: check_Attendance_byQR
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{PATH}}/attendancesR/create_my_attendance_QR?email=ever@meaa.sl&x=1.12&y=-1.1322333&courseId=f6cfc25e-8259-4cde-4e74-08dd73c935a0&MAC=00:1B:44:11:3A:B7
+  body: json
+  auth: bearer
+}
+
+params:query {
+  email: ever@meaa.sl
+  x: 1.12
+  y: -1.1322333
+  courseId: f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  MAC: 00:1B:44:11:3A:B7
+}
+
+auth:bearer {
+  token: 
+}
