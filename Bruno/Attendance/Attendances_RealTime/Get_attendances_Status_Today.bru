@@ -1,0 +1,11 @@
+meta {
+  name: Get_attendances_Status_Today
+  type: http
+  seq: 3
+}
+
+get {
+  url: /api/attendancesR/attendances_status_today/{courseId}
+  body: none
+  auth: inherit
+}

@@ -382,7 +382,6 @@ namespace ClassNotes.API.Services.Courses
                     MaximumGrade = dto.CourseSetting.MaximumGrade,
                     ValidateRangeMeters = dto.CourseSetting.ValidateRangeMeters,
                     MinimumAttendanceTime = dto.CourseSetting.MinimumAttendanceTime,
-                    ValidateRangeMeters = dto.CourseSetting.ValidateRangeMeters,
                     GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,
