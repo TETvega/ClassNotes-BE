@@ -621,7 +621,7 @@ namespace ClassNotes.API.Services.Notes
                         scoreType,
                         g.Sum(x => (x.note.Note/100)*x.activity.MaxScore),//Se pasa de promedio a nota en bruto...
                         g.Sum(x => x.activity.MaxScore),
-                        g.Key.MaxScore/100 ?? 100f,  // pasamos de promedio a decimal
+                        g.Key.MaxScore ?? 100f,  
                         courseMaxGrade),
                     UnitWeight = g.Key.MaxScore/100 ?? 100f // Asignamos el peso, pasamos de promedio a decimal
                 };
