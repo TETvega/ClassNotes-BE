@@ -358,9 +358,9 @@ namespace ClassNotes.API.Services.Notes
                                  group new { note, activity } by activity.UnitId into g
                                  select new
                                  {
-                                     SumNotes = g.Sum(x => x.note.Note),
+                                     SumNotes = g.Sum(x => (x.note.Note/100)*x.activity.MaxScore),//Se pasa de promedio a nota en bruto...
                                      SumMaxScores = g.Sum(x => x.activity.MaxScore),
-                                     UnitWeight = unit.MaxScore?? 1f
+                                     UnitWeight = unit.MaxScore/100 ?? 1f //Se pasa de porcentaje a decimal...
 
                                  };
 
@@ -619,11 +619,11 @@ namespace ClassNotes.API.Services.Notes
                     UnitNumber = g.Key.UnitNumber,
                     Note = CalculateUnitScore(
                         scoreType,
-                        g.Sum(x => x.note.Note),
+                        g.Sum(x => (x.note.Note/100)*x.activity.MaxScore),//Se pasa de promedio a nota en bruto...
                         g.Sum(x => x.activity.MaxScore),
-                        g.Key.MaxScore ?? 100f, 
+                        g.Key.MaxScore/100 ?? 100f,  // pasamos de promedio a decimal
                         courseMaxGrade),
-                    UnitWeight = g.Key.MaxScore ?? 100f // Asignamos el peso
+                    UnitWeight = g.Key.MaxScore/100 ?? 100f // Asignamos el peso, pasamos de promedio a decimal
                 };
 
 
