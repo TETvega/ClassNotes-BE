@@ -42,7 +42,7 @@ namespace ClassNotes.API.Services.TagsActivities
 			var userId = _auditService.GetUserId(); 
 
 			// AM: Filtrar unicamente las tags que pertenecen al usuario
-			var tagsQuery = _context.TagsActivities.Where(c => c.CreatedBy == userId && c.Icon != "undefined").AsQueryable();
+			var tagsQuery = _context.TagsActivities.Where(c => c.CreatedBy == userId).AsQueryable();
 
 			// AM: Buscar por nombre de la tag
 			if (!string.IsNullOrEmpty(searchTerm))

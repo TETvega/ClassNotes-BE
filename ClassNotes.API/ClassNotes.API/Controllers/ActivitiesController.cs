@@ -64,9 +64,9 @@ namespace ClassNotes.API.Controllers
         //(Ken)
         [HttpGet("students_scores/{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<List<StudentAndNoteDto>>>> GetStudentAndScoreAsync(Guid id, int page = 1)
+        public async Task<ActionResult<ResponseDto<List<StudentAndNoteDto>>>> GetStudentAndScoreAsync(Guid id, int page = 1, string searchTerm = "", int? pageSize = null)
         {
-            var response = await _activitiesService.GetStudentsActivityScoreAsync(id, page);
+            var response = await _activitiesService.GetStudentsActivityScoreAsync(id, page, searchTerm, pageSize);
             return StatusCode(response.StatusCode, response);
         }
 

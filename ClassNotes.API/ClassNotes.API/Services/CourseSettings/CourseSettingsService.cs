@@ -3,9 +3,12 @@ using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Common;
+using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
+using NetTopologySuite;
 
 namespace ClassNotes.API.Services.CoursesSettings
 {
@@ -114,8 +117,23 @@ namespace ClassNotes.API.Services.CoursesSettings
 		{
 			var userId = _auditService.GetUserId(); // Id de quien hace la petición
 
-			// Validar que la fecha de fin de periodo no sea menor a la de inicio
-			if (dto.EndDate < dto.StartDate)
+
+            //Valida que se cree correctamente el tipo de puntaje... esos son los valores que se pueden usar...
+            if (dto.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE &&
+                dto.ScoreType.ToUpper().Trim() != ScoreTypeConstant.WEIGHTED_SCORE &&
+                dto.ScoreType.ToUpper().Trim() != ScoreTypeConstant.ARITHMETIC_SCORE)
+            {
+                return new ResponseDto<CourseSettingDto>
+                {
+                    StatusCode = 405,
+                    Status = false,
+                    Message = $"Los tipos de puntaje válidos son: [ {ScoreTypeConstant.GOLD_SCORE} , {ScoreTypeConstant.WEIGHTED_SCORE} , {ScoreTypeConstant.ARITHMETIC_SCORE}  ]"
+                };
+            }
+
+
+            // Validar que la fecha de fin de periodo no sea menor a la de inicio
+            if (dto.EndDate < dto.StartDate)
 			{
 				return new ResponseDto<CourseSettingDto>
 				{
@@ -168,10 +186,17 @@ namespace ClassNotes.API.Services.CoursesSettings
 				};
 			}
 
-			// Pasa las validaciones y se crea la configuración
-			var settingEntity = _mapper.Map<CourseSettingEntity>(dto);
+            
+
+            // Pasa las validaciones y se crea la configuración
+            var settingEntity = _mapper.Map<CourseSettingEntity>(dto);
 			settingEntity.IsOriginal = true; // Aqui se marca la configuración como original
-			
+
+			var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+            var point = geometryFactory.CreatePoint(new Coordinate(dto.GetLocationDto.X, dto.GetLocationDto.Y));
+
+			settingEntity.GeoLocation = point;
+
 			_context.CoursesSettings.Add(settingEntity);
 			await _context.SaveChangesAsync();
 			var settingDto = _mapper.Map<CourseSettingDto>(settingEntity);
@@ -203,9 +228,26 @@ namespace ClassNotes.API.Services.CoursesSettings
 				};
 			}
 
-			_mapper.Map(dto, settingEntity);
+            //Valida que se cree correctamente el tipo de puntaje... esos son los valores que se pueden usar...
+            if (dto.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE &&
+                dto.ScoreType.ToUpper().Trim() != ScoreTypeConstant.WEIGHTED_SCORE &&
+                dto.ScoreType.ToUpper().Trim() != ScoreTypeConstant.ARITHMETIC_SCORE)
+            {
+                return new ResponseDto<CourseSettingDto>
+                {
+                    StatusCode = 405,
+                    Status = false,
+                    Message = $"Los tipos de puntaje válidos son: [ {ScoreTypeConstant.GOLD_SCORE} , {ScoreTypeConstant.WEIGHTED_SCORE} , {ScoreTypeConstant.ARITHMETIC_SCORE}  ]"
+                };
+            }
 
-			_context.CoursesSettings.Update(settingEntity);
+            _mapper.Map(dto, settingEntity);
+
+            var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+            var point = geometryFactory.CreatePoint(new Coordinate(dto.GetLocationDto.X, dto.GetLocationDto.Y));
+
+            settingEntity.GeoLocation = point;
+            _context.CoursesSettings.Update(settingEntity);
 			await _context.SaveChangesAsync();
 
 			var settingDto = _mapper.Map<CourseSettingDto>(settingEntity);

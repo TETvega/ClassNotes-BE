@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Azure;
+using ClosedXML.Excel;
 using ClassNotes.API.Constants;
 using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
@@ -17,9 +18,11 @@ using iText.Commons.Actions.Contexts;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ClassNotes.API.Services.Students
 {
@@ -619,6 +622,214 @@ namespace ClassNotes.API.Services.Students
                 Data = studentsToRemoveFromStudents.Select(s => s.Id).ToList()
             };
         }
+
+
+        //(Ken)
+        public async Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync(IFormFile file, bool strictMode = true)
+        {
+            //Se obtiene el id de usuario para poner como teacher id y para validaciones...
+            var userId = _auditService.GetUserId();
+
+            //Si el archivo es nulo o esta vacio...
+            if (file == null || file.Length == 0)
+            {
+                return new ResponseDto<List<StudentDto>>
+                {
+                    StatusCode = 405,
+                    Status = false,
+                    Message = "Archivo vacío, ingrese uno diferente.",
+                    Data = null
+                };
+            }
+
+            //Se usa Patch.GetExtensio porque es especifico para obtener extension de archivos.
+            string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            //Con la extension se valida que sea un archivo xlsx, tampoco acepta .slx por se muy viejo...
+            if (fileExtension != ".xlsx")
+            {
+
+                return new ResponseDto<List<StudentDto>>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = $"Solo se aceptan archivos .xlsx.",
+                    Data = null
+                };
+            }
+
+            //Listado de titulos validos para columnas...
+            var allowedFirstNameColumns = new HashSet<string> { "primer nombre", "nombre", "nombres", "name", "names", "first name"};
+            var allowedLastNameColumns = new HashSet<string> { "apellido", "apellidos", "last name", "surname", "surnames" };
+            var allowedEmailColumns = new HashSet<string> { "email", "correo", "correo electrónico", "e-mail", "mail" };
+
+
+            //Aqui se guardaran los studentCreateDto, se usan para aprovechar sus validaciones individuales de propiedades...
+            var dataList = new List<StudentCreateDto>();
+
+            //Indica que s creara un nuevo archivo en memoria
+            using (var memoryStream = new MemoryStream())
+            {
+                //Esto pasa los datos de "file" dentro del espacio en memoria que hicimos...
+                await file.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                //Esto es para indicar que se trabajara con un archivo
+                using (var workbook = new XLWorkbook(memoryStream))
+                {
+                    //Busca la primera pagina del excel
+                    var worksheet = workbook.Worksheets.FirstOrDefault();
+                    //Validacion de que si tenga, posiblemente innecesaria pero quien sabe...
+                    if (worksheet == null)
+                    {
+                        return new ResponseDto<List<StudentDto>>
+                        {
+                            StatusCode = 405,
+                            Status = false,
+                            Message = "El archivo está vacío.",
+                            Data = null
+                        };
+                    }
+
+                    //Se busca la primera fila que no este vacía, si es uno se empieza a contar desde la primera fila...
+                    var firstRow = worksheet.FirstRowUsed()?.RowNumber() ?? 1;
+                    //Lo mismo con la misma fila usada dentro del archivo, si es 0 se considera que no habia ningún alumno en la lista...
+                    var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 0;
+                    
+                    //Para tener un listado de celdas editadas de la primera fila (La de los titulos)...
+                    var EditedCells = worksheet.FirstRowUsed()?.CellsUsed();
+
+                    //Contador de filas si agregadas...
+                    int u = 0;
+
+                    //Se buscan las celdas cuyo contenido encaje con los titulos válidos, una para cada propiedad...
+                    var FirstNameCell = EditedCells.FirstOrDefault(x => allowedFirstNameColumns.Contains(x.Value.ToString().Trim().ToLower()));
+                    var LastNameCell = EditedCells.FirstOrDefault(x => allowedLastNameColumns.Contains(x.Value.ToString().Trim().ToLower()));
+                    var EMailCell = EditedCells.FirstOrDefault(x => allowedEmailColumns.Contains(x.Value.ToString().Trim().ToLower()));
+
+                    //Si al menos una celda no corresponde se lanza el error...
+                    if (FirstNameCell == null || LastNameCell == null || EMailCell == null)
+                    {
+                        return new ResponseDto<List<StudentDto>>
+                        {
+                            StatusCode = 405,
+                            Status = false,
+                            Message = "Estructura de columnas incorrecta, asegurese que su documento contenga solo 1 fila de titulos, y que conste unicamente de 3 columnas tituladas 'Nombre', 'Apellido' y 'Correo'.",
+                            Data = null
+                        };
+                    }
+
+                    //El bucle termina con la ultima fila de alumnos, y empieza una fila despues de la primera no vacia en el archivo, asumiendo que la primera son titulos de columna...
+                    for (int i = firstRow + 1; i <= lastRow; i++)
+                    {
+                        //row cambia en cada iteracion...
+                        var row = worksheet.Row(i);
+                        
+                        //De las celdas con el titulo correspondiente, se toma su columna, y la fila se toma de i, para obbtener el valor de las propiedades en esta iteracion...
+                        var firstName = FirstNameCell.WorksheetColumn().Cell(i).Value.ToString().Trim();
+                        var lastName = LastNameCell.WorksheetColumn().Cell(i).Value.ToString().Trim();
+                        var eMail = EMailCell.WorksheetColumn().Cell(i).Value.ToString().Trim();
+
+                        //Si todas las propiedades son nulas, se salta la fila...
+                        if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName) && string.IsNullOrWhiteSpace(eMail))
+                        {
+                            continue;
+                        }
+                        else
+                        {   //Si solo una propiedad es nula, dara error para evitar estudiantes incompletos...
+                            if(string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(eMail))
+                            {    
+                                return new ResponseDto<List<StudentDto>>
+                                {
+                                    StatusCode = 405,
+                                    Status = false,
+                                    Message = $"La fila número {row.RowNumber()} contiene propiedades vacías, asegúrese de llenar toda la información.",
+                                    Data = null
+                                };
+                            }
+                        }
+
+                        //Si el contador es igual o mayor a 50, se repitio 51 veces, por lo que se agregaron 51 estudiantes, dando un error...
+                        if (u == 50)
+                        {
+                            return new ResponseDto<List<StudentDto>>
+                            {
+                                StatusCode = 405,
+                                Status = false,
+                                Message = "Se permiten máximo 50 filas de de estudiantes a la vez.",
+                                Data = null
+                            };
+                        }
+
+                        //Aumento para el contador
+                        u++;
+
+                        //Se crea el StudentCreateDto y se agrega a la lista, asi, si hay un error en una iteracion la lista no sera agregada..
+                        var createdStudentDto = new StudentCreateDto
+                        {
+                            FirstName = firstName,
+                            LastName = lastName,
+                            Email = eMail
+                        };
+
+                        dataList.Add(createdStudentDto);
+                    }
+                }
+            }
+
+            //Se pasa de create dto a entity
+            var studentEntities = _mapper.Map<List<StudentEntity>>(dataList);
+
+
+            //Por cada entidad, se valida email y se agrega..
+            foreach (var item in studentEntities)
+            {
+                item.TeacherId = userId;
+
+                //si no se envio strictMode como activo, usara generateUniqueEmail..
+                if (!strictMode)
+                {
+                    item.Email = await GenerateUniqueEmail(item.Email);
+                }
+                else
+                {
+                    //Si esta activo, se validara normalmente...
+                    var existingStudent = await _context.Students.FirstOrDefaultAsync(s => s.Email == item.Email && s.TeacherId == userId);
+                    if (existingStudent != null)
+                    {
+                        return new ResponseDto<List<StudentDto>>
+                        {
+                            StatusCode = 405,
+                            Status = false,
+                            Message = $"El correo '{item.Email}' de el estudiante '{item.FirstName + " " + item.LastName}' ya esta siendo utilizado por '{existingStudent.FirstName + " " + existingStudent.LastName}'.",
+                            Data = null
+                        };
+                    }
+                }
+
+                //Se guarda el estudentEntity de esta iteracion, asegurando que generateUniqueEmail lo tome en cuenta posteriormente..
+                _context.Students.Add(item);
+                await _context.SaveChangesAsync();
+
+            };
+
+
+            var studentDtos = _mapper.Map<List<StudentDto>>(studentEntities);
+
+            return new ResponseDto<List<StudentDto>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.STU_RECORD_FOUND,
+                Data = studentDtos
+            };
+
+
+        }
+
+
+
+
 
         //(Ken)
         public async Task<ResponseDto<PaginationDto<List<StudentPendingDto>>>> GetAllStudentsPendingActivitiesAsync (Guid id, 
