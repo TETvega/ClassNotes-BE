@@ -312,6 +312,7 @@ namespace ClassNotes.API.Services.Attendances
                         Minute = a.RegistrationDate.ToString("mm", cultureEs),
                         Hour = a.RegistrationDate.ToString("HH", cultureEs),
                         Day = cultureEs.DateTimeFormat.GetDayName(a.RegistrationDate.DayOfWeek),
+						            NumberDay =  a.RegistrationDate.ToString("dd",cultureEs),
                         Month = cultureEs.DateTimeFormat.GetMonthName(a.RegistrationDate.Month),
                         Year = a.RegistrationDate.ToString("yyyy", cultureEs)
                     }
