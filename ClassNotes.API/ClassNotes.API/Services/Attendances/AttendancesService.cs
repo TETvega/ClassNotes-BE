@@ -5,6 +5,7 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Dtos.Attendances.Student;
+using System.Globalization;
 
 namespace ClassNotes.API.Services.Attendances
 {
@@ -183,7 +184,16 @@ namespace ClassNotes.API.Services.Attendances
             //JA: Buscar el nombre del estudiante
             var student = await _context.Students
                 .Where(s => s.Id == dto.StudentId)
-                .Select(s => new { FullName = s.FirstName + ' ' + s.LastName })
+                .Select(s => new
+                {
+                    s.FirstName,
+                    s.LastName,
+                    s.Email,
+                    IsActive = s.Courses
+                        .Where(sc => sc.CourseId == dto.CourseId)
+                        .Select(sc => sc.IsActive)
+                        .FirstOrDefault()
+                })
                 .FirstOrDefaultAsync();
 
             var studentCourse = await _context.StudentsCourses
@@ -223,12 +233,14 @@ namespace ClassNotes.API.Services.Attendances
 
             var studentStats = new StudentAttendancesDto
             {
-                StudentName = student?.FullName ?? "Desconocido",
+                StudentFirstName = student?.FirstName ?? "Desconocido",
+				StudentLastName = student?.LastName ?? "Desconocido",
+				StudentEmail = student?.Email ?? "Desconocido",
                 AttendanceCount = attendedCount,
                 AttendanceRate = attendanceRate,
                 AbsenceCount = absenceCount,
                 AbsenceRate = absenceRate,
-                IsActive = attendedCount > 0
+                IsActive = student.IsActive,
             };
 
             return new ResponseDto<StudentAttendancesDto>
@@ -241,16 +253,21 @@ namespace ClassNotes.API.Services.Attendances
         }
 
         // AM: Mostrar paginación de asistencias por estudiante
-        public async Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1, bool isCurrentMonth = false, int pageSize = 10)
+        public async Task<ResponseDto<PaginationDto<List<StudentsDATAAttendances>>>> GetAttendancesByStudentPaginationAsync(
+			StudentIdCourseIdDto dto,
+			string searchTerm = "",
+			int page = 1,
+			bool isCurrentMonth = false,
+			int pageSize = 10)
         {
             int startIndex = (page - 1) * pageSize;
 
-            //JA: Validar existencia del estudiante en el curso
+            // Validar existencia del estudiante en el curso
             var studentCourse = await _context.StudentsCourses
                 .FirstOrDefaultAsync(sc => sc.StudentId == dto.StudentId && sc.CourseId == dto.CourseId);
             if (studentCourse == null)
             {
-                return new ResponseDto<PaginationDto<List<AttendanceDto>>>
+                return new ResponseDto<PaginationDto<List<StudentsDATAAttendances>>>
                 {
                     StatusCode = 404,
                     Status = false,
@@ -258,48 +275,55 @@ namespace ClassNotes.API.Services.Attendances
                 };
             }
 
-            //JA: Consultar asistencias del estudiante en el curso
+            // Consultar asistencias del estudiante en el curso
             var query = _context.Attendances
                 .Where(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId);
 
-            //JA: Filtrar asistencia por fecha específica (si se proporciona un término de búsqueda)
+            // Filtrar asistencia por fecha específica
+            
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 query = query.Where(a => a.RegistrationDate.ToString().Contains(searchTerm));
             }
 
-            //JA: Filtrar por mes actual si isCurrentMonth es true
+            // Filtrar por mes actual si isCurrentMonth es true
             if (isCurrentMonth)
             {
                 var currentMonth = DateTime.Now.Month;
                 query = query.Where(a => a.RegistrationDate.Month == currentMonth);
             }
 
-            //JA: Contar el total de registros de asistencia encontrados
+            // Contar el total de registros de asistencia encontrados
             int totalItems = await query.CountAsync();
-
             int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
+            var cultureEs = new CultureInfo("es-ES");
             var attendances = await query
                 .OrderByDescending(a => a.RegistrationDate)
                 .Skip(startIndex)
                 .Take(pageSize)
-                .Select(a => new AttendanceDto
+                .Select(a => new StudentsDATAAttendances
                 {
-                    Id = a.Id,
-                    Attended = a.Attended,
-                    RegistrationDate = a.RegistrationDate,
-                    CourseId = a.CourseId,
-                    StudentId = a.StudentId
+                    Attendance = a.Attended,
+                    Status = a.Status,
+                    AttendaceMethod = a.Method,
+                    LastChangeBy = a.ChangeBy,
+                    RegisterDate = new ExtendedDateDto
+                    {
+                        Minute = a.RegistrationDate.ToString("mm", cultureEs),
+                        Hour = a.RegistrationDate.ToString("HH", cultureEs),
+                        Day = cultureEs.DateTimeFormat.GetDayName(a.RegistrationDate.DayOfWeek),
+                        Month = cultureEs.DateTimeFormat.GetMonthName(a.RegistrationDate.Month),
+                        Year = a.RegistrationDate.ToString("yyyy", cultureEs)
+                    }
                 })
                 .ToListAsync();
 
-            return new ResponseDto<PaginationDto<List<AttendanceDto>>>
+            return new ResponseDto<PaginationDto<List<StudentsDATAAttendances>>>
             {
                 StatusCode = 200,
                 Status = true,
                 Message = MessagesConstant.ATT_RECORDS_FOUND,
-                Data = new PaginationDto<List<AttendanceDto>>
+                Data = new PaginationDto<List<StudentsDATAAttendances>>
                 {
                     CurrentPage = page,
                     PageSize = pageSize,
@@ -312,6 +336,6 @@ namespace ClassNotes.API.Services.Attendances
             };
         }
 
-        
+
     }
 }
