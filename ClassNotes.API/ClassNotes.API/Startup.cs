@@ -37,6 +37,8 @@ using ClassNotes.API.BackgroundServices;
 using ClassNotes.API.Models;
 using System.Collections.Concurrent;
 using ClassNotes.API.Services.ConcurrentGroups;
+using System.Threading.Channels;
+using ClassNotes.Models;
 
 
 namespace ClassNotes.API;
@@ -70,6 +72,11 @@ public class Startup
         services.AddSingleton<ConcurrentDictionary<Guid, AttendanceGroupCache>>();
         services.AddHostedService<AttendanceExpirationService>();
         services.AddSingleton<IAttendanceGroupCacheManager, AttendanceGroupCacheManager>();
+
+        //Para servicio de enviar reportes en segundo plano, aqui se declara el canal y el servicio...
+        var messageQueue = Channel.CreateUnbounded<EmailStudentListRequest>();
+        services.AddSingleton(messageQueue); 
+        services.AddHostedService<LoggingBackgroundService>();
 
         // Servicios personalizados
         services.AddTransient<IActivitiesService, ActivitiesService>();
