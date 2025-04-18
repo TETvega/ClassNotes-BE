@@ -140,5 +140,17 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpPut("change_state/{courseId}")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<Guid>>>> ChangeStateStudentsIsActive(
+            Guid courseId,
+            List<Guid> studentIds
+            )
+        {
+            var response = await _studentsService.ChangeIsActiveStudentList(courseId, studentIds);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
     }
 }

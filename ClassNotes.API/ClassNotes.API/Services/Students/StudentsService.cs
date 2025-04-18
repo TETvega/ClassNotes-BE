@@ -7,22 +7,13 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
-using ClassNotes.API.Dtos.CourseFilter;
-using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
 using ClassNotes.API.Services.Emails;
-using iText.Commons.Actions.Contexts;
-using iText.Layout.Properties;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System.Diagnostics;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ClassNotes.API.Services.Students
 {
@@ -1078,5 +1069,79 @@ namespace ClassNotes.API.Services.Students
                 Data = pendingClasses
             };
         }
+
+        public async Task<ResponseDto<StatusModifiStudents>> ChangeIsActiveStudentList(Guid courseId, List<Guid> studentsList)
+        {
+            var userId = _auditService.GetUserId();
+
+            var course = await _context.Courses
+                .Include(c => c.Center)
+                .FirstOrDefaultAsync(c => c.Id == courseId && c.Center.TeacherId == userId);
+
+            if (course == null)
+            {
+                return new ResponseDto<StatusModifiStudents>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "No este autorizado o Curso no encontrado ",
+                    Data = null
+                };
+            }
+
+            
+            var existingStudentsCount = await _context.Students
+                .CountAsync(s => studentsList.Contains(s.Id));
+
+            if (existingStudentsCount != studentsList.Count)
+            {
+                return new ResponseDto<StatusModifiStudents>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "Uno o mas estudiantes no existen en la base de datos",
+                    Data = null
+                };
+            }
+
+            var students = await _context.StudentsCourses
+                .Where(sc => sc.CourseId == courseId && studentsList.Contains(sc.StudentId))
+                .ToListAsync();
+
+            if (students.Count != studentsList.Count)
+            {
+                return new ResponseDto<StatusModifiStudents>
+                {
+                    StatusCode = 403,
+                    Status = false,
+                    Message = "Error: Algunos estudiantes no están inscritos en el curso o no tienes permisos.",
+                    Data = null
+                };
+            }
+
+            // Invertimos el estado uno por uno
+            students.ForEach(sc =>
+            {
+                sc.IsActive = !sc.IsActive;
+                sc.UpdatedBy = userId;
+                sc.UpdatedDate = DateTime.UtcNow;
+            });
+
+            await _context.SaveChangesAsync();
+
+            bool status = students.FirstOrDefault()?.IsActive ?? false; 
+            return new ResponseDto<StatusModifiStudents>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = $"{students.Count} registros modificados.",
+                Data = new StatusModifiStudents
+                {
+                    StudentsMCount = students.Count,
+                    ToIsActive = status
+                }
+            };
+        }
+
     }
 }
