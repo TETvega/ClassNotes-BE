@@ -5,6 +5,8 @@
         public float OverallAvarage { get; set; }
         public float ApprovalRating { get; set; }
 
+        public string ScoreTypeCourse { get; set; }
+
         public UnitStatus BestUnit { get; set; }
         public UnitStatus WorstUnit { get; set; }
 
