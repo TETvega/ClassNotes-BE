@@ -5,6 +5,7 @@
         public string StudentFirstName { get; set; }
         public string StudentLastName { get; set; }
         public string  StudentEmail { get; set; }
+        public double TotalAttendance { get; set; }
         public double AttendanceCount { get; set; }
         public double AttendanceRate { get; set; }
         public double AbsenceCount { get; set; }

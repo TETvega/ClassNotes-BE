@@ -36,7 +36,7 @@ namespace ClassNotes.API.Controllers
 			return StatusCode(response.StatusCode, response);
 		}
 
-        [HttpGet("student_stats")]
+        [HttpPost("student_stats")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<StudentAttendancesDto>>> GetStudentStats(StudentIdCourseIdDto dto, bool isCurrentMonth = false)
         {
@@ -44,7 +44,7 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        [HttpGet("student_attendances")]
+        [HttpPost("student_attendances")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<List<AttendanceDto>>>> GetAttendancesByStudentPagination(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1, bool isCurrentMonth = false, int pageSize = 10)
         {

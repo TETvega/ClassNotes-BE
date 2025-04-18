@@ -223,7 +223,7 @@ namespace ClassNotes.API.Services.Attendances
             var attendances = await query.ToListAsync();
 
             //JA: Calcular estadísticas
-            int totalAttendances = attendances.Count;
+            int totalAttendances = attendances.Count();
             int attendedCount = attendances.Count(a => a.Attended);
             int absenceCount = totalAttendances - attendedCount;
 
@@ -236,6 +236,7 @@ namespace ClassNotes.API.Services.Attendances
                 StudentFirstName = student?.FirstName ?? "Desconocido",
 				StudentLastName = student?.LastName ?? "Desconocido",
 				StudentEmail = student?.Email ?? "Desconocido",
+				TotalAttendance = totalAttendances,
                 AttendanceCount = attendedCount,
                 AttendanceRate = attendanceRate,
                 AbsenceCount = absenceCount,
