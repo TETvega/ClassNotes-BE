@@ -231,7 +231,7 @@ namespace ClassNotes.API.Services.Activities
                     Id = x.StudentId, 
                     Name = x.Student.FirstName + " " + x.Student.LastName,
                     Email = x.Student.Email,
-                    Score = note
+                    Score = (note/100)*activityEntity.MaxScore
                 };
 
                 studentScoreList.Add(studentAndNoteDto);
@@ -681,15 +681,15 @@ namespace ClassNotes.API.Services.Activities
                 };
             }
 
-            //(Ken)
-            //Para impedir cambios de unidad...
-            if (activityEntity.UnitId != dto.UnitId)
-            {
-                dto.UnitId = activityEntity.UnitId;
-            }
+            ////(Ken)
+            ////Para impedir cambios de unidad...
+            //if (activityEntity.UnitId != dto.UnitId)
+            //{
+            //    dto.UnitId = activityEntity.UnitId;
+            //}
 
             //AL igual que en createAsync, se usa unitEntity para hacer validaciones...
-            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == dto.UnitId);
+            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == activityEntity.UnitId);
 
 
             if (unitEntity is null)
@@ -703,8 +703,8 @@ namespace ClassNotes.API.Services.Activities
             }
 
             //Estas dos variables son lostas de flotantes para hacer validaciones...
-            //Se buscan las otras unidades enla unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
-            var otherActivities = _context.Activities.Where(x => x.UnitId == dto.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
+            //Se buscan las otras unidades en la unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
+            var otherActivities = _context.Activities.Where(x => x.UnitId == activityEntity.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
             //Lo mismo pero para puntos oro, esto es para verificar que entre todas las unidades DEL CURSO no se pasen del maximo del curso...
             var otherCourseActivities = _context.Activities.Include(x => x.Unit).Where(x => x.Unit.CourseId == unitEntity.CourseId && !x.IsExtra).Select(x => x.MaxScore).ToList();
 
