@@ -7,8 +7,6 @@ namespace ClassNotes.API.Dtos.Notes
     { 
         public DateTime? EndDate { get; set; }
         public StadisticStudentsDto StadisticStudents { get; set; }
-       
-
         public PaginationDto<List<StudentQualificationDto>> StudentQualifications { get; set; }
     }
 }

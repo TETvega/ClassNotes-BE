@@ -647,7 +647,34 @@ namespace ClassNotes.API.Services.Students
             var relatedRecords = await _context.StudentsCourses
                 .Where(sc => studentIds.Contains(sc.StudentId) && sc.CourseId == courseId)
                 .ToListAsync();
+
+            //Misma funcionalidad para attendances
+            var relatedAttRecords = await _context.Attendances
+                .Where(sc => studentIds.Contains(sc.StudentId) && sc.CourseId == courseId)
+                .ToListAsync();
+            //Misma funcionalidad para activityNotes...
+            var ActivityRecords = await _context.StudentsActivitiesNotes.Include(x => x.Activity).ThenInclude(x => x.Unit)
+                .Where(sc => studentIds.Contains(sc.StudentId))
+                .ToListAsync();
+
+            //Se deben separar las studentActivityNotes para no quita las no relacionadas, de estas, solo queremos el id de estudiante...
+            var unrelatedActivities = ActivityRecords.Where(x => x.Activity.Unit.CourseId != courseId).Select(x => x.StudentId);
+            var relatedActivities = ActivityRecords.Where(x => x.Activity.Unit.CourseId == courseId);
+
+
+            _context.Attendances.RemoveRange(relatedAttRecords);
+            _context.StudentsActivitiesNotes.RemoveRange(relatedActivities);
+
+            //Antes de borrar los StudentCourses, se debe ir por cada uno y borrar las student unit relacionadas...
+            foreach (var item in relatedRecords)
+            {
+                var relatedUnits = _context.StudentsUnits.Where(x => x.StudentCourseId == item.Id);
+
+                _context.StudentsUnits.RemoveRange(relatedUnits);
+            }
+
             _context.StudentsCourses.RemoveRange(relatedRecords);
+
 
             // Determinar qué estudiantes pueden eliminarse de la tabla Students
             var studentsToKeep = studentCourseRelations
@@ -655,8 +682,10 @@ namespace ClassNotes.API.Services.Students
                 .Select(sc => sc.StudentId)
                 .ToHashSet();
 
+           
+            //Se quitaran solo los estudiantes que no tengand actividades no relacionadas, pues estas necesitan el id...
             var studentsToRemoveFromStudents = studentsToDelete
-                .Where(s => !studentsToKeep.Contains(s.Id))
+                .Where(s => !studentsToKeep.Contains(s.Id) && !unrelatedActivities.Contains(s.Id))
                 .ToList();
 
             // Eliminar de la tabla Students solo los que no tienen más cursos

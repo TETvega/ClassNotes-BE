@@ -223,6 +223,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 //Si existe una revision de actividad, se asigna ese valor, sino, se le pone como 0...
                 var note = x.Student.Activities.FirstOrDefault(u => u.ActivityId == activityId)?.Note ?? 0;
+                var feedBack = x.Student.Activities.FirstOrDefault(u => u.ActivityId == activityId)?.Feedback ;
 
                 //Crea el dto y lo ingresa en la lista creada anteriormente...
                 var studentAndNoteDto = new StudentAndNoteDto
@@ -231,7 +232,8 @@ namespace ClassNotes.API.Services.Activities
                     Id = x.StudentId, 
                     Name = x.Student.FirstName + " " + x.Student.LastName,
                     Email = x.Student.Email,
-                    Score = (note/100)*activityEntity.MaxScore
+                    Score = (note/100)*activityEntity.MaxScore,
+                    FeedBack = feedBack
                 };
 
                 studentScoreList.Add(studentAndNoteDto);
@@ -648,8 +650,6 @@ namespace ClassNotes.API.Services.Activities
         }
 
 
-
-
         // Editar una actividad
         public async Task<ResponseDto<ActivityDto>> EditAsync(ActivityEditDto dto, Guid id)
         {
@@ -857,6 +857,10 @@ namespace ClassNotes.API.Services.Activities
                     Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
+
+            var revisedActivities = _context.StudentsActivitiesNotes.Where(a => a.ActivityId == activityEntity.Id);
+
+            _context.StudentsActivitiesNotes.RemoveRange(revisedActivities);
             _context.Activities.Remove(activityEntity);
             await _context.SaveChangesAsync();
             return new ResponseDto<ActivityDto>
