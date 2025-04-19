@@ -78,6 +78,10 @@ public class Startup
         services.AddSingleton(messageQueue); 
         services.AddHostedService<LoggingBackgroundService>();
 
+        var emailQueue = Channel.CreateUnbounded<EmailFeedBackRequest>();
+        services.AddSingleton(emailQueue);
+        services.AddHostedService<EmailFeedBackService>();
+        services.AddTransient<IEmailsService, EmailsService>();
         // Servicios personalizados
         services.AddTransient<IActivitiesService, ActivitiesService>();
 		services.AddTransient<IAttendancesService, AttendancesService>();
@@ -118,7 +122,7 @@ public class Startup
         services.AddTransient<IOtpService, OtpService>();
 
         // Servicio para el envio de correos (SMTP)
-        services.AddTransient<IEmailsService, EmailsService>();
+
 
         // Servicio para la subida de archivos de imagenes en la nube (Cloudinary)
         services.AddTransient<ICloudinaryService, CloudinaryService>();
