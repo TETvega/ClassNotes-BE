@@ -27,7 +27,15 @@ namespace ClassNotes.API.Controllers
 			return StatusCode(response.StatusCode, response);
 		}
 
-		[HttpPost("send-pdf")]
+        [HttpPost("send-pdf-to-all")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<List<EmailDto>>>> SendGradeReportToAllsAsync(EmailAllGradeDto dto)
+        {
+            var response = await _emailsService.SendGradeReportPdfsAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpPost("send-pdf")]
 		[Authorize(Roles = $"{RolesConstant.USER}")]
 		public async Task<IActionResult> SendEmailWithPdf([FromBody] EmailGradeDto dto)
 		{

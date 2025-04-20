@@ -7,5 +7,6 @@ namespace ClassNotes.API.Services.Emails
 	{
 		Task<ResponseDto<EmailDto>> SendEmailAsync(EmailDto dto);
 		Task<ResponseDto<EmailDto>> SendEmailWithPdfAsync(EmailGradeDto dto);
-	}
+        Task<ResponseDto<List<EmailDto>>> SendGradeReportPdfsAsync(EmailAllGradeDto dto);
+    }
 }

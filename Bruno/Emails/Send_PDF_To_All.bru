@@ -1,0 +1,22 @@
+meta {
+  name: Send_PDF_To_All
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{PATH}}/emails/send-pdf-to-all
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "courseId": "45D85F5A-6C74-4A7B-8D1F-1C736730116F",
+    "content": "Hola querido estudiante estas son tus calificaciones de la clase, buen rendimiento sigue así."
+  }
+}

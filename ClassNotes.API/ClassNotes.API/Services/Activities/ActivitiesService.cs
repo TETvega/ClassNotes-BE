@@ -7,9 +7,11 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
+using ClassNotes.Models;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Threading.Channels;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace ClassNotes.API.Services.Activities
@@ -20,13 +22,15 @@ namespace ClassNotes.API.Services.Activities
         private readonly ClassNotesContext _context;
         private readonly IMapper _mapper;
         private readonly IAuditService _auditService;
+        private readonly Channel<EmailFeedBackRequest> _emailQueue;
         private readonly int PAGE_SIZE;
 
         public ActivitiesService(
             ClassNotesContext context,
             IMapper mapper,
             IConfiguration configuration,
-            IAuditService auditService
+            IAuditService auditService,
+            Channel<EmailFeedBackRequest> emailQueue
         )
         {
             _context = context;
@@ -36,6 +40,7 @@ namespace ClassNotes.API.Services.Activities
             // Y este se usa de la manera que aparece abajo:
             PAGE_SIZE = configuration.GetValue<int>("PageSize:Activities");
             _auditService = auditService;
+            _emailQueue = emailQueue;
         }
 
 
@@ -264,12 +269,21 @@ namespace ClassNotes.API.Services.Activities
         }
 
 
-
         public async Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId)
         {
+            var userId = _auditService.GetUserId();
             //(Ken)
             //Obtenemos la propia actividad especificada...
-            var activityEntity = await _context.Activities.Include(a => a.Unit).ThenInclude(x => x.Course).FirstOrDefaultAsync(a => a.Id == ActivityId);
+            var activityEntity = await _context.Activities.Include(a => a.CreatedByUser).Include(a => a.Unit).ThenInclude(x => x.Course).FirstOrDefaultAsync(a => a.Id == ActivityId && a.CreatedBy == userId);
+
+
+            //Para el servicio de enviar emails...
+            var emailRequest = new EmailFeedBackRequest
+            {
+                TeacherEntity = activityEntity.CreatedByUser,
+                ActivityEntity = activityEntity,
+                Students = []
+            };
 
             //Verificacion de existencia...
             if (activityEntity == null)
@@ -417,12 +431,25 @@ namespace ClassNotes.API.Services.Activities
                 await _context.SaveChangesAsync();
 
                 //Se busca la relacion actividad a estudiante para confirmar su existencia...
-                var existingStudentActivity = _context.StudentsActivitiesNotes.FirstOrDefault(x => x.ActivityId == ActivityId && x.StudentId == activity.StudentId);
+                var existingStudentActivity = _context.StudentsActivitiesNotes.Include(x => x.Student).FirstOrDefault(x => x.ActivityId == ActivityId && x.StudentId == activity.StudentId);
+
 
 
                 //Si existe, se actualizan sus datos, sino, se crea...
                 if (existingStudentActivity != null)
                 {
+                    //Se ingresa una entrada a la lista de espera del correo solo si cambio el feedback...
+                    if (activity.Feedback != existingStudentActivity.Feedback)
+                    {
+                        emailRequest.Students.Add(new EmailFeedBackRequest.StudentInfo
+                        {
+                            Name = existingStudentActivity.Student.FirstName + " " + existingStudentActivity.Student.LastName,
+                            Score = (activity.Note / 100) * activityEntity.MaxScore,
+                            FeedBack = activity.Feedback,
+                            Email = existingStudentActivity.Student.Email
+                        });
+                    }
+
                     existingStudentActivity.Note = activity.Note;
                     existingStudentActivity.Feedback = activity.Feedback;
 
@@ -432,11 +459,26 @@ namespace ClassNotes.API.Services.Activities
                 }
                 else
                 {
+                    var student = _context.Students.FirstOrDefault(x => x.Id == activity.StudentId);
+                    //Tambien se agrega una entrada si es la primera vez que se ingresa algo...
+                    emailRequest.Students.Add(new EmailFeedBackRequest.StudentInfo
+                    {
+                        Name = student.FirstName + " " + student.LastName,
+                        Score = (activity.Note / 100) * activityEntity.MaxScore,
+                        FeedBack = activity.Feedback,
+                        Email = student.Email
+                    });
+
                     _context.StudentsActivitiesNotes.Add(activity);
                     await _context.SaveChangesAsync();
                 }
 
             };
+
+            if (emailRequest.Students.Count() > 0)
+            {
+                _emailQueue.Writer.TryWrite(emailRequest);
+            }
 
             var studentActivityDto = _mapper.Map<List<StudentActivityNoteDto>>(studentActivityEntity);
             return new ResponseDto<List<StudentActivityNoteDto>>

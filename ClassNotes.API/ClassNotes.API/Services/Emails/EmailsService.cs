@@ -17,6 +17,9 @@ using iText.Kernel.Pdf.Canvas.Draw;
 using ClassNotes.API.Constants;
 using MimeKit.Text;
 using CloudinaryDotNet;
+using ClassNotes.API.Services.Audit;
+using ClassNotes.Models;
+using System.Threading.Channels;
 
 namespace ClassNotes.API.Services.Emails
 {
@@ -32,7 +35,9 @@ namespace ClassNotes.API.Services.Emails
 	public class EmailsService : IEmailsService
 	{
 		private readonly ClassNotesContext _context;
-		private readonly IConfiguration _configuration;
+        private readonly Channel<EmailStudentListRequest> _messageQueue;
+        private readonly IAuditService _auditService;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<EmailsService> _logger;
 
         /// <summary>
@@ -69,10 +74,12 @@ namespace ClassNotes.API.Services.Emails
 
 
 
-        public EmailsService(ClassNotesContext context, IConfiguration configuration, ILogger<EmailsService> logger)
+        public EmailsService(ClassNotesContext context, Channel<EmailStudentListRequest> messageQueue , IAuditService auditService, IConfiguration configuration, ILogger<EmailsService> logger)
         {
 			_context = context;
-			_configuration = configuration;
+            _messageQueue = messageQueue;
+            _auditService = auditService;
+            _configuration = configuration;
             _logger = logger;
             var smtpAccounts = configuration.GetSection("SmtpAccounts").Get<List<SMTPAcountDto>>()
                 ?? new List<SMTPAcountDto>();
@@ -152,6 +159,139 @@ namespace ClassNotes.API.Services.Emails
                     Message = $"Error temporal con la cuenta {wrapper.Account.Username}",
                     Data = dto
                 };
+            }
+        }
+
+        //(ken) este servicio retorna el listado de emailDto apenas evalua el data, y envia la info al servicio para reportes en segundo plano
+        public async Task<ResponseDto<List<EmailDto>>> SendGradeReportPdfsAsync(EmailAllGradeDto dto)
+        {
+            SmtpAccountWrapper acquiredWrapper = null;
+            CourseEntity courseEntity = null;
+            //Esto es para la response de este servicio...
+            List<EmailDto> emailInfo = [];
+            var userId = _auditService.GetUserId();
+
+            try
+            {
+                // Validaciones iniciales, aqui obtiene de una sola llamada el curso, settings, teacher y centro
+                courseEntity = await _context.Courses
+                    .Include(x => x.CourseSetting)
+                    .Include(x => x.Center)
+                        .ThenInclude(x => x.Teacher)
+                    .FirstOrDefaultAsync(c => c.Id == dto.CourseId && c.CreatedBy == userId);
+                if (courseEntity is null)
+                {
+                    return new ResponseDto<List<EmailDto>>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = MessagesConstant.EMAIL_COURSE_NOT_REGISTERED,
+                        Data = null
+                    };
+                }
+
+                // Obtener datos adicionales
+                var centerEntity = courseEntity.Center;
+                var teacherEntity = courseEntity.Center.Teacher;
+                var courseSettingEntity = courseEntity.CourseSetting;
+
+                //Aqui declara un objeto del modelo para ingresar al canal, la lista students se poblara despues
+                var emailRequest = new EmailStudentListRequest 
+                { 
+                    teacherEntity = teacherEntity,
+                    courseSettingEntity = courseSettingEntity,
+                    centerEntity = centerEntity,
+                    courseEntity = courseEntity,
+                    Content = dto.Content,
+                    students = []
+                };
+
+                var studentCourseEntities =  await _context.StudentsCourses
+                    .Include(x => x.Student)
+                    .Where(sc => sc.CourseId == dto.CourseId && sc.CreatedBy == teacherEntity.Id).ToListAsync();
+
+                if (!studentCourseEntities.Any())
+                {
+                    return new ResponseDto<List<EmailDto>>
+                    {
+                        StatusCode = 404,
+                        Status = false,
+                        Message = MessagesConstant.STU_RECORD_NOT_FOUND,
+                        Data = null
+                    };
+                }
+
+                foreach (var item in studentCourseEntities)
+                {//Una vez obtenidos los studentCourses, por cada estudiante en el curso, buscara sus student units
+                    var studentUnits = await _context.StudentsUnits
+                        .Where(su => su.StudentCourseId == item.Id)
+                        .OrderBy(su => su.UnitNumber)
+                        .ToListAsync();
+
+                    //if (!studentUnits.Any())
+                    //{
+                    //    return new ResponseDto<List<EmailDto>>
+                    //    {
+                    //        StatusCode = 404,
+                    //        Status = false,
+                    //        Message = MessagesConstant.STU_RECORD_NOT_FOUND,
+                    //        Data = null
+                    //    };
+                    //}
+
+                    //ingresa la info de este estudiante a la lista de estudiantes del modelo...
+                    emailRequest.students.Add(new EmailStudentListRequest.studentInfo
+                    {
+                        studentCourseEntity = item,
+                        studentEntity = item.Student,
+                        unitEntities = studentUnits
+                    });
+
+                    //Tambien lo ingresa dentro de la lista que retornara este dto
+                    emailInfo.Add(new EmailDto
+                    {
+                        To = item.Student.Email,
+                        Subject = $"Tus calificaciones de {courseEntity.Name} {courseEntity.Section}",
+                        Content = dto.Content,
+                    });
+                }
+
+                //Aqui esta ingresando el modelo creado a la lista de espera del canal, que esta siendo checkeada 24/7 por el servicio en segundo plano...
+                _messageQueue.Writer.TryWrite(emailRequest);
+
+                return new ResponseDto<List<EmailDto>>
+                {
+                    StatusCode = 201,
+                    Status = true,
+                    Message = $"Las calificaciones de de el curso '{courseEntity.Name}' fueron enviadas",
+                    Data = emailInfo
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error enviando email con PDF: {ex.Message}");
+                Console.WriteLine(ex.ToString());
+                return new ResponseDto<List<EmailDto>>
+                {
+                    StatusCode = 500,
+                    Status = false,
+                    Message = "Error al enviar las calificaciones",
+
+                };
+            }
+            finally
+            {
+                if (acquiredWrapper != null)
+                {
+                    try
+                    {
+                        acquiredWrapper.Semaphore.Release();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"Error liberando semáforo SMTP: {ex.Message}");
+                    }
+                }
             }
         }
 
@@ -281,7 +421,7 @@ namespace ClassNotes.API.Services.Emails
                     Subject = courseEntity != null
                         ? $"Calificaciones de {courseEntity.Name} - Error"
                         : "Error enviando calificaciones",
-                    Content = dto.Content
+                    Content = ex.ToString()
                 };
 
                 return new ResponseDto<EmailDto>

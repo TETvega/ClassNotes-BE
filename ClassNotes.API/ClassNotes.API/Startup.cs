@@ -32,6 +32,8 @@ using ClassNotes.API.BackgroundServices;
 using ClassNotes.API.Models;
 using System.Collections.Concurrent;
 using ClassNotes.API.Services.ConcurrentGroups;
+using System.Threading.Channels;
+using ClassNotes.Models;
 
 
 namespace ClassNotes.API;
@@ -66,6 +68,15 @@ public class Startup
         services.AddHostedService<AttendanceExpirationService>();
         services.AddSingleton<IAttendanceGroupCacheManager, AttendanceGroupCacheManager>();
 
+        //Para servicio de enviar reportes en segundo plano, aqui se declara el canal y el servicio...
+        var messageQueue = Channel.CreateUnbounded<EmailStudentListRequest>();
+        services.AddSingleton(messageQueue); 
+        services.AddHostedService<LoggingBackgroundService>();
+
+        var emailQueue = Channel.CreateUnbounded<EmailFeedBackRequest>();
+        services.AddSingleton(emailQueue);
+        services.AddHostedService<EmailFeedBackService>();
+        services.AddTransient<IEmailsService, EmailsService>();
         // Servicios personalizados
         services.AddTransient<IActivitiesService, ActivitiesService>();
 		services.AddTransient<IAttendancesService, AttendancesService>();
@@ -94,7 +105,7 @@ public class Startup
         services.AddTransient<IOtpService, OtpService>();
 
         // Servicio para el envio de correos (SMTP)
-        services.AddTransient<IEmailsService, EmailsService>();
+
 
         // Servicio para la subida de archivos de imagenes en la nube (Cloudinary)
         services.AddTransient<ICloudinaryService, CloudinaryService>();
