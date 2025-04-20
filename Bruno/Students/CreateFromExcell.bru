@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: https://localhost:7047/api/students/create-from-excel?strictMode=false
+  url: https://localhost:7047/api/students/create-from-excel/{{courseId}}?strictMode=false
   body: multipartForm
   auth: bearer
 }
@@ -184,5 +184,9 @@ body:json {
 }
 
 body:multipart-form {
-  file: @file()
+  file: @file(C:\Users\Usuario\Downloads\testEndpoint.xlsx)
+}
+
+vars:pre-request {
+  courseId: f6cfc25e-8259-4cde-4e74-08dd73c935a0
 }

@@ -97,11 +97,11 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
-        [HttpPost("create-from-excel")]
+        [HttpPost("create-from-excel/{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
-        public async Task<ActionResult<ResponseDto<List<StudentDto>>>> ReadStudentsFromExcel(IFormFile file, bool strictMode = true)
+        public async Task<ActionResult<ResponseDto<List<StudentDto>>>> ReadStudentsFromExcel(Guid id, IFormFile file, bool strictMode = true)
         {
-            var response = await _studentsService.ReadExcelFileAsync(file, strictMode);
+            var response = await _studentsService.ReadExcelFileAsync(id, file, strictMode);
             return StatusCode(response.StatusCode, response);
         }
 
