@@ -708,10 +708,26 @@ namespace ClassNotes.API.Services.Students
 
 
         //(Ken)
-        public async Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync(IFormFile file, bool strictMode = true)
+        public async Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync(Guid Id, IFormFile file, bool strictMode = true)
         {
             //Se obtiene el id de usuario para poner como teacher id y para validaciones...
             var userId = _auditService.GetUserId();
+
+            var courseEntity = await _context.Courses
+             .AsNoTracking()
+             .Include(c => c.Center)
+             .FirstOrDefaultAsync(c => c.Id == Id && c.Center.TeacherId == userId);
+
+            if (courseEntity == null)
+            {
+                return new ResponseDto<List<StudentDto>>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El curso no existe o no está asignado a este docente.",
+                    Data = null
+                };
+            }
 
             //Si el archivo es nulo o esta vacio...
             if (file == null || file.Length == 0)
@@ -893,6 +909,17 @@ namespace ClassNotes.API.Services.Students
                 //Se guarda el estudentEntity de esta iteracion, asegurando que generateUniqueEmail lo tome en cuenta posteriormente..
                 _context.Students.Add(item);
                 await _context.SaveChangesAsync();
+
+                var studentCourse = new StudentCourseEntity
+                {
+                    StudentId = item.Id,
+                    CourseId = Id
+                };
+
+                _context.StudentsCourses.Add(studentCourse);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine(studentCourse.Id);
 
             };
 

@@ -20,7 +20,7 @@ namespace ClassNotes.API.Services.Students
         Task<ResponseDto<List<Guid>>> DeleteStudentsInBatchAsync(List<Guid> studentIds, Guid courseId);
         Task<ResponseDto<PaginationDto<List<StudentPendingDto>>>> GetAllStudentsPendingActivitiesAsync(Guid id, string searchTerm = "", int? pageSize = null, int page = 1, string StudentType = "All", string ActivityType = "All");
         Task<ResponseDto<PaginationDto<List<ActivityDto>>>> GetStudentPendingActivitiesAsync(Guid id, int? pageSize = null, int page = 1);
-        Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync(IFormFile file, bool strictMode);
+        Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync( Guid id, IFormFile file, bool strictMode);
 
         Task<ResponseDto<StatusModifiStudents>> ChangeIsActiveStudentList( Guid courseId, List<Guid> studentsList);
     }
