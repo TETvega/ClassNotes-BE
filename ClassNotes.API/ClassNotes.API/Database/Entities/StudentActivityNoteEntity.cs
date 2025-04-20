@@ -32,7 +32,6 @@ namespace ClassNotes.API.Database.Entities
         public float Note { get; set; }
 
 
-        [Required]
         [StringLength(250)]
         [Column("feedback")]
         public string Feedback { get; set; }

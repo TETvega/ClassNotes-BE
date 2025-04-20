@@ -9,8 +9,10 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Activities;
+using MailKit.Search;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NetTopologySuite.Algorithm;
 
 namespace ClassNotes.API.Controllers
 {
@@ -38,10 +40,25 @@ namespace ClassNotes.API.Controllers
             string typeActivities = "ALL"
         )
         {
-            var response = await _activitiesService.GetActivitiesListAsync(searchTerm, page, pageSize , centerId , tagActivityId , typeActivities);
+            var response = await _activitiesService.GetActivitiesListAsync(searchTerm, page, pageSize, centerId, tagActivityId, typeActivities);
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpGet("student-pendings")]
+        [Authorize(Roles =$"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<PaginationDto<List<ActivityDto>>>>> GetStudentPendingsListAsync(Guid studentId,Guid courseId,int page = 1, int? pageSize = 10)
+        {
+            var response = await _activitiesService.GetStudentPendingsListAsync(studentId, courseId, page, pageSize);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpGet("student-info")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<StudentAndPendingsDto>>> GetStudentPendingsinfoAsync(Guid studentId, Guid courseId)
+        {
+            var response = await _activitiesService.GetStudentPendingsInfoAsync(studentId, courseId);
+            return StatusCode(response.StatusCode, response);
+        }
 
         [HttpGet("course/{id}")]
         [Authorize(Roles = $"{RolesConstant.USER}")]

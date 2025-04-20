@@ -4,8 +4,8 @@ using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
-using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Attendances.Student;
+using System.Globalization;
 
 namespace ClassNotes.API.Services.Attendances
 {
@@ -17,8 +17,8 @@ namespace ClassNotes.API.Services.Attendances
 
 		public AttendancesService(ClassNotesContext context, IAuditService auditService, IConfiguration configuration)
 		{
-			this._context = context;
-			this._auditService = auditService;
+			_context = context;
+			_auditService = auditService;
 			PAGE_SIZE = configuration.GetValue<int>("PageSize:StudentsAttendances");
 		}
 
@@ -184,7 +184,16 @@ namespace ClassNotes.API.Services.Attendances
             //JA: Buscar el nombre del estudiante
             var student = await _context.Students
                 .Where(s => s.Id == dto.StudentId)
-                .Select(s => new { FullName = s.FirstName + ' ' + s.LastName })
+                .Select(s => new
+                {
+                    s.FirstName,
+                    s.LastName,
+                    s.Email,
+                    IsActive = s.Courses
+                        .Where(sc => sc.CourseId == dto.CourseId)
+                        .Select(sc => sc.IsActive)
+                        .FirstOrDefault()
+                })
                 .FirstOrDefaultAsync();
 
             var studentCourse = await _context.StudentsCourses
@@ -214,7 +223,7 @@ namespace ClassNotes.API.Services.Attendances
             var attendances = await query.ToListAsync();
 
             //JA: Calcular estadísticas
-            int totalAttendances = attendances.Count;
+            int totalAttendances = attendances.Count();
             int attendedCount = attendances.Count(a => a.Attended);
             int absenceCount = totalAttendances - attendedCount;
 
@@ -224,12 +233,15 @@ namespace ClassNotes.API.Services.Attendances
 
             var studentStats = new StudentAttendancesDto
             {
-                StudentName = student?.FullName ?? "Desconocido",
+                StudentFirstName = student?.FirstName ?? "Desconocido",
+				StudentLastName = student?.LastName ?? "Desconocido",
+				StudentEmail = student?.Email ?? "Desconocido",
+				TotalAttendance = totalAttendances,
                 AttendanceCount = attendedCount,
                 AttendanceRate = attendanceRate,
                 AbsenceCount = absenceCount,
                 AbsenceRate = absenceRate,
-                IsActive = attendedCount > 0
+                IsActive = student.IsActive,
             };
 
             return new ResponseDto<StudentAttendancesDto>
@@ -242,16 +254,21 @@ namespace ClassNotes.API.Services.Attendances
         }
 
         // AM: Mostrar paginación de asistencias por estudiante
-        public async Task<ResponseDto<PaginationDto<List<AttendanceDto>>>> GetAttendancesByStudentPaginationAsync(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1, bool isCurrentMonth = false, int pageSize = 10)
+        public async Task<ResponseDto<PaginationDto<List<StudentsDATAAttendances>>>> GetAttendancesByStudentPaginationAsync(
+			StudentIdCourseIdDto dto,
+			string searchTerm = "",
+			int page = 1,
+			bool isCurrentMonth = false,
+			int pageSize = 10)
         {
             int startIndex = (page - 1) * pageSize;
 
-            //JA: Validar existencia del estudiante en el curso
+            // Validar existencia del estudiante en el curso
             var studentCourse = await _context.StudentsCourses
                 .FirstOrDefaultAsync(sc => sc.StudentId == dto.StudentId && sc.CourseId == dto.CourseId);
             if (studentCourse == null)
             {
-                return new ResponseDto<PaginationDto<List<AttendanceDto>>>
+                return new ResponseDto<PaginationDto<List<StudentsDATAAttendances>>>
                 {
                     StatusCode = 404,
                     Status = false,
@@ -259,48 +276,56 @@ namespace ClassNotes.API.Services.Attendances
                 };
             }
 
-            //JA: Consultar asistencias del estudiante en el curso
+            // Consultar asistencias del estudiante en el curso
             var query = _context.Attendances
                 .Where(a => a.StudentId == dto.StudentId && a.CourseId == dto.CourseId);
 
-            //JA: Filtrar asistencia por fecha específica (si se proporciona un término de búsqueda)
+            // Filtrar asistencia por fecha específica
+            
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 query = query.Where(a => a.RegistrationDate.ToString().Contains(searchTerm));
             }
 
-            //JA: Filtrar por mes actual si isCurrentMonth es true
+            // Filtrar por mes actual si isCurrentMonth es true
             if (isCurrentMonth)
             {
                 var currentMonth = DateTime.Now.Month;
                 query = query.Where(a => a.RegistrationDate.Month == currentMonth);
             }
 
-            //JA: Contar el total de registros de asistencia encontrados
+            // Contar el total de registros de asistencia encontrados
             int totalItems = await query.CountAsync();
-
             int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
+            var cultureEs = new CultureInfo("es-ES");
             var attendances = await query
                 .OrderByDescending(a => a.RegistrationDate)
                 .Skip(startIndex)
                 .Take(pageSize)
-                .Select(a => new AttendanceDto
+                .Select(a => new StudentsDATAAttendances
                 {
-                    Id = a.Id,
-                    Attended = a.Attended,
-                    RegistrationDate = a.RegistrationDate,
-                    CourseId = a.CourseId,
-                    StudentId = a.StudentId
+                    Attendance = a.Attended,
+                    Status = a.Status,
+                    AttendaceMethod = a.Method,
+                    LastChangeBy = a.ChangeBy,
+                    RegisterDate = new ExtendedDateDto
+                    {
+                        Minute = a.RegistrationDate.ToString("mm", cultureEs),
+                        Hour = a.RegistrationDate.ToString("HH", cultureEs),
+                        Day = cultureEs.DateTimeFormat.GetDayName(a.RegistrationDate.DayOfWeek),
+						            NumberDay =  a.RegistrationDate.ToString("dd",cultureEs),
+                        Month = cultureEs.DateTimeFormat.GetMonthName(a.RegistrationDate.Month),
+                        Year = a.RegistrationDate.ToString("yyyy", cultureEs)
+                    }
                 })
                 .ToListAsync();
 
-            return new ResponseDto<PaginationDto<List<AttendanceDto>>>
+            return new ResponseDto<PaginationDto<List<StudentsDATAAttendances>>>
             {
                 StatusCode = 200,
                 Status = true,
                 Message = MessagesConstant.ATT_RECORDS_FOUND,
-                Data = new PaginationDto<List<AttendanceDto>>
+                Data = new PaginationDto<List<StudentsDATAAttendances>>
                 {
                     CurrentPage = page,
                     PageSize = pageSize,
@@ -313,191 +338,6 @@ namespace ClassNotes.API.Services.Attendances
             };
         }
 
-        public async Task<AttendanceDto> CreateAttendanceAsync(AttendanceCreateDto attendanceCreateDto)
-        {
-            // Validar que el curso existe
-            var course = await _context.Courses
-                .Include(c => c.Center)
-                .FirstOrDefaultAsync(c => c.Id == attendanceCreateDto.CourseId);
 
-            if (course == null)
-            {
-                throw new ArgumentException("El curso no existe.");
-            }
-
-            // Validar que el estudiante existe
-            var student = await _context.Students.FindAsync(attendanceCreateDto.StudentId);
-            if (student == null)
-            {
-                throw new ArgumentException("El estudiante no existe.");
-            }
-
-            // Validar que el profesor existe
-            var teacher = await _context.Users.FindAsync(attendanceCreateDto.TeacherId);
-            if (teacher == null)
-            {
-                throw new ArgumentException("El profesor no existe.");
-            }
-
-            // Validar que el profesor pertenece al centro del curso
-            var center = await _context.Centers
-                .FirstOrDefaultAsync(c => c.Id == course.CenterId && c.TeacherId == attendanceCreateDto.TeacherId);
-
-            if (center == null)
-            {
-                throw new ArgumentException("El profesor no está asignado a este centro.");
-            }
-
-            // Crear la asistencia
-            var attendance = new AttendanceEntity
-            {
-                Attended = attendanceCreateDto.Attended,
-                Status = attendanceCreateDto.Status,
-                RegistrationDate = attendanceCreateDto.RegistrationDate,
-                CourseId = attendanceCreateDto.CourseId,
-                StudentId = attendanceCreateDto.StudentId,
-                CreatedByUser = teacher,  // Asignamos el objeto UserEntity completo
-                UpdatedByUser = teacher   // Asignamos el objeto UserEntity completo
-            };
-
-            _context.Attendances.Add(attendance);
-            await _context.SaveChangesAsync();
-
-            return new AttendanceDto
-            {
-                Id = attendance.Id,
-                Attended = attendance.Attended,
-                Status = attendance.Status,
-                RegistrationDate = attendance.RegistrationDate,
-                CourseId = attendance.CourseId,
-                StudentId = attendance.StudentId
-            };
-        }
-
-        public async Task<AttendanceDto> EditAttendanceAsync(Guid attendanceId, bool attended)
-        {
-            var attendance = await _context.Attendances
-                .Include(a => a.UpdatedByUser)
-                .FirstOrDefaultAsync(a => a.Id == attendanceId);
-
-            if (attendance == null)
-            {
-                throw new ArgumentException("La asistencia no existe.");
-            }
-
-            attendance.Attended = attended;
-
-            // No podemos actualizar UpdatedDate directamente ya que no existe en la entidad
-            // Pero podemos actualizar UpdatedByUser si es necesario
-            // attendance.UpdatedByUser = ...;
-
-            await _context.SaveChangesAsync();
-
-            return new AttendanceDto
-            {
-                Id = attendance.Id,
-                Attended = attendance.Attended,
-                Status = attendance.Status,
-                RegistrationDate = attendance.RegistrationDate,
-                CourseId = attendance.CourseId,
-                StudentId = attendance.StudentId
-            };
-        }
-
-        public async Task<AttendanceDto> EditAttendanceAsync(Guid attendanceId, AttendanceEditDto attendanceEditDto)
-        {
-            // Obtener la asistencia existente
-            var attendance = await _context.Attendances
-                .Include(a => a.UpdatedByUser)
-                .FirstOrDefaultAsync(a => a.Id == attendanceId);
-
-            if (attendance == null)
-            {
-                throw new ArgumentException("La asistencia no existe.");
-            }
-
-            // Actualizar solo el status (sin modificar Attended si no es necesario)
-            attendance.Status = attendanceEditDto.Status;
-
-            // Guardar cambios
-            await _context.SaveChangesAsync();
-
-            // Devolver el DTO actualizado
-            return new AttendanceDto
-            {
-                Id = attendance.Id,
-                Attended = attendance.Attended, // Mantiene el valor existente
-                RegistrationDate = attendance.RegistrationDate,
-                CourseId = attendance.CourseId,
-                StudentId = attendance.StudentId
-                // No incluye Status si no está en el DTO
-            };
-        }
-
-        public async Task<List<AttendanceDto>> ListAttendancesAsync()
-        {
-            var attendances = await _context.Attendances
-                .Include(a => a.Course)
-                .Include(a => a.Student)
-                .Include(a => a.CreatedByUser)
-                .Include(a => a.UpdatedByUser)
-                .ToListAsync();
-
-            return attendances.Select(a => new AttendanceDto
-            {
-                Id = a.Id,
-                Status = a.Status,
-                Attended = a.Attended,
-                RegistrationDate = a.RegistrationDate,
-                CourseId = a.CourseId,
-                StudentId = a.StudentId,
-                CourseName = a.Course?.Name,
-                StudentName = $"{a.Student?.FirstName} {a.Student?.LastName}"
-            }).ToList();
-        }
-
-        public async Task<List<AttendanceDto>> ListAttendancesByCourseAsync(Guid courseId)
-        {
-            var attendances = await _context.Attendances
-                .Where(a => a.CourseId == courseId)
-                .Include(a => a.Course)
-                .Include(a => a.Student)
-                .Include(a => a.CreatedByUser)
-                .ToListAsync();
-
-            return attendances.Select(a => new AttendanceDto
-            {
-                Id = a.Id,
-                Attended = a.Attended,
-                Status = a.Status,
-                RegistrationDate = a.RegistrationDate,
-                CourseId = a.CourseId,
-                StudentId = a.StudentId,
-                CourseName = a.Course?.Name,
-                StudentName = $"{a.Student?.FirstName} {a.Student?.LastName}"
-            }).ToList();
-        }
-
-        public async Task<List<AttendanceDto>> ListAttendancesByStudentAsync(Guid studentId)
-        {
-            var attendances = await _context.Attendances
-                .Where(a => a.StudentId == studentId)
-                .Include(a => a.Course)
-                .Include(a => a.Student)
-                .Include(a => a.CreatedByUser)
-                .ToListAsync();
-
-            return attendances.Select(a => new AttendanceDto
-            {
-                Id = a.Id,
-                Attended = a.Attended,
-                Status = a.Status,
-                RegistrationDate = a.RegistrationDate,
-                CourseId = a.CourseId,
-                StudentId = a.StudentId,
-                CourseName = a.Course?.Name,
-                StudentName = $"{a.Student?.FirstName} {a.Student?.LastName}"
-            }).ToList();
-        }
     }
 }

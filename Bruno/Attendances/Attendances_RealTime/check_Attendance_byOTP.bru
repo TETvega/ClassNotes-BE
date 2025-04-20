@@ -1,0 +1,23 @@
+meta {
+  name: check_Attendance_byOTP
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{PATH}}/attendancesR/create_my_attendance_OTP?email=ever@meaa.sl&OTP=249856&x=1.329&y=-5.1673&courseId=f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  body: json
+  auth: bearer
+}
+
+params:query {
+  email: ever@meaa.sl
+  OTP: 249856
+  x: 1.329
+  y: -5.1673
+  courseId: f6cfc25e-8259-4cde-4e74-08dd73c935a0
+}
+
+auth:bearer {
+  token: 
+}

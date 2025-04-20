@@ -2,18 +2,15 @@
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Attendances;
-using ClassNotes.API.Dtos.Attendances.Student;
 using ClassNotes.API.Dtos.Centers;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.CourseSettings;
 using ClassNotes.API.Dtos.DashboardCourses;
-using ClassNotes.API.Dtos.EmailsAttendace;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Dtos.TagsActivities;
 using ClassNotes.API.Dtos.Users;
-using ClassNotes.API.Services.Audit;
 using NetTopologySuite.Geometries;
 
 namespace ClassNotes.API.Helpers.Automapper
@@ -68,7 +65,6 @@ namespace ClassNotes.API.Helpers.Automapper
         {
             CreateMap<AttendanceEntity, AttendanceDto>();
             CreateMap<AttendanceCreateDto, AttendanceEntity>();
-            CreateMap<AttendanceEditDto, AttendanceEntity>();
         }
 
         private void MapsForActivityNotes()
@@ -132,7 +128,6 @@ namespace ClassNotes.API.Helpers.Automapper
         private void MapsForStudents()
         {
             CreateMap<StudentEntity, StudentDto>();
-            CreateMap<StudentEntity, StudentSenEmailDto>();
             CreateMap<StudentCreateDto, StudentEntity>();
             CreateMap<StudentEditDto, StudentEntity>();
         }

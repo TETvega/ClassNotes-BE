@@ -8,6 +8,7 @@ using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Notes.QualificationDasboard;
 using ClassNotes.API.Dtos.Notes;
 using Serilog;
+using ProjNet.CoordinateSystems;
 
 
 namespace ClassNotes.API.Services.Notes
@@ -249,6 +250,7 @@ namespace ClassNotes.API.Services.Notes
         {
             try
             {
+                var userId = _auditService.GetUserId();
                 // Validación de parámetros
                 var validationResult = ValidateParameters(activeStudent, studentStateNote);
                 if (validationResult != null)
@@ -257,6 +259,7 @@ namespace ClassNotes.API.Services.Notes
                 // Obtener configuración del curso
                 var course = await _context.Courses
                     .Include(c => c.CourseSetting)
+                    .Where(c => c.Center.TeacherId == userId)
                     .FirstOrDefaultAsync(c => c.Id == courseId);
 
                 if (course == null)
@@ -298,6 +301,7 @@ namespace ClassNotes.API.Services.Notes
                         searchTerm,
                         studentStateNote);
                     statistics = await CalculateCourseStatistics(courseId, scoreType, allStudents.Items);
+                    statistics.ScoreTypeCourse = scoreType;
                 }
 
 
@@ -310,7 +314,8 @@ namespace ClassNotes.API.Services.Notes
                     Data = new DasboardRequestDto
                     {
                         StadisticStudents = statistics,
-                        StudentQualifications = studentData
+                        StudentQualifications = studentData,
+                        EndDate = course.CourseSetting.EndDate
                     }
                 };
             }
@@ -339,6 +344,12 @@ namespace ClassNotes.API.Services.Notes
             var units = await _context.Units
                 .Where(u => u.CourseId == courseId)
                 .ToListAsync();
+            var courseSettings = await _context.Courses
+                .Where(c => c.Id == courseId)
+                .Select(c => c.CourseSetting)
+                .FirstOrDefaultAsync();
+            float maxGrade = courseSettings?.MaximumGrade ?? 100f;
+
 
             foreach (var unit in units)
             {
@@ -348,21 +359,24 @@ namespace ClassNotes.API.Services.Notes
                                  group new { note, activity } by activity.UnitId into g
                                  select new
                                  {
-                                     SumNotes = g.Sum(x => x.note.Note),
-                                     SumMaxScores = g.Sum(x => x.activity.MaxScore)
+                                     SumNotes = g.Sum(x => (x.note.Note/100)*x.activity.MaxScore),//Se pasa de promedio a nota en bruto...
+                                     SumMaxScores = g.Sum(x => x.activity.MaxScore),
+                                     UnitWeight = unit.MaxScore/100 ?? 1f //Se pasa de porcentaje a decimal...
+
                                  };
 
                 var sums = await notesQuery.FirstOrDefaultAsync();
                 float average = 0f;
 
-                if (sums != null)
+                if (sums != null && sums.SumMaxScores > 0)
                 {
-                    if (scoreType == ScoreTypeConstant.GOLD_SCORE)
-                        average = sums.SumNotes;
-                    if (scoreType == ScoreTypeConstant.ARITHMETIC_SCORE && sums.SumMaxScores > 0)
-                        average = (sums.SumNotes / sums.SumMaxScores) * 100;
-                    if (scoreType == ScoreTypeConstant.WEIGHTED_SCORE && sums.SumMaxScores > 0 && unit.MaxScore.HasValue)
-                        average = (sums.SumNotes * unit.MaxScore.Value) / (sums.SumMaxScores * unit.MaxScore.Value) * 100;
+                    average = scoreType switch
+                    {
+                        ScoreTypeConstant.GOLD_SCORE => sums.SumNotes,
+                        ScoreTypeConstant.ARITHMETIC_SCORE => (sums.SumNotes / sums.SumMaxScores) * maxGrade,
+                        ScoreTypeConstant.WEIGHTED_SCORE => (sums.SumNotes / sums.SumMaxScores) * sums.UnitWeight * maxGrade,
+                        _ => 0f
+                    };
                 }
 
                 unitAverages.Add(new UnitStatus
@@ -392,10 +406,20 @@ namespace ClassNotes.API.Services.Notes
                 .FirstOrDefaultAsync();
             if (studentData.Any())
             {
-                overallAverage = studentData.Average(s => s.GlobalAverage);
+                if (scoreType == ScoreTypeConstant.ARITHMETIC_SCORE && unitAverages.Any())
+                {
+                    overallAverage = unitAverages.Average(u => u.Avarage);
+                }
+                else if (studentData.Any())
+                {
+                    // Normalizar según MaximumGrade para consistencia
+                    overallAverage = studentData.Average(s => s.GlobalAverage);
+                }
 
-                int approvedCount = studentData.Count(s => s.GlobalAverage >= courseScores.MaximumGrade);
-                approvalRating = (float)approvedCount / studentData.Count * 100;
+                // Corrección en el cálculo de aprobación
+                int approvedCount = studentData.Count(s => s.GlobalAverage >= (courseScores?.MinimumGrade ?? 0));
+                approvalRating = studentData.Count > 0 ? (float)approvedCount / studentData.Count * 100 : 0;
+            }
 
                 // Clasificar estudiantes por categoría
                 foreach (var student in studentData)
@@ -421,7 +445,7 @@ namespace ClassNotes.API.Services.Notes
                             break;
                     }
                 }
-            }
+            
             //  Identificar la mejor y peor unidad
             UnitStatus bestUnit = null;
             UnitStatus worstUnit = null;
@@ -504,9 +528,20 @@ namespace ClassNotes.API.Services.Notes
             foreach (var studentCourse in studentCourses)
             {
                 var studentNotes = await GetStudentNotes(studentCourse.StudentId, courseId, scoreType);
-                var globalAverage = studentNotes.Any()
-                    ? studentNotes.Average(sn => sn.Note)
-                    : 0;
+                float globalAverage = 0;
+
+                if (studentNotes.Any())
+                {
+                        globalAverage = scoreType switch
+                        {
+                            ScoreTypeConstant.GOLD_SCORE => studentNotes.Sum(sn => sn.Note),
+                            ScoreTypeConstant.ARITHMETIC_SCORE => studentNotes.Average(sn => sn.Note),
+                            ScoreTypeConstant.WEIGHTED_SCORE =>
+                                    studentNotes.Sum(sn => sn.Note * sn.UnitWeight) /
+                                    studentNotes.Sum(sn => sn.UnitWeight),
+                                                    _ => 0
+                        };
+                }
 
                 var stateNote = GetNoteState(globalAverage, courseScores.MaximumGrade, courseScores.MinimumGrade);
 
@@ -567,24 +602,29 @@ namespace ClassNotes.API.Services.Notes
             Guid courseId,
             string scoreType)
         {
+            var courseMaxGrade = await _context.Courses
+                .Where(c => c.Id == courseId)
+                .Select(c => c.CourseSetting.MaximumGrade)
+                .FirstOrDefaultAsync();
+
             var query =
                 from note in _context.StudentsActivitiesNotes //Relacionamos con las actividades
                 join activity in _context.Activities on note.ActivityId equals activity.Id
                 join unit in _context.Units on activity.UnitId equals unit.Id //Relacionamos con las unidades
                 where unit.CourseId == courseId && note.StudentId == studentId
                 // Agrupamiento por unidad
-                group new { note, activity, unit } by new { unit.Id, unit.UnitNumber } into g
-
-                // Calculamos la nota según el tipo
+                group new { note, activity, unit } by new { unit.Id, unit.UnitNumber, unit.MaxScore } into g
                 select new StudentUnitNote
                 {
                     UnitID = g.Key.Id,
                     UnitNumber = g.Key.UnitNumber,
                     Note = CalculateUnitScore(
                         scoreType,
-                        g.Sum(x => x.note.Note),
+                        g.Sum(x => (x.note.Note/100)*x.activity.MaxScore),//Se pasa de promedio a nota en bruto...
                         g.Sum(x => x.activity.MaxScore),
-                        g.First().unit.MaxScore ?? 0)
+                        g.Key.MaxScore ?? 100f,  
+                        courseMaxGrade),
+                    UnitWeight = g.Key.MaxScore/100 ?? 100f // Asignamos el peso, pasamos de promedio a decimal
                 };
 
 
@@ -604,16 +644,19 @@ namespace ClassNotes.API.Services.Notes
         ///     <seealso href="https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression"/>
         /// </remarks>
         private static float CalculateUnitScore(
-            string scoreType, 
+            string scoreType,
             float sumNotes,
             float sumMaxScores,
-            float unitWeight)
+            float unitWeight,
+            float courseMaxGrade)
         {
+            if (sumMaxScores <= 0) return 0f; // Evitar división por cero
+
             return scoreType switch
             {
                 ScoreTypeConstant.GOLD_SCORE => sumNotes,
-                ScoreTypeConstant.ARITHMETIC_SCORE => (sumNotes / sumMaxScores) * 100,
-                ScoreTypeConstant.WEIGHTED_SCORE => (sumNotes * unitWeight) / (sumMaxScores * unitWeight) * 100,
+                ScoreTypeConstant.ARITHMETIC_SCORE => (sumNotes / sumMaxScores) * courseMaxGrade,
+                ScoreTypeConstant.WEIGHTED_SCORE => (sumNotes / sumMaxScores) * unitWeight,
                 _ => 0f
             };
         }

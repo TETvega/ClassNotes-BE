@@ -7,22 +7,13 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.Activities;
 using ClassNotes.API.Dtos.Common;
-using ClassNotes.API.Dtos.CourseFilter;
-using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Courses;
 using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
 using ClassNotes.API.Services.Emails;
-using iText.Commons.Actions.Contexts;
-using iText.Layout.Properties;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System.Diagnostics;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ClassNotes.API.Services.Students
 {
@@ -656,7 +647,34 @@ namespace ClassNotes.API.Services.Students
             var relatedRecords = await _context.StudentsCourses
                 .Where(sc => studentIds.Contains(sc.StudentId) && sc.CourseId == courseId)
                 .ToListAsync();
+
+            //Misma funcionalidad para attendances
+            var relatedAttRecords = await _context.Attendances
+                .Where(sc => studentIds.Contains(sc.StudentId) && sc.CourseId == courseId)
+                .ToListAsync();
+            //Misma funcionalidad para activityNotes...
+            var ActivityRecords = await _context.StudentsActivitiesNotes.Include(x => x.Activity).ThenInclude(x => x.Unit)
+                .Where(sc => studentIds.Contains(sc.StudentId))
+                .ToListAsync();
+
+            //Se deben separar las studentActivityNotes para no quita las no relacionadas, de estas, solo queremos el id de estudiante...
+            var unrelatedActivities = ActivityRecords.Where(x => x.Activity.Unit.CourseId != courseId).Select(x => x.StudentId);
+            var relatedActivities = ActivityRecords.Where(x => x.Activity.Unit.CourseId == courseId);
+
+
+            _context.Attendances.RemoveRange(relatedAttRecords);
+            _context.StudentsActivitiesNotes.RemoveRange(relatedActivities);
+
+            //Antes de borrar los StudentCourses, se debe ir por cada uno y borrar las student unit relacionadas...
+            foreach (var item in relatedRecords)
+            {
+                var relatedUnits = _context.StudentsUnits.Where(x => x.StudentCourseId == item.Id);
+
+                _context.StudentsUnits.RemoveRange(relatedUnits);
+            }
+
             _context.StudentsCourses.RemoveRange(relatedRecords);
+
 
             // Determinar qué estudiantes pueden eliminarse de la tabla Students
             var studentsToKeep = studentCourseRelations
@@ -664,8 +682,10 @@ namespace ClassNotes.API.Services.Students
                 .Select(sc => sc.StudentId)
                 .ToHashSet();
 
+           
+            //Se quitaran solo los estudiantes que no tengand actividades no relacionadas, pues estas necesitan el id...
             var studentsToRemoveFromStudents = studentsToDelete
-                .Where(s => !studentsToKeep.Contains(s.Id))
+                .Where(s => !studentsToKeep.Contains(s.Id) && !unrelatedActivities.Contains(s.Id))
                 .ToList();
 
             // Eliminar de la tabla Students solo los que no tienen más cursos
@@ -688,10 +708,26 @@ namespace ClassNotes.API.Services.Students
 
 
         //(Ken)
-        public async Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync(IFormFile file, bool strictMode = true)
+        public async Task<ResponseDto<List<StudentDto>>> ReadExcelFileAsync(Guid Id, IFormFile file, bool strictMode = true)
         {
             //Se obtiene el id de usuario para poner como teacher id y para validaciones...
             var userId = _auditService.GetUserId();
+
+            var courseEntity = await _context.Courses
+             .AsNoTracking()
+             .Include(c => c.Center)
+             .FirstOrDefaultAsync(c => c.Id == Id && c.Center.TeacherId == userId);
+
+            if (courseEntity == null)
+            {
+                return new ResponseDto<List<StudentDto>>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = "El curso no existe o no está asignado a este docente.",
+                    Data = null
+                };
+            }
 
             //Si el archivo es nulo o esta vacio...
             if (file == null || file.Length == 0)
@@ -873,6 +909,17 @@ namespace ClassNotes.API.Services.Students
                 //Se guarda el estudentEntity de esta iteracion, asegurando que generateUniqueEmail lo tome en cuenta posteriormente..
                 _context.Students.Add(item);
                 await _context.SaveChangesAsync();
+
+                var studentCourse = new StudentCourseEntity
+                {
+                    StudentId = item.Id,
+                    CourseId = Id
+                };
+
+                _context.StudentsCourses.Add(studentCourse);
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine(studentCourse.Id);
 
             };
 
@@ -1078,5 +1125,79 @@ namespace ClassNotes.API.Services.Students
                 Data = pendingClasses
             };
         }
+
+        public async Task<ResponseDto<StatusModifiStudents>> ChangeIsActiveStudentList(Guid courseId, List<Guid> studentsList)
+        {
+            var userId = _auditService.GetUserId();
+
+            var course = await _context.Courses
+                .Include(c => c.Center)
+                .FirstOrDefaultAsync(c => c.Id == courseId && c.Center.TeacherId == userId);
+
+            if (course == null)
+            {
+                return new ResponseDto<StatusModifiStudents>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "No este autorizado o Curso no encontrado ",
+                    Data = null
+                };
+            }
+
+            
+            var existingStudentsCount = await _context.Students
+                .CountAsync(s => studentsList.Contains(s.Id));
+
+            if (existingStudentsCount != studentsList.Count)
+            {
+                return new ResponseDto<StatusModifiStudents>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "Uno o mas estudiantes no existen en la base de datos",
+                    Data = null
+                };
+            }
+
+            var students = await _context.StudentsCourses
+                .Where(sc => sc.CourseId == courseId && studentsList.Contains(sc.StudentId))
+                .ToListAsync();
+
+            if (students.Count != studentsList.Count)
+            {
+                return new ResponseDto<StatusModifiStudents>
+                {
+                    StatusCode = 403,
+                    Status = false,
+                    Message = "Error: Algunos estudiantes no están inscritos en el curso o no tienes permisos.",
+                    Data = null
+                };
+            }
+
+            // Invertimos el estado uno por uno
+            students.ForEach(sc =>
+            {
+                sc.IsActive = !sc.IsActive;
+                sc.UpdatedBy = userId;
+                sc.UpdatedDate = DateTime.UtcNow;
+            });
+
+            await _context.SaveChangesAsync();
+
+            bool status = students.FirstOrDefault()?.IsActive ?? false; 
+            return new ResponseDto<StatusModifiStudents>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = $"{students.Count} registros modificados.",
+                Data = new StatusModifiStudents
+                {
+                    StudentsMCount = students.Count,
+                    ToIsActive = status
+                }
+            };
+        }
+
     }
 }

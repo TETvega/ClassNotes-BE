@@ -1,0 +1,22 @@
+meta {
+  name: GetStudentPendingActivities
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{PATH}}/activities/student-pendings?page=2&courseId=06ee7f6d-44b1-4729-92c9-08dd7e06babb&studentId=cb20f7ec-b6cf-4da4-2e4f-08dd7e071667&pageSize=2
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 2
+  courseId: 06ee7f6d-44b1-4729-92c9-08dd7e06babb
+  studentId: cb20f7ec-b6cf-4da4-2e4f-08dd7e071667
+  pageSize: 2
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

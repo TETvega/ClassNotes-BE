@@ -18,16 +18,11 @@ using ClassNotes.API.Services.CoursesSettings;
 using ClassNotes.API.Services.Emails;
 using ClassNotes.API.Services.Otp;
 using ClassNotes.API.Services.Users;
-using CloudinaryDotNet;
 using ClassNotes.API.Services.Cloudinary;
-using Microsoft.Extensions.Configuration;
 using ClassNotes.API.Services.DashboardHome;
 using ClassNotes.API.Services.DashboarCenter;
 using ClassNotes.API.Services.TagsActivities;
 using ClassNotes.API.Services.DashboardCourses;
-using ClassNotes.API.Services.Date;
-using ClassNotes.API.Services.Distance;
-using ClassNotes.API.Services;
 using ClassNotes.API.Services.Notes;
 using ClassNotes.API.Services.AllCourses;
 using Serilog;
@@ -98,18 +93,6 @@ public class Startup
     	services.AddTransient<IDashboardCenterService, DashboardCenterService>();
 		services.AddTransient<ICoursesFilterService, CoursesFilterService>();
 		services.AddTransient<ICentersService, CentersService>();
-
-        services.AddSingleton<DistanceService>(); //
-        services.AddScoped<IEmailAttendanceService, EmailAttendanceService>(); //
-
-        services.AddScoped<QRService>();
-        services.AddHostedService<QRService>();
-        services.AddSingleton<OTPCleanupService>();
-        services.AddHostedService(provider => provider.GetRequiredService<OTPCleanupService>());
-        services.AddSingleton<EmailScheduleService>();
-        services.AddHostedService<ScheduledEmailSender>();
-        services.AddSingleton<IDateTimeService, DateTimeService>();
-
 
         //Para Asistencias en Tiepo real
         services.AddTransient<IAttendanceRSignalService, AttendanceRSignalService>();

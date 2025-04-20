@@ -8,6 +8,7 @@ using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
 using ClassNotes.Models;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Threading.Channels;
@@ -228,6 +229,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 //Si existe una revision de actividad, se asigna ese valor, sino, se le pone como 0...
                 var note = x.Student.Activities.FirstOrDefault(u => u.ActivityId == activityId)?.Note ?? 0;
+                var feedBack = x.Student.Activities.FirstOrDefault(u => u.ActivityId == activityId)?.Feedback ;
 
                 //Crea el dto y lo ingresa en la lista creada anteriormente...
                 var studentAndNoteDto = new StudentAndNoteDto
@@ -236,7 +238,8 @@ namespace ClassNotes.API.Services.Activities
                     Id = x.StudentId, 
                     Name = x.Student.FirstName + " " + x.Student.LastName,
                     Email = x.Student.Email,
-                    Score = note
+                    Score = (note/100)*activityEntity.MaxScore,
+                    FeedBack = feedBack
                 };
 
                 studentScoreList.Add(studentAndNoteDto);
@@ -488,6 +491,135 @@ namespace ClassNotes.API.Services.Activities
 
         }
 
+        public async Task<ResponseDto<PaginationDto<List<ActivityDto>>>> GetStudentPendingsListAsync(
+             Guid studentId,
+             Guid courseId,
+             int page = 1,
+             int? pageSize = 10
+             )
+        {
+
+
+            var userId = _auditService.GetUserId(); // Id de quien hace la petición
+
+            var testStudent = _context.StudentsCourses.FirstOrDefault(x => x.StudentId == studentId && x.CourseId == courseId && x.CreatedBy == userId);
+
+
+            
+            if ( testStudent == null )
+            {
+                return new ResponseDto<PaginationDto<List<ActivityDto>>>
+                {
+                    StatusCode = 405,
+                    Status = true,
+                    Message = "El estudiante que ingresó no pertenece al curso, no existen o usted no esta autorizado."
+                };
+            }
+
+
+
+            int MAX_PAGE_SIZE = 50;
+            int currentPageSize = Math.Min(pageSize ?? PAGE_SIZE, MAX_PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+            var activitiesQuery = _context.Activities
+                .Where(a => a.CreatedBy == userId && a.Unit.CourseId == courseId &&!a.StudentNotes.Any(x => x.StudentId == studentId))
+                .AsQueryable();
+
+
+            // Total y paginado
+            var totalActivities = await activitiesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalActivities / currentPageSize);
+
+            // Paginación y ordenación
+            var activitiesEntity = await activitiesQuery
+                .OrderByDescending(x => x.CreatedDate) // Ordenar por fecha de creación
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .ToListAsync();
+
+            // Mapear a DTO
+            // centro retorna nulo siempre revisar 
+            // depurar cada campo ->
+            var activitiesDto = _mapper.Map<List<ActivityDto>>(activitiesEntity);
+
+            return new ResponseDto<PaginationDto<List<ActivityDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.ACT_RECORDS_FOUND,
+                Data = new PaginationDto<List<ActivityDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = currentPageSize,
+                    TotalItems = totalActivities,
+                    TotalPages = totalPages,
+                    Items = activitiesDto,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
+            };
+        }
+
+        //En conjunto con GetStudentPendingsListAsync, este endpoint obtiene informacion relevante para el primero...
+        public async Task<ResponseDto<StudentAndPendingsDto>> GetStudentPendingsInfoAsync(
+            Guid studentId,
+            Guid courseId
+        )
+        {
+
+            var userId = _auditService.GetUserId(); 
+
+            var studentEntity = await _context.StudentsCourses
+                .Include(a => a.Student)
+                .Include(a => a.Course)
+                .ThenInclude(a => a.Center)
+                .FirstOrDefaultAsync(a => a.StudentId == studentId && a.CourseId == courseId && a.CreatedBy == userId);
+
+            if (studentEntity == null) 
+            {
+                return new ResponseDto<StudentAndPendingsDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "El estudiante no pertenece al curso, no existen o no esta autorizado."
+                };
+            }
+
+            var student = new StudentAndPendingsDto.StudentInfo
+            {
+                Id = studentId,
+                FirstName = studentEntity.Student.FirstName,
+                LastName = studentEntity.Student.LastName,
+                Email = studentEntity.Student.Email,
+                Status = studentEntity.IsActive
+            };
+
+            var course = new StudentAndPendingsDto.ClassInfo
+            {
+                Id = studentEntity.CourseId,
+                ClassName = studentEntity.Course.Name,
+                CenterId = studentEntity.Course.CenterId,
+                CenterName = studentEntity.Course.Center.Name,
+                CenterAbb = studentEntity.Course.Center.Abbreviation
+            };
+
+            var studentAndCourse = new StudentAndPendingsDto
+            {
+                Class = course,
+                Student = student,
+            };
+
+
+            return new ResponseDto<StudentAndPendingsDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.STU_RECORD_FOUND,
+                Data = studentAndCourse
+            };
+
+        }
 
         // Obtener una actividad mediante su id
         public async Task<ResponseDto<ActivityDto>> GetActivityByIdAsync(Guid id)
@@ -558,7 +690,7 @@ namespace ClassNotes.API.Services.Activities
             if (!dto.IsExtra)
             {
                 //Si no es oro, se confirma que no se pasen de 100...
-                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != "oro")
+                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
 
                     return new ResponseDto<ActivityDto>
@@ -568,7 +700,7 @@ namespace ClassNotes.API.Services.Activities
                         Message = "No puede agregar más puntos de el 100% de la unidad"
                     };
                 }//Si son oro, se confirma que no se pasen de el maximo del curso...
-                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == "oro")
+                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
                     return new ResponseDto<ActivityDto>
                     {
@@ -635,7 +767,7 @@ namespace ClassNotes.API.Services.Activities
                 //Por cada actividad, si no es de puntaje "oro", Se pondera de 100 a su valor en el valor maximo real de la unidad, al igual que en el endpoint ReviewEntity, antes de este...
                 foreach (var revisedActivity in studentActivities)
                 {
-                    if (unitEntity.Course.CourseSetting.ScoreType != "oro")
+                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                     {
                         totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
                     }
@@ -691,8 +823,6 @@ namespace ClassNotes.API.Services.Activities
         }
 
 
-
-
         // Editar una actividad
         public async Task<ResponseDto<ActivityDto>> EditAsync(ActivityEditDto dto, Guid id)
         {
@@ -724,15 +854,15 @@ namespace ClassNotes.API.Services.Activities
                 };
             }
 
-            //(Ken)
-            //Para impedir cambios de unidad...
-            if (activityEntity.UnitId != dto.UnitId)
-            {
-                dto.UnitId = activityEntity.UnitId;
-            }
+            ////(Ken)
+            ////Para impedir cambios de unidad...
+            //if (activityEntity.UnitId != dto.UnitId)
+            //{
+            //    dto.UnitId = activityEntity.UnitId;
+            //}
 
             //AL igual que en createAsync, se usa unitEntity para hacer validaciones...
-            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == dto.UnitId);
+            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == activityEntity.UnitId);
 
 
             if (unitEntity is null)
@@ -746,8 +876,8 @@ namespace ClassNotes.API.Services.Activities
             }
 
             //Estas dos variables son lostas de flotantes para hacer validaciones...
-            //Se buscan las otras unidades enla unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
-            var otherActivities = _context.Activities.Where(x => x.UnitId == dto.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
+            //Se buscan las otras unidades en la unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
+            var otherActivities = _context.Activities.Where(x => x.UnitId == activityEntity.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
             //Lo mismo pero para puntos oro, esto es para verificar que entre todas las unidades DEL CURSO no se pasen del maximo del curso...
             var otherCourseActivities = _context.Activities.Include(x => x.Unit).Where(x => x.Unit.CourseId == unitEntity.CourseId && !x.IsExtra).Select(x => x.MaxScore).ToList();
 
@@ -756,7 +886,7 @@ namespace ClassNotes.API.Services.Activities
             if (!dto.IsExtra)
             {
                 //Si no es oro, se confirma que no se pasen de 100...
-                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != "oro")
+                if (dto.MaxScore + otherActivities.Sum() > 100.00 && unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
 
                     return new ResponseDto<ActivityDto>
@@ -766,7 +896,7 @@ namespace ClassNotes.API.Services.Activities
                         Message = "No puede agregar más puntos de el 100% de la unidad"
                     };
                 }//Si es oro, confirma pero de que no se pase del maximo de puntos de el curso...
-                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == "oro")
+                else if (dto.MaxScore > unitEntity.Course.CourseSetting.MaximumGrade - otherCourseActivities.Sum() && unitEntity.Course.CourseSetting.ScoreType == Constants.ScoreTypeConstant.GOLD_SCORE)
                 {
                     return new ResponseDto<ActivityDto>
                     {
@@ -831,7 +961,7 @@ namespace ClassNotes.API.Services.Activities
                 foreach (var revisedActivity in studentActivities)
                 {
                     //por cada actividad, si no se evalua como oro, se pondera de 100 a la nota maxima de la unidad, para solo necesitar se sumada a studentCourse, si se evalua como oro se suma en bruto
-                    if (unitEntity.Course.CourseSetting.ScoreType != "oro")
+                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
                     {
                         totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
                     }
@@ -900,6 +1030,10 @@ namespace ClassNotes.API.Services.Activities
                     Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
+
+            var revisedActivities = _context.StudentsActivitiesNotes.Where(a => a.ActivityId == activityEntity.Id);
+
+            _context.StudentsActivitiesNotes.RemoveRange(revisedActivities);
             _context.Activities.Remove(activityEntity);
             await _context.SaveChangesAsync();
             return new ResponseDto<ActivityDto>

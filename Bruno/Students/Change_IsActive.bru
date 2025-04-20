@@ -1,0 +1,28 @@
+meta {
+  name: Change_IsActive
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{PATH}}/students/change_state/f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  body: json
+  auth: bearer
+}
+
+headers {
+  Authorization: {{TOKEN}}
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  [
+    "FDE9CF6B-A969-405F-C94E-08DD6F448B81",
+    "701F32F8-0905-4A04-C94D-08DD6F448B81",
+    "361CF5C7-FC7F-4670-C94C-08DD6F448B81"
+  ]
+   
+}
