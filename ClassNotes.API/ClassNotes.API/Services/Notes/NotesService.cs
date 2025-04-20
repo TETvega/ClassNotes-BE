@@ -314,7 +314,8 @@ namespace ClassNotes.API.Services.Notes
                     Data = new DasboardRequestDto
                     {
                         StadisticStudents = statistics,
-                        StudentQualifications = studentData
+                        StudentQualifications = studentData,
+                        EndDate = course.CourseSetting.EndDate
                     }
                 };
             }

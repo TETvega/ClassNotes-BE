@@ -223,6 +223,7 @@ namespace ClassNotes.API.Services.Activities
             {
                 //Si existe una revision de actividad, se asigna ese valor, sino, se le pone como 0...
                 var note = x.Student.Activities.FirstOrDefault(u => u.ActivityId == activityId)?.Note ?? 0;
+                var feedBack = x.Student.Activities.FirstOrDefault(u => u.ActivityId == activityId)?.Feedback ;
 
                 //Crea el dto y lo ingresa en la lista creada anteriormente...
                 var studentAndNoteDto = new StudentAndNoteDto
@@ -231,7 +232,8 @@ namespace ClassNotes.API.Services.Activities
                     Id = x.StudentId, 
                     Name = x.Student.FirstName + " " + x.Student.LastName,
                     Email = x.Student.Email,
-                    Score = note
+                    Score = (note/100)*activityEntity.MaxScore,
+                    FeedBack = feedBack
                 };
 
                 studentScoreList.Add(studentAndNoteDto);
@@ -648,8 +650,6 @@ namespace ClassNotes.API.Services.Activities
         }
 
 
-
-
         // Editar una actividad
         public async Task<ResponseDto<ActivityDto>> EditAsync(ActivityEditDto dto, Guid id)
         {
@@ -681,15 +681,15 @@ namespace ClassNotes.API.Services.Activities
                 };
             }
 
-            //(Ken)
-            //Para impedir cambios de unidad...
-            if (activityEntity.UnitId != dto.UnitId)
-            {
-                dto.UnitId = activityEntity.UnitId;
-            }
+            ////(Ken)
+            ////Para impedir cambios de unidad...
+            //if (activityEntity.UnitId != dto.UnitId)
+            //{
+            //    dto.UnitId = activityEntity.UnitId;
+            //}
 
             //AL igual que en createAsync, se usa unitEntity para hacer validaciones...
-            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == dto.UnitId);
+            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == activityEntity.UnitId);
 
 
             if (unitEntity is null)
@@ -703,8 +703,8 @@ namespace ClassNotes.API.Services.Activities
             }
 
             //Estas dos variables son lostas de flotantes para hacer validaciones...
-            //Se buscan las otras unidades enla unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
-            var otherActivities = _context.Activities.Where(x => x.UnitId == dto.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
+            //Se buscan las otras unidades en la unidad, que no sean extra, para confirmar que entre todas no se pasen de 100 que es lo maximo que una unidad no "oro" permite...
+            var otherActivities = _context.Activities.Where(x => x.UnitId == activityEntity.UnitId && !x.IsExtra).Select(x => x.MaxScore).ToList();
             //Lo mismo pero para puntos oro, esto es para verificar que entre todas las unidades DEL CURSO no se pasen del maximo del curso...
             var otherCourseActivities = _context.Activities.Include(x => x.Unit).Where(x => x.Unit.CourseId == unitEntity.CourseId && !x.IsExtra).Select(x => x.MaxScore).ToList();
 
@@ -857,6 +857,10 @@ namespace ClassNotes.API.Services.Activities
                     Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
+
+            var revisedActivities = _context.StudentsActivitiesNotes.Where(a => a.ActivityId == activityEntity.Id);
+
+            _context.StudentsActivitiesNotes.RemoveRange(revisedActivities);
             _context.Activities.Remove(activityEntity);
             await _context.SaveChangesAsync();
             return new ResponseDto<ActivityDto>

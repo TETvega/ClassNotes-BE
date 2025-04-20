@@ -6,5 +6,6 @@
         public string Name { get; set; }
         public string Email { get; set; }
         public float Score { get; set; }
+        public string FeedBack { get; set; }
     }
 }

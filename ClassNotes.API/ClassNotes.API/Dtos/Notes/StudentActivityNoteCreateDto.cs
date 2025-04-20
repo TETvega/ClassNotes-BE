@@ -18,7 +18,6 @@ namespace ClassNotes.API.Dtos.CourseNotes
         public float Note { get; set; }
 
         [Display(Name = "Comentario")]
-        [Required(ErrorMessage = "El {0} es requerido.")]
         [StringLength(250, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
         public string Feedback { get; set; }
 
