@@ -1,0 +1,20 @@
+meta {
+  name: GetStudentInfo
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{PATH}}/activities/student-info?courseId=06ee7f6d-44b1-4729-92c9-08dd7e06babb&studentId=cb20f7ec-b6cf-4da4-2e4f-08dd7e071667
+  body: none
+  auth: bearer
+}
+
+params:query {
+  courseId: 06ee7f6d-44b1-4729-92c9-08dd7e06babb
+  studentId: cb20f7ec-b6cf-4da4-2e4f-08dd7e071667
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

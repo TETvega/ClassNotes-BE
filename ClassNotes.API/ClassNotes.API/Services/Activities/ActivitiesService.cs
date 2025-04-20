@@ -7,6 +7,7 @@ using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.CourseNotes;
 using ClassNotes.API.Dtos.Students;
 using ClassNotes.API.Services.Audit;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
@@ -444,6 +445,136 @@ namespace ClassNotes.API.Services.Activities
                 Status = true,
                 Message = MessagesConstant.CREATE_SUCCESS,
                 Data = studentActivityDto
+            };
+
+        }
+
+        public async Task<ResponseDto<PaginationDto<List<ActivityDto>>>> GetStudentPendingsListAsync(
+             Guid studentId,
+             Guid courseId,
+             int page = 1,
+             int? pageSize = 10
+             )
+        {
+
+
+            var userId = _auditService.GetUserId(); // Id de quien hace la petición
+
+            var testStudent = _context.StudentsCourses.FirstOrDefault(x => x.StudentId == studentId && x.CourseId == courseId && x.CreatedBy == userId);
+
+
+            
+            if ( testStudent == null )
+            {
+                return new ResponseDto<PaginationDto<List<ActivityDto>>>
+                {
+                    StatusCode = 405,
+                    Status = true,
+                    Message = "El estudiante que ingresó no pertenece al curso, no existen o usted no esta autorizado."
+                };
+            }
+
+
+
+            int MAX_PAGE_SIZE = 50;
+            int currentPageSize = Math.Min(pageSize ?? PAGE_SIZE, MAX_PAGE_SIZE);
+            int startIndex = (page - 1) * currentPageSize;
+
+            var activitiesQuery = _context.Activities
+                .Where(a => a.CreatedBy == userId && a.Unit.CourseId == courseId &&!a.StudentNotes.Any(x => x.StudentId == studentId))
+                .AsQueryable();
+
+
+            // Total y paginado
+            var totalActivities = await activitiesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalActivities / currentPageSize);
+
+            // Paginación y ordenación
+            var activitiesEntity = await activitiesQuery
+                .OrderByDescending(x => x.CreatedDate) // Ordenar por fecha de creación
+                .Skip(startIndex)
+                .Take(currentPageSize)
+                .ToListAsync();
+
+            // Mapear a DTO
+            // centro retorna nulo siempre revisar 
+            // depurar cada campo ->
+            var activitiesDto = _mapper.Map<List<ActivityDto>>(activitiesEntity);
+
+            return new ResponseDto<PaginationDto<List<ActivityDto>>>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.ACT_RECORDS_FOUND,
+                Data = new PaginationDto<List<ActivityDto>>
+                {
+                    CurrentPage = page,
+                    PageSize = currentPageSize,
+                    TotalItems = totalActivities,
+                    TotalPages = totalPages,
+                    Items = activitiesDto,
+                    HasPreviousPage = page > 1,
+                    HasNextPage = page < totalPages
+                }
+            };
+        }
+
+        //En conjunto con GetStudentPendingsListAsync, este endpoint obtiene informacion relevante para el primero...
+        public async Task<ResponseDto<StudentAndPendingsDto>> GetStudentPendingsInfoAsync(
+            Guid studentId,
+            Guid courseId
+        )
+        {
+
+            var userId = _auditService.GetUserId(); 
+
+            var studentEntity = await _context.StudentsCourses
+                .Include(a => a.Student)
+                .Include(a => a.Course)
+                .ThenInclude(a => a.Center)
+                .FirstOrDefaultAsync(a => a.StudentId == studentId && a.CourseId == courseId && a.CreatedBy == userId);
+
+            if (studentEntity == null) 
+            {
+                return new ResponseDto<StudentAndPendingsDto>
+                {
+                    StatusCode = 404,
+                    Status = false,
+                    Message = "El estudiante no pertenece al curso, no existen o no esta autorizado."
+                };
+            }
+
+            var student = new StudentAndPendingsDto.StudentInfo
+            {
+                Id = studentId,
+                FirstName = studentEntity.Student.FirstName,
+                LastName = studentEntity.Student.LastName,
+                Email = studentEntity.Student.Email,
+                Status = studentEntity.IsActive
+            };
+
+            var course = new StudentAndPendingsDto.ClassInfo
+            {
+                Id = studentEntity.CourseId,
+                ClassName = studentEntity.Course.Name,
+                CenterId = studentEntity.Course.CenterId,
+                CenterName = studentEntity.Course.Center.Name,
+                CenterAbb = studentEntity.Course.Center.Abbreviation
+            };
+
+            var studentAndCourse = new StudentAndPendingsDto
+            {
+                Class = course,
+                Student = student,
+            };
+
+
+            return new ResponseDto<StudentAndPendingsDto>
+            {
+                StatusCode = 200,
+                Status = true,
+                Message = MessagesConstant.STU_RECORD_FOUND,
+                Data = studentAndCourse
             };
 
         }

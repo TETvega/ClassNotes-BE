@@ -44,5 +44,7 @@ namespace ClassNotes.API.Services.Activities
 
         Task<ResponseDto<List<StudentActivityNoteDto>>> ReviewActivityAsync(List<StudentActivityNoteCreateDto> dto, Guid ActivityId);
         Task<ResponseDto<PaginationDto<List<StudentAndNoteDto>>>> GetStudentsActivityScoreAsync(Guid activityId, int page = 1, string searchTerm = "", int? pageSize = null);
+        Task<ResponseDto<PaginationDto<List<ActivityDto>>>> GetStudentPendingsListAsync(Guid studentId, Guid courseId, int page = 1, int? pageSize = 10);
+        Task<ResponseDto<StudentAndPendingsDto>> GetStudentPendingsInfoAsync(Guid studentId, Guid courseId);
     }
 }
