@@ -50,7 +50,7 @@ namespace ClassNotes.API.Services.CoursesSettings
 			if (!string.IsNullOrEmpty(searchTerm))
 			{
 				settingsQuery = settingsQuery.Where(
-					s => s.ScoreType.ToLower().Contains(searchTerm.ToLower())
+					s => s.Name.ToLower().Contains(searchTerm.ToLower())
 				);
 			}
 
