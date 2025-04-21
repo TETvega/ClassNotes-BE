@@ -608,7 +608,7 @@ namespace ClassNotes.API.Services.Emails
             foreach (var unit in studentUnits)
             {
                 // AM: Agregar el número del parcial
-                table.AddCell(new Cell().Add(new Paragraph("Unidad "+unit.UnitNumber.ToString())
+                table.AddCell(new Cell().Add(new Paragraph(unit.UnitNumber.ToString())
                     .SetTextAlignment(TextAlignment.CENTER)));
 
                 // AM: Agregar la nota del parcial
