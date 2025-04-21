@@ -15,7 +15,8 @@ namespace ClassNotes.API.Dtos.Attendances
         [Required]
         public Guid StudentId { get; set; }
 
-        [Required]
-        public string TeacherId { get; set; }
+        //No se puede obtener desde front end
+        //[Required]
+        //public string TeacherId { get; set; }
     }
 }

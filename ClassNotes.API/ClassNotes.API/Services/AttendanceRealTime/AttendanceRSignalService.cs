@@ -4,6 +4,7 @@ using ClassNotes.API.Database;
 using ClassNotes.API.Database.Entities;
 using ClassNotes.API.Dtos.AttendacesRealTime;
 using ClassNotes.API.Dtos.AttendacesRealTime.ForStudents;
+using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Dtos.Common;
 using ClassNotes.API.Dtos.Emails;
 using ClassNotes.API.Hubs;
@@ -17,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using OtpNet;
 using QRCoder;
+using System;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Point = NetTopologySuite.Geometries.Point;
@@ -167,6 +169,18 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 };
             }
 
+
+            //Se confirma que en al menos 5 minutos no sea un nuevo dia...
+            if (DateTimeOffset.Now.AddMinutes(5).Date > DateTimeOffset.Now.Date)
+            {
+                return new ResponseDto<object>
+                {
+                    StatusCode = 405,
+                    Status = false,
+                    Message = "No se puede ingresar una asistencia muy cerca de el dia siguiente, al menos 7 minutos de diferencia.",
+                    Data = null
+                };
+            }
 
 
             // Validaciones
@@ -402,6 +416,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 Data = result
             };
         }
+
 
         private EmailDto CreateEmailDto(StudentEntity estudiante, CourseEntity clase, string otp, int tiempoExpiracion)
         {
