@@ -385,7 +385,7 @@ namespace ClassNotes.API.Services.Activities
                     {
                         totalUnitPoints.Add((revisedActivity.Note / 100) * revisedActivity.Activity.MaxScore); // como la nota revisada es un porcentaje, se pasa a puntaje en bruto
                     }
-                    totalUnitPoints.Add((activity.Note / 100) * activityEntity.MaxScore); //Lo mismo para esta actividad recien revisada...
+                    //totalUnitPoints.Add((activity.Note / 100) * activityEntity.MaxScore); //Lo mismo para esta actividad recien revisada...
 
                 }
 

@@ -15,7 +15,7 @@ namespace ClassNotes.API.Database.Entities
         public string Name { get; set; }
 
         [Required]
-        [StringLength(15)]
+        [StringLength(20)]
         [Column("score_type")]
         public string ScoreType { get; set; }
 
