@@ -562,6 +562,12 @@ namespace ClassNotes.API.Services.Courses
             var studentCourses = await _context.StudentsCourses
                 .Where(sc => sc.CourseId == id)
                 .ToListAsync();
+
+            var SCIds = studentCourses.Select(x => x.Id); //Se crea una lista de Ids de StudentCourse...
+            //Se buscan todos los studentUnit asociados con algún id de la lista...
+            var studentUnits = await _context.StudentsUnits.Where(x => SCIds.Any(y => y == x.StudentCourseId)).ToListAsync();
+
+            _context.StudentsUnits.RemoveRange(studentUnits);
             _context.StudentsCourses.RemoveRange(studentCourses);
 
             // Eliminar la configuración asociada al curso
