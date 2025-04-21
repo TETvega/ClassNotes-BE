@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{PATH}}/attendancesR/send_attendanceR
+  url: {{PATH}}/attendances/create
   body: json
   auth: bearer
 }
@@ -16,12 +16,10 @@ auth:bearer {
 
 body:json {
   {
-    "strictMode": true,
-    "courseId": "f6cfc25e-8259-4cde-4e74-08dd73c935a0",
-    "homePlace": true,
-    "attendanceType": {
-      "email": false,
-      "qr": true
-    }
+    "Attended": true,
+    "Status": "PRESENT",
+    "RegistrationDate": "2025-04-21T00:00:00",
+    "CourseId": "cfb6c9c8-220d-480e-f64b-08dd8091758c",
+    "StudentId": "2a760f21-6bf0-4963-e7b3-08dd8091b3e5"
   }
 }

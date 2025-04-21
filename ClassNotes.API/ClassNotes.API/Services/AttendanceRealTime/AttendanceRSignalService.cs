@@ -154,6 +154,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                              c.Center.IsArchived == false &&
                              c.Center.TeacherId == userId)
                  .Include(c => c.Center)
+                 .Include(x => x.CourseSetting)
                  .Include(c => c.Students.Where(sc => sc.IsActive))
                      .ThenInclude(sc => sc.Student)
                  .FirstOrDefaultAsync();
@@ -168,10 +169,9 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     Message = "Ya hay una asistencia activa en este curso.",
                 };
             }
-
-
-            //Se confirma que en al menos 5 minutos no sea un nuevo dia...
-            if (DateTimeOffset.Now.AddMinutes(5).Date > DateTimeOffset.Now.Date)
+            
+            //Se confirma que en el tiempo minimo mas  al menos 5 minutos no sea un nuevo dia...
+            if (DateTimeOffset.Now.AddMinutes(5 + course.CourseSetting.MinimumAttendanceTime).Date > DateTimeOffset.Now.Date)
             {
                 return new ResponseDto<object>
                 {
