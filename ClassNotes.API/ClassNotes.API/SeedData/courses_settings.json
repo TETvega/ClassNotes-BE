@@ -19,7 +19,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "3FF62995-97F9-4EBF-BF7C-08DD73C93595",
@@ -30,7 +30,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "15E4DEC6-E750-4C1A-BF7D-08DD73C93595",
@@ -41,7 +41,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "2FFBFEE9-87E2-4D53-BF7E-08DD73C93595",
@@ -52,7 +52,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "CB8571C9-4C4B-4664-BF7F-08DD73C93595",
@@ -63,7 +63,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "D762C83D-D5B9-4827-BF80-08DD73C93595",
@@ -74,7 +74,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "C2901670-E18A-4300-BF81-08DD73C93595",
@@ -96,7 +96,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "AD095004-190F-4791-BF83-08DD73C93595",
@@ -107,7 +107,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "11613EB9-7AF8-4EBA-BF84-08DD73C93595",
@@ -118,7 +118,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "F89F716A-E99E-4D0F-BF85-08DD73C93595",
@@ -140,7 +140,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "1AE71F2C-ABB6-4C03-BF87-08DD73C93595",
@@ -151,7 +151,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "3A8F8F10-EA5B-4726-BF88-08DD73C93595",
@@ -162,7 +162,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "272A14A4-F47C-4B5F-BF89-08DD73C93595",
@@ -173,7 +173,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "5704A99A-4240-4D13-BF8A-08DD73C93595",
@@ -184,7 +184,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "2FC6A111-5403-400D-BF8B-08DD73C93595",
@@ -195,7 +195,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "E587AC18-2EBE-4B49-BF8C-08DD73C93595",
@@ -206,7 +206,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "ECAD4FDF-961B-4E39-BF8D-08DD73C93595",
@@ -217,7 +217,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "3BF80DA2-640E-4322-BF8E-08DD73C93595",
@@ -228,7 +228,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "9D6B9FC6-07F5-4215-BF8F-08DD73C93595",
@@ -239,7 +239,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   }, 
   {
     "id": "FB2A986F-747C-4711-BF7A-08DD73C93585",
@@ -261,7 +261,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "3FF62995-97F9-4EBF-BF7C-08DD73C93591",
@@ -272,7 +272,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "15E4DEC6-E750-4C1A-BF7D-08DD73C93575",
@@ -283,7 +283,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "2FFBFEE9-87E2-4D53-BF7E-08DD73C93593",
@@ -294,7 +294,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "CB8571C9-4C4B-4664-BF7F-08DD73C94595",
@@ -305,7 +305,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "D762C83D-D5B9-4827-BF80-08DD73C23595",
@@ -316,7 +316,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "C2901670-E18A-4300-BF81-06DD73C93595",
@@ -338,7 +338,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "AD095004-190F-4791-BF83-08DD73C93225",
@@ -349,7 +349,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   }, 
   {
     "id": "AD095004-190F-4791-BF83-08DD73C93201",
@@ -360,7 +360,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "11613EB9-7AF8-4EBA-BF84-08DD73C93200",
@@ -371,7 +371,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "F89F716A-E99E-4D0F-BF85-08DD73C93199",
@@ -393,7 +393,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "1AE71F2C-ABB6-4C03-BF87-08DD73C93101",
@@ -404,7 +404,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "3A8F8F10-EA5B-4726-BF88-08DD73C93100",
@@ -415,7 +415,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "272A14A4-F47C-4B5F-BF89-08DD73C93005",
@@ -426,7 +426,7 @@
     "MinimumGrade": 67,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "5704A99A-4240-4D13-BF8A-08DD73C93004",
@@ -437,7 +437,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "2FC6A111-5403-400D-BF8B-08DD73C93003",
@@ -448,7 +448,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "E587AC18-2EBE-4B49-BF8C-08DD73C93001",
@@ -459,7 +459,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   },
   {
     "id": "ECAD4FDF-961B-4E39-BF8D-08DD73C93002",
@@ -470,7 +470,7 @@
     "MinimumGrade": 60,
     "MaximumGrade": 100,
     "MinimunAttendanceTime": 5,
-    "IsOriginal": false
+    "IsOriginal": true
   }
 
 ]
