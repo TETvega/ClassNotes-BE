@@ -642,7 +642,7 @@ namespace ClassNotes.API.Services.Emails
 
             // *********************************************************************
 
-            if(courseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
+            if(courseSetting.ScoreType == Constants.ScoreTypeConstant.ARITHMETIC_SCORE)
             {
                 document.Add(new Paragraph("Cada unidad se califica sobre un máximo de 100 puntos.")
                     .SetFontSize(9)
@@ -651,8 +651,19 @@ namespace ClassNotes.API.Services.Emails
                     .SetMarginTop(8)
                     .SetMarginBottom(6));
             }
+            else if (courseSetting.ScoreType == Constants.ScoreTypeConstant.GOLD_SCORE)
+            {
+                document.Add(new Paragraph("La evaluación de la clase se basa en un sistema de puntos oro. El promedio total resulta de la suma de los puntajes de todas las actividades.")
+                    .SetFontSize(9)
+                    //.SetFontColor(new DeviceRgb(169, 169, 169))
+                    .SetTextAlignment(TextAlignment.LEFT)
+                    .SetMarginTop(8)
+                    .SetMarginBottom(6));
+            }
 
-            string observationText = studentCourse.FinalNote >= courseSetting.MinimumGrade ? "Aprobado" : "Reprobado";
+
+
+                string observationText = studentCourse.FinalNote >= courseSetting.MinimumGrade ? "Aprobado" : "Reprobado";
 
             document.Add(new Paragraph($"Observación: {observationText}")
                 .SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
@@ -668,6 +679,24 @@ namespace ClassNotes.API.Services.Emails
                 .SetMarginTop(6)
                 .SetMarginBottom(10));
 
+            if (courseSetting.ScoreType == Constants.ScoreTypeConstant.WEIGHTED_SCORE)
+            {
+                document.Add(new Paragraph($"Cada unidad de esta clase tiene un peso específico, representando un porcentaje distinto del total de la calificación:")
+                    .SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
+                    .SetFontSize(10)
+                    .SetTextAlignment(TextAlignment.LEFT)
+                    .SetMarginTop(6));
+
+                foreach (var unit in course.Units.OrderBy(u => u.UnitNumber))
+                {
+
+                    document.Add(new Paragraph($"Unidad {unit.UnitNumber}:  {(unit.MaxScore/100)*courseSetting.MaximumGrade} %")
+                        .SetFontSize(9)
+                        .SetTextAlignment(TextAlignment.LEFT)
+                        .SetMarginTop(1)
+                        .SetMarginBottom(1));
+                }
+            }
 
             // AM: Linea horizontal
             document.Add(new LineSeparator(new SolidLine(1f))
