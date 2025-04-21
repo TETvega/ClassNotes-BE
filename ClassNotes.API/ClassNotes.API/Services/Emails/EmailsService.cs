@@ -545,8 +545,23 @@ namespace ClassNotes.API.Services.Emails
 				.SetTextAlignment(TextAlignment.CENTER);
 			document.Add(subtitle);
 
-			// AM: Linea horizontal
-			document.Add(new LineSeparator(new SolidLine(2f))
+            var scoreType = "";
+
+            if(Constants.ScoreTypeConstant.ARITHMETIC_SCORE == courseSetting.ScoreType)
+            {
+                scoreType = "Aritmética";
+            }
+            else if(Constants.ScoreTypeConstant.GOLD_SCORE == courseSetting.ScoreType)
+            {
+                scoreType = "puntos oro";
+            }
+            else
+            {
+                scoreType = "ponderada";
+            }
+
+            // AM: Linea horizontal
+            document.Add(new LineSeparator(new SolidLine(2f))
 				.SetWidth(UnitValue.CreatePercentValue(100))
 				.SetMarginTop(5)
 				.SetMarginBottom(5));
@@ -582,6 +597,10 @@ namespace ClassNotes.API.Services.Emails
             generalInfoTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph()
                 .Add(new Text("Fecha: ").SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
                 .Add(new Text($"{date:dd 'de' MMMM 'de' yyyy}")).SetFontSize(12)));
+
+            generalInfoTable.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph()
+                .Add(new Text("Sistema de calificación: ").SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD)))
+                .Add(new Text($"{scoreType}")).SetFontSize(12)));
 
             document.Add(generalInfoTable);
 
