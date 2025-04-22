@@ -1,0 +1,22 @@
+meta {
+  name: Edit_UbicationCourse
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{PATH}}/courses/ubication/f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "x": 1.12,
+    "y": -1.132
+  }
+}

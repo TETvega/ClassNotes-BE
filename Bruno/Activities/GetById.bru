@@ -1,0 +1,15 @@
+meta {
+  name: GetById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{PATH}}/activities/cbad7aca-b92b-49f9-5edc-08dd73cdd4aa
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

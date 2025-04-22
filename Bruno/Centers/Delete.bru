@@ -1,0 +1,23 @@
+meta {
+  name: Delete
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{PATH}}/centers/E3D6674A-8265-4E19-0BF8-08DD59326108?confirmation=true
+  body: none
+  auth: bearer
+}
+
+params:query {
+  confirmation: true
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+vars:pre-request {
+  id: 550E8400-E29B-41D4-A716-446655440000
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Delete
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{PATH}}/tags_activities/delete
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  [
+      "886a17fa-a80c-413a-b35e-7dc956e9522e"
+  ]
+  
+}

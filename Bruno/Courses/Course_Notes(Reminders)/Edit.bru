@@ -1,0 +1,25 @@
+meta {
+  name: Edit
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{PATH}}/course_notes/d36e827a-6355-4cc3-ad3a-08dd5a29f35f
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+      "title": "Introducción a la programacion en C# 2",
+      "content": "Esta es una nota sobre los conceptos básicos de programacion en C# editado.",
+      "registrationDate": "2025-02-02T10:00:00",
+      "useDate": "2025-02-10T12:00:00",
+     "courseId": "45d85f5a-6c74-4a7b-8d1f-1c736730116f"
+  }
+}

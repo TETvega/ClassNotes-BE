@@ -1,0 +1,61 @@
+meta {
+  name: Review
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{PATH}}/activities/review/3c6f3bab-63ed-424c-5ed7-08dd73cdd4aa
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  [
+    {
+      "StudentId": "a18db67b-0683-43a7-ee47-08dd73cc1390",
+      "Note": 2,
+      "Feedback": "ok"
+    },
+   
+   {
+      "StudentId": "3d52587b-50ef-477e-ee46-08dd73cc1390",
+      "Note": 4,
+      "Feedback": "ok"
+    },
+    {
+      "StudentId": "db3f9861-b2e7-411e-ee45-08dd73cc1390",
+      "Note": 2,
+      "Feedback": "ok"
+    },
+    {
+      "StudentId": "87f39f99-cff5-449b-ee44-08dd73cc1390",
+      "Note": 1,
+      "Feedback": "ok"
+    },
+    {
+      "StudentId": "65b45386-e0cd-49e2-ee43-08dd73cc1390",
+      "Note": 5,
+      "Feedback": "ok"
+    },
+    {
+      "StudentId": "1351d6b4-1469-47e9-ee42-08dd73cc1390",
+      "Note": 5,
+      "Feedback": "ok"
+    },
+    {
+      "StudentId": "acf5a242-0a02-4fbf-ee41-08dd73cc1390",
+      "Note": 4,
+      "Feedback": "ok"
+    },
+    {
+      "StudentId": "3d0b1229-905a-4bb0-ee40-08dd73cc1390",
+      "Note": 3,
+      "Feedback": "ok"
+    }
+  ]
+}

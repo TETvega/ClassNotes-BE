@@ -1,0 +1,22 @@
+meta {
+  name: Edit
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{PATH}}/users/7be3a3bd-397e-46dc-812e-ae3bb270fabb
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "firstName": "Anthony",
+    "lastName": "Miranda"
+  }
+}

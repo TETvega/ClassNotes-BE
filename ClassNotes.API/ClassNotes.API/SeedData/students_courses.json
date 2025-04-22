@@ -1,0 +1,198 @@
+[
+  {
+    "id": "86556B6E-43E3-4D4D-AE9B-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "E94943DB-F6FF-4460-EE29-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "6DAE139D-3003-4A79-AE9C-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "231CA03B-BF60-48B2-EE2A-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "B227D436-87DD-450C-AE9D-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "6BEE6190-BE47-489C-EE2B-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "41822447-5C8B-4163-AE9E-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "E139B80B-293E-466B-EE2C-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "41C31B03-FC90-4E00-AE9F-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "555A8B7E-3B94-461C-EE2D-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "F4B82C4C-9820-4029-AEA0-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "5E44C58D-4665-4AA4-EE2E-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "85D1C3AF-CCF6-49B0-AEA1-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "4E7610E8-3AA4-4DF0-EE2F-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "1922BE71-8BB5-4910-AEA2-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "FDC326DE-6CF5-46AE-EE30-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "2FF0145B-C570-40E6-AEA3-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "6778549F-C94E-4C09-EE31-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "33F800CA-C605-4E35-AEA4-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "92FBD7CC-DBCF-4812-EE32-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "36E872AC-54F9-4705-AEA5-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9EC4C5A9-1401-4DA2-EE33-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "BB9243A6-C883-480B-AEA6-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "6B3680C0-9463-4A2A-EE34-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "EDF7BE13-777A-4FA4-AEA7-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "2E3EBD7C-0451-4287-EE35-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "D31E0ED3-EE78-4D70-AEA8-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "2F752895-3C52-469C-EE36-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "F6158ED8-4A85-40A5-AEA9-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "C0B28711-59E4-4389-EE37-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "C60BBB3A-5701-43EA-AEAA-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9A6E2BEE-5D49-4721-EE38-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "2EA7A0A5-725C-4F45-AEAB-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "18552DEC-2266-4F00-EE39-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "F851A7EB-7AE7-4323-AEAC-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9425F7A8-F699-4400-EE3A-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "DF321078-D386-4E86-AEAD-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "9278D63D-9143-4616-EE3B-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "446FC1E8-735D-43F1-AEAE-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "50B18A7C-AAA8-4261-EE3C-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "6357CC36-9B40-47C7-AEAF-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "11AED3F7-C53F-4FBA-EE3D-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "37612796-85F5-49B0-AEB0-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "879E2D50-D95B-4ED5-EE3E-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "A045BFEC-3BD5-453D-AEB1-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "73ED78D6-F669-4BB8-EE3F-08DD73CC1390",
+    "FinalNote": 0,
+    "IsActive": true
+  },
+  {
+    "id": "43B0EF84-7F79-4003-AEB2-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "3D0B1229-905A-4BB0-EE40-08DD73CC1390",
+    "FinalNote": 3,
+    "IsActive": true
+  },
+  {
+    "id": "54F3FA89-08C5-4A30-AEB3-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "ACF5A242-0A02-4FBF-EE41-08DD73CC1390",
+    "FinalNote": 4,
+    "IsActive": true
+  },
+  {
+    "id": "9CDCB500-AB2D-46B9-AEB4-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "1351D6B4-1469-47E9-EE42-08DD73CC1390",
+    "FinalNote": 5,
+    "IsActive": true
+  },
+  {
+    "id": "AF62CAA4-A7F4-4BB7-AEB5-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "65B45386-E0CD-49E2-EE43-08DD73CC1390",
+    "FinalNote": 5,
+    "IsActive": true
+  },
+  {
+    "id": "D7862874-B407-4496-AEB6-08DD73CC1397",
+    "CourseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0",
+    "StudentId": "87F39F99-CFF5-449B-EE44-08DD73CC1390",
+    "FinalNote": 1,
+    "IsActive": true
+  }
+]

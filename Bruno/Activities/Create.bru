@@ -1,0 +1,28 @@
+meta {
+  name: Create
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{PATH}}/activities
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Ejercicios 12-20 ",
+    "isExtra": false,
+    "description" : "Ejercicios Introductorios a c# y API rest",
+    "maxScore": 7,
+    "qualificationDate": "2025-04-22T14:30:00Z",
+    "tagActivityId": "7402ca4c-1937-48b0-984f-cbb28162e77a",
+    "unitId": "68E2E5E8-5099-4364-B948-76EE7D315E87"
+  }
+  
+}

@@ -1,0 +1,24 @@
+meta {
+  name: GetActivities
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/activities?searchTerm&page=1&typeActivities=ALL&centerID=c854bc29-f388-400b-6fc4-08dd73c6c0de&tagActivityId
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  page: 1
+  typeActivities: ALL
+  centerID: c854bc29-f388-400b-6fc4-08dd73c6c0de
+  tagActivityId: 
+  ~pageSize: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

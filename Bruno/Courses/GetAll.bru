@@ -1,0 +1,21 @@
+meta {
+  name: GetAll
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{PATH}}/courses?pageSize=20&page=1&searchTerm
+  body: none
+  auth: bearer
+}
+
+params:query {
+  pageSize: 20
+  page: 1
+  searchTerm: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

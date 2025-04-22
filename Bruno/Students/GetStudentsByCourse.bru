@@ -1,0 +1,21 @@
+meta {
+  name: GetStudentsByCourse
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{PATH}}/students/byCourse/61f74479-f689-4803-0f52-08dd7d3127bc?searchTerm&page=1&pageSize
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  page: 1
+  pageSize: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

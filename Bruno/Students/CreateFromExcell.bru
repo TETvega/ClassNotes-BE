@@ -1,0 +1,192 @@
+meta {
+  name: CreateFromExcell
+  type: http
+  seq: 9
+}
+
+post {
+  url: https://localhost:7047/api/students/create-from-excel/{{courseId}}?strictMode=false
+  body: multipartForm
+  auth: bearer
+}
+
+params:query {
+  strictMode: false
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "StricMode": true,
+    "courseId": "f6cfc25e-8259-4cde-4e74-08dd73c935a0",
+    "students": [
+      {
+        "firstName": "Ever Garcia",
+        "lastName": "PerezA",
+        "email": "ever@meaa.sl"
+      },
+      {
+        "firstName": "David Mejia",
+        "lastName": "Perezss@asss.me",
+        "email": "aiiis@mehgsh"
+      },
+      {
+        "firstName": "Lucia",
+        "lastName": "Martinez",
+        "email": "lucia123@gmailmema"
+      },
+      {
+        "firstName": "Carlos",
+        "lastName": "Ramirez",
+        "email": "carlos@mesacom"
+      },
+      {
+        "firstName": "Fernanda",
+        "lastName": "Lopez",
+        "email": "fernanda@mailasdacom"
+      },
+      {
+        "firstName": "Jorge",
+        "lastName": "Castillo",
+        "email": "jorge@comasd"
+      },
+      {
+        "firstName": "Valeria",
+        "lastName": "Nunez",
+        "email": "valeria@correoase"
+      },
+      {
+        "firstName": "Brayan",
+        "lastName": "Hernandez",
+        "email": "vf@brayanmail"
+      },
+      {
+        "firstName": "Camila",
+        "lastName": "Gomez",
+        "email": "camila@hotmailuieicom"
+      },
+      {
+        "firstName": "Mateo",
+        "lastName": "Sanchez",
+        "email": "mateo@mailsscom"
+      },
+      {
+        "firstName": "Paola",
+        "lastName": "Alvarez",
+        "email": "paola.mail@jkdidcom"
+      },
+      {
+        "firstName": "Luis",
+        "lastName": "Ortega",
+        "email": "luis@nopeaacom"
+      },
+      {
+        "firstName": "Andrea",
+        "lastName": "Mendoza",
+        "email": "andrea@siteass"
+      },
+      {
+        "firstName": "Mario",
+        "lastName": "Pineda",
+        "email": "mariopineda@asdsad"
+      },
+      {
+        "firstName": "Daniela",
+        "lastName": "Vargas",
+        "email": "daniela@sodocom"
+      },
+      {
+        "firstName": "Kevin",
+        "lastName": "Lozano",
+        "email": "kevin@mailaacom"
+      },
+      {
+        "firstName": "Natalia",
+        "lastName": "Guerrero",
+        "email": "natalia@correoaashn"
+      },
+      {
+        "firstName": "Sebastian",
+        "lastName": "Cruz",
+        "email": "sebastian@aaaemail.com"
+      },
+      {
+        "firstName": "Isabel",
+        "lastName": "Duarte",
+        "email": "isabel@maiaaal"
+      },
+      {
+        "firstName": "Andres",
+        "lastName": "Aguilar",
+        "email": "andres@correocom"
+      },
+      {
+        "firstName": "Tatiana",
+        "lastName": "Escobar",
+        "email": "tatiana@chnoaa"
+      },
+      {
+        "firstName": "Francisco",
+        "lastName": "Zelaya",
+        "email": "francisco@kjdk.hn"
+      },
+      {
+        "firstName": "Karla",
+        "lastName": "Villeda",
+        "email": "karla@siteaa.hn"
+      },
+      {
+        "firstName": "Diego",
+        "lastName": "Ruiz",
+        "email": "diegoruiz@com.awd"
+      },
+      {
+        "firstName": "Sofia",
+        "lastName": "Peña",
+        "email": "sofia@mail.com"
+      },
+      {
+        "firstName": "Esteban",
+        "lastName": "Ramos",
+        "email": "esteban@ramos"
+      },
+      {
+        "firstName": "Melany",
+        "lastName": "Chavez",
+        "email": "melany@.hn.asss."
+      },
+      {
+        "firstName": "Oscar",
+        "lastName": "Benitez",
+        "email": "oscar@domaicom"
+      },
+      {
+        "firstName": "Mariela",
+        "lastName": "Zuniga",
+        "email": "mariela@mail.."
+      },
+      {
+        "firstName": "Cristian",
+        "lastName": "Medina",
+        "email": "cristian@nope"
+      },
+      {
+        "firstName": "Daniel",
+        "lastName": "Herrera",
+        "email": "daniel.mail@se.as"
+      }
+    ]
+  }
+  
+}
+
+body:multipart-form {
+  file: @file(C:\Users\Usuario\Downloads\testEndpoint.xlsx)
+}
+
+vars:pre-request {
+  courseId: f6cfc25e-8259-4cde-4e74-08dd73c935a0
+}

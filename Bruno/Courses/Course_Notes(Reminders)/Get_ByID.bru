@@ -1,0 +1,19 @@
+meta {
+  name: Get_ByID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/course_notes/d36e827a-6355-4cc3-ad3a-08dd5a29f35f
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+   
+}

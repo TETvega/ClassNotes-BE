@@ -1,0 +1,19 @@
+meta {
+  name: Recover
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{PATH}}/centers/recover/300C439C-E4E2-4EAB-BB6E-E1EAEC4252FF
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+vars:pre-request {
+  id: E29B8400-E29B-41D4-A716-446655440001
+}

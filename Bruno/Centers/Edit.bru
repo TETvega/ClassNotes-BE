@@ -1,0 +1,36 @@
+meta {
+  name: Edit
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{PATH}}/centers/2E6B6552-281C-45D4-4F98-08DD5921368E?changedImage=true
+  body: multipartForm
+  auth: bearer
+}
+
+params:query {
+  changedImage: true
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Jeronimo J Reina EDIT",
+    "abbreviation": "JJRE"
+  }
+}
+
+body:multipart-form {
+  Name: Universidad Nacional Autonoma de Honduras
+  Abbreviation: UNAH-CUROC
+  image: @file(C:\Users\crist\Pictures\curoc.jpg)
+}
+
+vars:pre-request {
+  id: E29B8400-E29B-41D4-A716-446655440001
+}

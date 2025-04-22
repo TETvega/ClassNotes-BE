@@ -1,0 +1,23 @@
+meta {
+  name: Send_Email
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/emails
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "to": "",
+    "subject": "Holaa",
+    "content": "Soy un correo enviado desde el backend de ClassNotes"
+  }
+}

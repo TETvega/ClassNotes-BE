@@ -1,0 +1,32 @@
+meta {
+  name: Create
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{PATH}}/courses_settings/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Configuración 321",
+    "scoreType": "WEIGHTED_SCORE",
+    "startDate": "2025-03-03T03:03:27.528Z",
+    "endDate": "2025-03-03T03:03:27.528Z",
+    "minimumGrade": 70,
+    "maximumGrade": 100,
+      "ValidateRangeMeters": 10,
+        "getLocationDto": {
+        "x": 30.329,
+        "y": 30.1673
+      },
+    "minimumAttendanceTime": 10
+  }
+}

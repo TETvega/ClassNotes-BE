@@ -1,0 +1,25 @@
+meta {
+  name: Get_All_Revised_Activities
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{PATH}}/notes/student_activities?courseId=B941094A-2646-470F-A18B-5BD75F9B067C&page=1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  courseId: B941094A-2646-470F-A18B-5BD75F9B067C
+  page: 1
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+vars:pre-request {
+  studentId: 
+  unitId: 
+}

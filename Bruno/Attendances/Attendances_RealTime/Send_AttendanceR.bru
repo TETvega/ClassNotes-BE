@@ -1,0 +1,27 @@
+meta {
+  name: Send_AttendanceR
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/attendancesR/send_attendanceR
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "strictMode": true,
+    "courseId": "f6cfc25e-8259-4cde-4e74-08dd73c935a0",
+    "homePlace": true,
+    "attendanceType": {
+      "email": false,
+      "qr": true
+    }
+  }
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Get_CentersActives
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{PATH}}/centers/actives
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~page: 
+  ~pageSize: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

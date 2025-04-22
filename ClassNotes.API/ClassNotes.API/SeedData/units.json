@@ -1,0 +1,38 @@
+[
+  {
+    "id": "A8FB7B2E-E63A-436D-9614-D7C05C60C938",
+    "unitNumber": 4,
+    "maxScore": 100,
+    "courseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0"
+  },
+  {
+    "id": "82656FC8-D504-43A5-9EEA-A99AB74F1CE0",
+    "unitNumber": 3,
+    "maxScore": 100,
+    "courseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0"
+  },
+  {
+    "id": "15498880-13B2-4745-896F-9767512388DB",
+    "unitNumber": 5,
+    "maxScore": 100,
+    "courseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0"
+  },
+  {
+    "id": "006A0373-4C39-4D21-95E2-839955E5B248",
+    "unitNumber": 6,
+    "maxScore": 100,
+    "courseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0"
+  },
+  {
+    "id": "68E2E5E8-5099-4364-B948-76EE7D315E87",
+    "unitNumber": 1,
+    "maxScore": 100,
+    "courseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0"
+  },
+  {
+    "id": "0E3695E9-E040-46C6-8C0B-3A1BABB72816",
+    "unitNumber": 2,
+    "maxScore": 100,
+    "courseId": "F6CFC25E-8259-4CDE-4E74-08DD73C935A0"
+  }
+]

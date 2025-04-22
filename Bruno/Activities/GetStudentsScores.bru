@@ -1,0 +1,21 @@
+meta {
+  name: GetStudentsScores
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{PATH}}/activities/students_scores/cbad7aca-b92b-49f9-5edc-08dd73cdd4aa?pageSize=1&page=26
+  body: none
+  auth: bearer
+}
+
+params:query {
+  pageSize: 1
+  page: 26
+  ~searchTerm: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

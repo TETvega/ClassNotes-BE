@@ -1,0 +1,35 @@
+meta {
+  name: Register
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{PATH}}/auth/register
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "firstName": "{{firstName}}",
+    "lastName": "{{lastName}}",
+    "email": "{{email}}",
+    "password": "{{password}}",
+    "confirmPassword": "{{confirmPassword}}"
+  }
+}
+
+vars:pre-request {
+  firstName: Juan Perez
+  lastName: David Malo
+  email: jperez@me.com
+  password: Temporal01*
+  confirmPassword: Temporal01*
+}
+
+script:post-response {
+  let response = res.getBody()
+  bru.setEnvVar("TOKEN", response.data?.token ?? '')
+  bru.setEnvVar("REFRESH_TOKEN", response.data?.refreshToken ?? '')
+}

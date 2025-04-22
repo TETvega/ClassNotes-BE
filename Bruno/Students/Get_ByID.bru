@@ -1,0 +1,15 @@
+meta {
+  name: Get_ByID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{PATH}}/students/87f39f99-cff5-449b-ee44-08dd73cc1390
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

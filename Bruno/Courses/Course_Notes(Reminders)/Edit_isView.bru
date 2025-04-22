@@ -1,0 +1,22 @@
+meta {
+  name: Edit_isView
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{PATH}}/course_notes/notesViews
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  [
+    "c0adb0cb-42c9-4cce-d450-08dd73d1a5e3",
+    "b9edcb5f-a432-4564-d448-08dd73d1a5e3"
+  ]
+}

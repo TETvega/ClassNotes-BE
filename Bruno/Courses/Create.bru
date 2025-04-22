@@ -1,0 +1,54 @@
+meta {
+  name: Create
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{PATH}}/courses
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "course": {  
+      "name": "Probando OTP",
+      "section": "B",
+      "startTime": "10:00:00",
+      "finishTime": "11:00:00",
+      "code": "A-100",
+      "centerId": "3a534d7b-90bf-43bf-6fc5-08dd73c6c0de",
+      "settingId": null
+    },
+      "courseSetting": {
+      "name": "string",
+      "scoreType": "WEIGHTED_SCORE",
+      "startDate": "2025-04-07T22:37:18.364Z",
+      "endDate": "2025-05-07T22:37:18.364Z",
+      "getLocationDto": {
+        "x": 1.329,
+        "y": -5.1673
+      },
+      "validateRangeMeters": 30,
+      "minimumGrade": 100,
+      "maximumGrade": 100,
+      "minimumAttendanceTime": 10
+    },
+    "units": [
+      {
+        "unitNumber": 1,
+        "maxScore": 50
+      },
+      {
+        "unitNumber": 2,
+        "maxScore": 50
+      }
+    ]
+  }
+  
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Edit
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{PATH}}/students/ffa0431f-70e8-4c2b-a697-cc147788c06c
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "teacherId": "41e958ea-a9e3-4deb-bccb-e17a987164c7",
+    "firstName": "ever garcia",
+    "lastName": "editar",
+    "email": ""
+  }
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "3C6F3BAB-63ED-424C-5ED7-08DD73CDD4AA",
+    "Name": "Ejercicios 1-10 ",
+    "IsExtra": false,
+    "MaxScore": 5,
+    "TagActivityId": "7402CA4C-1937-48B0-984F-CBB28162E77A",
+    "QualificationDate": "2025-04-20T14:30:00",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87"
+  },
+  {
+    "id": "645A0A35-DEE2-4298-5ED8-08DD73CDD4AA",
+    "Name": "Ejercicios 2-10 ",
+    "IsExtra": false,
+    "MaxScore": 5,
+    "TagActivityId": "7402CA4C-1937-48B0-984F-CBB28162E77A",
+    "QualificationDate": "2025-04-20T14:30:00",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87"
+  },
+  {
+    "id": "8EAB2B53-FC8E-488A-5ED9-08DD73CDD4AA",
+    "Name": "Ejercicios 3-10 ",
+    "IsExtra": false,
+    "MaxScore": 5,
+    "TagActivityId": "7402CA4C-1937-48B0-984F-CBB28162E77A",
+    "QualificationDate": "2025-04-21T14:30:00",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87"
+  },
+  {
+    "id": "3F4A8E72-592D-4AC3-5EDA-08DD73CDD4AA",
+    "Name": "Ejercicios 4-10 ",
+    "IsExtra": false,
+    "MaxScore": 5,
+    "TagActivityId": "7402CA4C-1937-48B0-984F-CBB28162E77A",
+    "QualificationDate": "2025-04-22T14:30:00",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87"
+  },
+  {
+    "id": "28C2EDC6-26C6-47A7-5EDB-08DD73CDD4AA",
+    "Name": "Ejercicios 5-10 ",
+    "IsExtra": false,
+    "MaxScore": 5,
+    "TagActivityId": "7402CA4C-1937-48B0-984F-CBB28162E77A",
+    "QualificationDate": "2025-04-22T14:30:00",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87"
+  },
+  {
+    "id": "CBAD7ACA-B92B-49F9-5EDC-08DD73CDD4AA",
+    "Name": "Ejercicios 12-20 ",
+    "Description": "Ejercicios Introductorios a c# y API rest",
+    "IsExtra": false,
+    "MaxScore": 7,
+    "TagActivityId": "7402CA4C-1937-48B0-984F-CBB28162E77A",
+    "QualificationDate": "2025-04-22T14:30:00",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87"
+  }
+]
+

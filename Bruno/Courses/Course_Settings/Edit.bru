@@ -1,0 +1,27 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/courses_settings/1445647a-d5f0-4566-e4ee-08dd6d54587a
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Config5PruebaEditOrig",
+    "scoreType": "weighted_pts",
+    "startDate": "2025-03-03T03:01:08.320Z",
+    "endDate": "2025-10-03T03:01:08.320Z",
+    "minimumGrade": 65,
+    "maximumGrade": 100,
+    "minimumAttendanceTime": 10
+  }
+}

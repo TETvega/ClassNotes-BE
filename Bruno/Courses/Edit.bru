@@ -1,0 +1,26 @@
+meta {
+  name: Edit
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/courses/f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Ingles4",
+    "section": "A",
+    "startTime": "10:00:00",
+    "finishTime": "11:00:00",
+    "code": "IN-101",
+    "isActive": true
+  }
+}

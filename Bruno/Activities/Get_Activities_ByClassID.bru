@@ -1,0 +1,25 @@
+meta {
+  name: Get_Activities_ByClassID
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{PATH}}/activities/course/f6cfc25e-8259-4cde-4e74-08dd73c935a0?searchTerm
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  ~page: 
+  ~pageSize: 
+  ~tagActivityId: 
+  ~unitId: 
+  ~typeActivities: 
+  ~isExtraFilter: 
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Get course students pagination
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{PATH}}/attendances/course_students/45D85F5A-6C74-4A7B-8D1F-1C736730116F?searchTerm&page=1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  searchTerm: 
+  page: 1
+<<<<<<< HEAD
+  ~isActive: true
+=======
+  ~isActive: false
+>>>>>>> development
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}

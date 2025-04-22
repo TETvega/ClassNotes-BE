@@ -1,0 +1,25 @@
+meta {
+  name: Get_All_Notes
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{PATH}}/notes/student_notes?courseId=f6cfc25e-8259-4cde-4e74-08dd73c935a0&page=1
+  body: none
+  auth: bearer
+}
+
+params:query {
+  courseId: f6cfc25e-8259-4cde-4e74-08dd73c935a0
+  page: 1
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+vars:pre-request {
+  studentId: 
+  unitId: 
+}

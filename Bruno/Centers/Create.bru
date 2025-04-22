@@ -1,0 +1,28 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{PATH}}/centers
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "name": "Jeronimo J Reina",
+    "abbreviation": "JJR"
+  }
+}
+
+body:multipart-form {
+  Name: Kinder Federico C. Canales
+  Abbreviation: KFCC
+  ~image: @file()
+}

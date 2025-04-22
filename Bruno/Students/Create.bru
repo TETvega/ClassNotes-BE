@@ -1,0 +1,35 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://localhost:7047/api/students/bulk-create
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "StricMode": true,
+    "courseId": "e5f44125-898b-4ece-7128-08dd7ca4d59d",
+    "students": [
+      {
+        "firstName":"Hector Rene",
+        "lastName": "Martinez Vega",
+        "email": "hectormartinez1vg@gmail.com"
+      },
+      {
+        "firstName": "Ever Garcia",
+        "lastName": "PerezA",
+        "email": "hrmartinezv@unah.hn"
+      }
+    ]
+  }
+  
+}

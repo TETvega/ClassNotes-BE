@@ -1,0 +1,37 @@
+[
+  {
+    "id": "4EE326CF-6984-4FC2-5CA7-08DD73D04B4A",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87",
+    "StudentCourseId": "D7862874-B407-4496-AEB6-08DD73CC1397",
+    "UnitNumber": 1,
+    "UnitNote": 1
+  },
+  {
+    "id": "1B005718-2783-4B39-5CA8-08DD73D04B4A",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87",
+    "StudentCourseId": "AF62CAA4-A7F4-4BB7-AEB5-08DD73CC1397",
+    "UnitNumber": 1,
+    "UnitNote": 5
+  },
+  {
+    "id": "919CCFC4-B677-4802-5CA9-08DD73D04B4A",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87",
+    "StudentCourseId": "9CDCB500-AB2D-46B9-AEB4-08DD73CC1397",
+    "UnitNumber": 1,
+    "UnitNote": 5
+  },
+  {
+    "id": "AC61E8C1-0907-4AB3-5CAA-08DD73D04B4A",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87",
+    "StudentCourseId": "54F3FA89-08C5-4A30-AEB3-08DD73CC1397",
+    "UnitNumber": 1,
+    "UnitNote": 4
+  },
+  {
+    "id": "E2B10133-9BBA-4582-5CAB-08DD73D04B4A",
+    "UnitId": "68E2E5E8-5099-4364-B948-76EE7D315E87",
+    "StudentCourseId": "43B0EF84-7F79-4003-AEB2-08DD73CC1397",
+    "UnitNumber": 1,
+    "UnitNote": 3
+  }
+]

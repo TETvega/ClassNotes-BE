@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Tasks",
+    "colorHex": "ff7e63",
+    "icon": "tasks"
+  },
+  {
+    "name": "Forums",
+    "colorHex": "84ff63",
+    "icon": "forum"
+  },
+  {
+    "name": "Exams",
+    "colorHex": "4eb234",
+    "icon": "doc"
+  },
+  {
+    "name": "ExtraPoints",
+    "colorHex": "57efc6",
+    "icon": "star"
+  },
+  {
+    "name": "Excursion",
+    "colorHex": "57caef",
+    "icon": "travel"
+  },
+  {
+    "name": "Quiz",
+    "colorHex": "9569fd",
+    "icon": "question"
+  },
+  {
+    "name": "Presentation",
+    "colorHex": "e369fd",
+    "icon": "presentation"
+  },
+  {
+    "name": "Experiment",
+    "colorHex": "fd699d",
+    "icon": "flask"
+  },
+  {
+    "name": "Undefined",
+    "colorHex": "fd699d",
+    "icon": "flask"
+  }
+]

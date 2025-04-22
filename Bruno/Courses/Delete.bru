@@ -1,0 +1,15 @@
+meta {
+  name: Delete
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{PATH}}/courses/e1e663a2-5eee-4d28-aa29-08dd6d803382
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
