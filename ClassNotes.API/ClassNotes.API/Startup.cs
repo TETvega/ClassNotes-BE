@@ -34,6 +34,7 @@ using System.Collections.Concurrent;
 using ClassNotes.API.Services.ConcurrentGroups;
 using System.Threading.Channels;
 using ClassNotes.Models;
+using ClassNotes.API.Services.Audit.Owner;
 
 
 namespace ClassNotes.API;
@@ -103,6 +104,7 @@ public class Startup
         services.AddTransient<IAuditService, AuditService>();
         services.AddTransient<IAuthService, AuthService>();
         services.AddTransient<IOtpService, OtpService>();
+        services.AddTransient<IsOwnerAcces, OwnerAcces>();
 
         // Servicio para el envio de correos (SMTP)
 
