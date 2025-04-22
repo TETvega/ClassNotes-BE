@@ -1,0 +1,25 @@
+meta {
+  name: Create
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{PATH}}/attendances/create
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{TOKEN}}
+}
+
+body:json {
+  {
+    "Attended": true,
+    "Status": "PRESENT",
+    "RegistrationDate": "2025-04-21T00:00:00",
+    "CourseId": "cfb6c9c8-220d-480e-f64b-08dd8091758c",
+    "StudentId": "2a760f21-6bf0-4963-e7b3-08dd8091b3e5"
+  }
+}

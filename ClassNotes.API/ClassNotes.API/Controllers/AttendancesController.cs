@@ -44,6 +44,14 @@ namespace ClassNotes.API.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpPost("create")]
+        [Authorize(Roles = $"{RolesConstant.USER}")]
+        public async Task<ActionResult<ResponseDto<AttendanceDto>>> SetAttendance(AttendanceCreateDto dto)
+        {
+            var response = await _attendancesService.SetAttendaceAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
+
         [HttpPost("student_attendances")]
         [Authorize(Roles = $"{RolesConstant.USER}")]
         public async Task<ActionResult<ResponseDto<List<AttendanceDto>>>> GetAttendancesByStudentPagination(StudentIdCourseIdDto dto, string searchTerm = "", int page = 1, bool isCurrentMonth = false, int pageSize = 10)

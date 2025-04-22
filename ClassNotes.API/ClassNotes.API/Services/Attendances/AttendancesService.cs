@@ -6,24 +6,178 @@ using ClassNotes.API.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 using ClassNotes.API.Dtos.Attendances.Student;
 using System.Globalization;
+using ClassNotes.API.Services.ConcurrentGroups;
+using ClassNotes.API.Database.Entities;
+using AutoMapper;
 
 namespace ClassNotes.API.Services.Attendances
 {
     public class AttendancesService : IAttendancesService
 	{
 		private readonly ClassNotesContext _context;
-		private readonly IAuditService _auditService;
+        private readonly IMapper _mapper;
+        private readonly IAttendanceGroupCacheManager _groupCacheManager;
+        private readonly IAuditService _auditService;
 		private readonly int PAGE_SIZE;
 
-		public AttendancesService(ClassNotesContext context, IAuditService auditService, IConfiguration configuration)
+
+        public AttendancesService(ClassNotesContext context,IMapper mapper,IAttendanceGroupCacheManager groupCacheManager, IAuditService auditService, IConfiguration configuration)
 		{
 			_context = context;
-			_auditService = auditService;
+            this._mapper = mapper;
+            _groupCacheManager = groupCacheManager;
+            _auditService = auditService;
 			PAGE_SIZE = configuration.GetValue<int>("PageSize:StudentsAttendances");
 		}
 
-		// AM: Obtener stats de las asistencias por Id del curso
-		public async Task<ResponseDto<CourseAttendancesDto>> GetCourseAttendancesStatsAsync(Guid courseId)
+        //Para aplicar asistencia manualmente...
+        public async Task<ResponseDto<AttendanceDto>> SetAttendaceAsync(AttendanceCreateDto dto)
+        {
+            var userId = _auditService.GetUserId();
+            //Valores necesarios para status
+            var allowedStatus = new HashSet<string> {MessageConstant_Attendance.PRESENT,
+                                                     MessageConstant_Attendance.NOT_PRESENT,
+                                                     MessageConstant_Attendance.EXCUSED};
+
+
+            // Verificar si el usuario es dueño del curso
+            var isOwner = await _context.Courses
+                .Where(c => c.Center.TeacherId == userId)
+                .AnyAsync(c => c.Id == dto.CourseId);
+
+            if (!isOwner)
+            {
+                return new ResponseDto<AttendanceDto>()
+                {
+                    Status = false,
+                    StatusCode = 404,
+                    Message = "No es el dueño del curso",
+                    Data = null
+                };
+            }
+
+            //Si lo que ingreso no es uno de estos valores retorna error...
+            if (!allowedStatus.Any(x => x == dto.Status))
+            {
+                return new ResponseDto<AttendanceDto>()
+                {
+                    Status = false,
+                    StatusCode = 405,
+                    Message = $"Los status válidos son: {MessageConstant_Attendance.PRESENT}, {MessageConstant_Attendance.NOT_PRESENT}, {MessageConstant_Attendance.EXCUSED}.",
+                    Data = null
+                };
+            }
+
+            // Intentar obtener datos de la cache
+            var activeAttendanceCache = _groupCacheManager.GetGroupCache(dto.CourseId);
+
+            //Si hay registros en cache, aun se ejecuta en tiempo real, debe esperar...
+            if (activeAttendanceCache != null && activeAttendanceCache.Entries.Any())
+            {
+                return new ResponseDto<AttendanceDto>()
+                {
+                    Status = false,
+                    StatusCode = 405,
+                    Message = "Aún no cierra la asistencia en tiempo real, espere un momento.",
+                    Data = null
+                };
+            }
+
+            //Se busca que exista la asistencia de hoy
+            var existingAtt = _context.Attendances.Include(x => x.Course).Include(x => x.Student).FirstOrDefault(x =>
+                x.CourseId == dto.CourseId &&
+                x.StudentId == dto.StudentId &&
+                x.RegistrationDate.Date == DateTime.Now.Date
+                );
+
+            var attendanceDto = new AttendanceDto { };
+
+            //Si no existe, el estudiante no esta activo y se cambio...
+            if (existingAtt != null)
+            {
+                //Se cambia la asistencia existente pues se comprobo que no es null
+                existingAtt.Status = dto.Status;
+                existingAtt.Attended = dto.Attended;
+                existingAtt.ChangeBy = Constants.Attendance_Helpers.TEACHER;
+                existingAtt.Method = Constants.Attendance_Helpers.TYPE_MANUALLY;
+
+                _context.Attendances.Update(existingAtt);
+                await _context.SaveChangesAsync();
+
+                attendanceDto = _mapper.Map<AttendanceDto>(existingAtt);
+                //Se cambian propiedades no mapeadas...
+                attendanceDto.CourseName = existingAtt.Course.Name;
+                attendanceDto.StudentName = existingAtt.Student.FirstName+" "+existingAtt.Student.LastName;
+            }
+            else
+            {//Sino, se obtienen datos de studentCourse y de paso se valida
+                var student = _context.StudentsCourses.Include(x => x.CourseId).Include(x => x.Student).FirstOrDefault(x => x.StudentId == dto.StudentId && x.CreatedBy == userId);
+                if (student == null)
+                {
+                    return new ResponseDto<AttendanceDto>()
+                    {
+                        Status = false,
+                        StatusCode = 404,
+                        Message = "No existe el estudiante o no es parte de la clase.",
+                        Data = null
+                    };
+                }
+
+                //Se confirma que aun esta a tiempo para enviar asistencia
+                if (DateTime.Now.AddMinutes(5).Date > DateTime.Now.Date)
+                {
+                    Console.WriteLine(DateTime.Now.Date);
+                    return new ResponseDto<AttendanceDto>
+                    {
+                        StatusCode = 405,
+                        Status = false,
+                        Message = "No se puede ingresar una asistencia muy cerca de el dia siguiente, al menos 7 minutos de diferencia.",
+                        Data = null
+                    };
+                }
+
+                //Se asegura que el estudiante si este activo
+                student.IsActive = true;
+                _context.StudentsCourses.Update(student);
+                await _context.SaveChangesAsync();
+
+
+                var attEntity = _mapper.Map<AttendanceEntity>(student);
+                //Se cambian propiedades no mapeadas
+                attEntity.Method = Constants.Attendance_Helpers.TYPE_MANUALLY;
+                attEntity.ChangeBy = Constants.Attendance_Helpers.TEACHER;
+
+                _context.Attendances.Add(attEntity);
+                await _context.SaveChangesAsync();
+
+                //Se crea dto a devolver...
+                attendanceDto = new AttendanceDto
+                {
+                    Id = attEntity.Id,
+                    Attended = attEntity.Attended,
+                    RegistrationDate = attEntity.RegistrationDate,
+                    CourseId = attEntity.CourseId,
+                    StudentId = attEntity.StudentId,
+                    Status = attEntity.Status,
+                    CourseName = student.Course.Name,
+                    StudentName =  student.Student.FirstName+" "+student.Student.LastName
+                };
+
+            }
+
+            return new ResponseDto<AttendanceDto>()
+            {
+                Status = true,
+                StatusCode = 201,
+                Message = "Asistencia modificada correctamente.",
+                Data = attendanceDto
+            };
+
+        }
+
+
+        // AM: Obtener stats de las asistencias por Id del curso
+        public async Task<ResponseDto<CourseAttendancesDto>> GetCourseAttendancesStatsAsync(Guid courseId)
 		{
 			// AM: Id del usuario en sesión
 			var userId = _auditService.GetUserId();

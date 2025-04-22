@@ -1,5 +1,6 @@
 ﻿using ClassNotes.API.Dtos.AttendacesRealTime;
 using ClassNotes.API.Dtos.AttendacesRealTime.ForStudents;
+using ClassNotes.API.Dtos.Attendances;
 using ClassNotes.API.Dtos.Common;
 
 namespace ClassNotes.API.Services.AttendanceRealTime
@@ -11,6 +12,6 @@ namespace ClassNotes.API.Services.AttendanceRealTime
 
         Task<ResponseDto<PaginationDto<List<StudentsAttendanceEntries>>>> GetStudentsAttendancesToday(Guid courseId);
         Task<ResponseDto<StudentAttendanceResponse>> SendAttendanceByOtpAsync(string email,  string OTP, float x, float y,Guid courseId);
-        Task<ResponseDto<StudentAttendanceResponse>> SendAttendanceByQr(Guid courseId, string Email, float x, float y, string MAC=""); 
+        Task<ResponseDto<StudentAttendanceResponse>> SendAttendanceByQr(Guid courseId, string Email, float x, float y, string MAC="");
     }
 }

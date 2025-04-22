@@ -10,5 +10,6 @@ namespace ClassNotes.API.Dtos.DashboardCourses
     {
         public Guid Id { get; set; } // Id del estudiante
         public string FullName { get; set; } // Nombre completo del estudiante
+        public string Email { get; set; }
     }
 }
