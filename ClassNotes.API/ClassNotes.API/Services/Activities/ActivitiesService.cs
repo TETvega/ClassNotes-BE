@@ -723,7 +723,7 @@ namespace ClassNotes.API.Services.Activities
             var studentCourses = _context.StudentsCourses.Include(x => x.Course).Where(x => x.Course.Id == unitEntity.CourseId);
 
             //Estas son todas las relaciones estudiante a unidad que pertenescan a unidades de este curso..
-            var fullStudentUnits = _context.StudentsUnits.Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
+            var fullStudentUnits = _context.StudentsUnits.Include(x => x.Unit).Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
 
             //En estas listas se almacenaran los studentUnit a agregar, los que se modificaron, y los student course, estas listas son para hacer addRange o updateRange
             List<StudentUnitEntity> newStudentUnitList = [];
@@ -765,16 +765,10 @@ namespace ClassNotes.API.Services.Activities
                 var totalUnitPoints = new List<float>();
 
                 //Por cada actividad, si no es de puntaje "oro", Se pondera de 100 a su valor en el valor maximo real de la unidad, al igual que en el endpoint ReviewEntity, antes de este...
+                //Aqui se llena la lista para poder realizar la sumatoría...
                 foreach (var revisedActivity in studentActivities)
                 {
-                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
-                    {
-                        totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
-                    }
-                    else
-                    {
-                        totalUnitPoints.Add(thisUnit.UnitNote);
-                    };
+                    totalUnitPoints.Add((revisedActivity.Note / 100) * revisedActivity.Activity.MaxScore); // como la nota revisada es un porcentaje, se pasa a puntaje en bruto
                 }
 
                 float newUnitScore = 0;
@@ -789,10 +783,21 @@ namespace ClassNotes.API.Services.Activities
                 var totalPoints = new List<float>();
                 foreach (var unit in studentUnits)
                 {
-                    totalPoints.Add(unit.UnitNote);
 
+                    //Si no es oro, las sumatorias de studentUnit deben ser promediadas a corde a lo que vale la unidad para el curso
+                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
+                    {
+                        //Debe forsarse a ser float de esta forma para no dar problemas debido a que unit.maxScore
+                        //permite null (para cursos con puntaje oro, aunque aqui no aplique siempre afecta el hecho de que los permita...
+                        totalPoints.Add((float)((unit.UnitNote / 100) * unit.Unit.MaxScore));
+                        //la formula es basicamente una forma de regla de 3, debido a que tanto ponderado como aritmetico permiten hasta 100 puntos dentro de su unidad...
+                    }
+                    else
+                    {
+                        //si es oro, solo hace una sumatoria de las sumatorias de unidades sin ponderar...
+                        totalPoints.Add(unit.UnitNote);
+                    };
                 }
-
 
                 //Se actualiza la nota en el curso del estudiante usando los valores de la lista...
                 studentCourse.FinalNote = totalPoints.Sum();
@@ -917,7 +922,7 @@ namespace ClassNotes.API.Services.Activities
             var studentCourses = _context.StudentsCourses.Include(x => x.Course).Where(x => x.Course.Id == unitEntity.CourseId);
 
             //Estas son todas las relaciones estudiante a unidad que pertenescan a unidades de este curso..
-            var fullStudentUnits = _context.StudentsUnits.Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
+            var fullStudentUnits = _context.StudentsUnits.Include(x => x.Unit).Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
 
             //En estas listas se almacenaran los studentUnit a agregar, los que se modificaron, y los student course, estas listas son para hacer addRange o updateRange
             List<StudentUnitEntity> newStudentUnitList = [];
@@ -960,15 +965,7 @@ namespace ClassNotes.API.Services.Activities
 
                 foreach (var revisedActivity in studentActivities)
                 {
-                    //por cada actividad, si no se evalua como oro, se pondera de 100 a la nota maxima de la unidad, para solo necesitar se sumada a studentCourse, si se evalua como oro se suma en bruto
-                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
-                    {
-                        totalUnitPoints.Add((float)((thisUnit.UnitNote / 100) * unitEntity.MaxScore));
-                    }
-                    else
-                    {
-                        totalUnitPoints.Add(thisUnit.UnitNote);
-                    };
+                    totalUnitPoints.Add((revisedActivity.Note / 100) * revisedActivity.Activity.MaxScore); // como la nota revisada es un porcentaje, se pasa a puntaje en bruto
                 }
 
                 float newUnitScore = 0;
@@ -983,8 +980,20 @@ namespace ClassNotes.API.Services.Activities
                 var totalPoints = new List<float>();
                 foreach (var unit in studentUnits)
                 {
-                    totalPoints.Add(unit.UnitNote);
 
+                    //Si no es oro, las sumatorias de studentUnit deben ser promediadas a corde a lo que vale la unidad para el curso
+                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
+                    {
+                        //Debe forsarse a ser float de esta forma para no dar problemas debido a que unit.maxScore
+                        //permite null (para cursos con puntaje oro, aunque aqui no aplique siempre afecta el hecho de que los permita...
+                        totalPoints.Add((float)((unit.UnitNote / 100) * unit.Unit.MaxScore));
+                        //la formula es basicamente una forma de regla de 3, debido a que tanto ponderado como aritmetico permiten hasta 100 puntos dentro de su unidad...
+                    }
+                    else
+                    {
+                        //si es oro, solo hace una sumatoria de las sumatorias de unidades sin ponderar...
+                        totalPoints.Add(unit.UnitNote);
+                    };
                 }
 
 
@@ -1030,10 +1039,87 @@ namespace ClassNotes.API.Services.Activities
                     Message = MessagesConstant.ACT_RECORD_NOT_FOUND
                 };
             }
+            var unitEntity = _context.Units.Include(x => x.Course).ThenInclude(x => x.CourseSetting).FirstOrDefault(z => z.Id == activityEntity.UnitId);
 
             var revisedActivities = _context.StudentsActivitiesNotes.Where(a => a.ActivityId == activityEntity.Id);
 
             _context.StudentsActivitiesNotes.RemoveRange(revisedActivities);
+            await _context.SaveChangesAsync();
+            //Se buscan los estudiantes del curso...
+            var studentCourses = _context.StudentsCourses.Include(x => x.Course).Where(x => x.Course.Id == unitEntity.CourseId);
+
+            //Estas son todas las relaciones estudiante a unidad que pertenescan a unidades de este curso..
+            var fullStudentUnits = _context.StudentsUnits.Include(x => x.Unit).Include(x => x.StudentCourse).Where(x => x.StudentCourse.CourseId == unitEntity.CourseId).ToList();
+
+            //En estas listas se almacenaran los studentUnit a agregar, los que se modificaron, y los student course, estas listas son para hacer addRange o updateRange
+            List<StudentUnitEntity> oldStudentUnitList = [];
+            List<StudentCourseEntity> StudentCourseList = [];
+
+            //Las studentUnit de la unidad a la que pertenece la actividad cambiaran, por lo que se les llama a todas las actividades de esa unidad para acoplar el nuevo valor...
+            var allStudentActivities = _context.StudentsActivitiesNotes.Include(x => x.Activity).Where(x => x.Activity.UnitId == activityEntity.UnitId).ToList();
+
+            //Por cada alumno en el curso...
+            foreach (var studentCourse in studentCourses)
+            {
+                //StudentUnit de este alumno
+                var studentUnits = fullStudentUnits.Where(x => x.StudentCourseId == studentCourse.Id).ToList();
+
+                //La unidad de esta actividad y alumno
+                var thisUnit = studentUnits.FirstOrDefault(x => x.UnitId == activityEntity.UnitId);
+
+
+                //Actividades de este estudiante
+                var studentActivities = allStudentActivities.Where(x => x.StudentId == studentCourse.StudentId).ToList();
+                var totalUnitPoints = new List<float>();
+
+                foreach (var revisedActivity in studentActivities)
+                {
+                    totalUnitPoints.Add((revisedActivity.Note / 100) * revisedActivity.Activity.MaxScore); // como la nota revisada es un porcentaje, se pasa a puntaje en bruto
+                }
+
+                float newUnitScore = 0;
+
+
+                newUnitScore = (totalUnitPoints.Sum());
+
+                thisUnit.UnitNote = newUnitScore;
+                oldStudentUnitList.Add(thisUnit);
+
+                //Se suman los puntajes del alumno en unidades para sacar el total del curso...
+                var totalPoints = new List<float>();
+                foreach (var unit in studentUnits)
+                {
+
+                    //Si no es oro, las sumatorias de studentUnit deben ser promediadas a corde a lo que vale la unidad para el curso
+                    if (unitEntity.Course.CourseSetting.ScoreType != Constants.ScoreTypeConstant.GOLD_SCORE)
+                    {
+                        //Debe forsarse a ser float de esta forma para no dar problemas debido a que unit.maxScore
+                        //permite null (para cursos con puntaje oro, aunque aqui no aplique siempre afecta el hecho de que los permita...
+                        totalPoints.Add((float)((unit.UnitNote / 100) * unit.Unit.MaxScore));
+                        //la formula es basicamente una forma de regla de 3, debido a que tanto ponderado como aritmetico permiten hasta 100 puntos dentro de su unidad...
+                    }
+                    else
+                    {
+                        //si es oro, solo hace una sumatoria de las sumatorias de unidades sin ponderar...
+                        totalPoints.Add(unit.UnitNote);
+                    };
+                }
+
+
+                //Se actualiza la nota en el curso del estudiante es igual a la suma de studentUnit...
+                studentCourse.FinalNote = totalPoints.Sum();
+
+
+                StudentCourseList.Add(studentCourse);
+
+            }
+
+
+            _context.StudentsUnits.UpdateRange(oldStudentUnitList);
+            await _context.SaveChangesAsync();
+
+            _context.StudentsCourses.UpdateRange(StudentCourseList);
+            await _context.SaveChangesAsync();
             _context.Activities.Remove(activityEntity);
             await _context.SaveChangesAsync();
             return new ResponseDto<ActivityDto>
