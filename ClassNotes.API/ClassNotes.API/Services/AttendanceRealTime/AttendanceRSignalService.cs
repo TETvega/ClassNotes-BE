@@ -386,7 +386,9 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     course.Id,
                     course.Name,
                     course.Code,
-                    course.Section
+                    course.Section,
+                    minimumTime = course.CourseSetting.MinimumAttendanceTime+2
+
                 },
                 Center = new
                 {

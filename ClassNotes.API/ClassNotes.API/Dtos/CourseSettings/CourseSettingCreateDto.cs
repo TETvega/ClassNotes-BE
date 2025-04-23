@@ -18,7 +18,7 @@ namespace ClassNotes.API.Dtos.CourseSettings
         // Tipo de puntuación
         [Display(Name = "tipo de puntuación")]
         [Required(ErrorMessage = "El {0} es requerido.")]
-        [StringLength(15, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
+        [StringLength(20, ErrorMessage = "El {0} debe tener menos de {1} caracteres.")]
         public string ScoreType { get; set; }
 
         // Fecha de inicio del periodo
