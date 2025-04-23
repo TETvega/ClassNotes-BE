@@ -74,6 +74,12 @@ namespace ClassNotes.API.BackgroundServices
                                 });
                         }
 
+                        await hub.Clients.Group(groupId.ToString())
+                            .SendAsync(Attendance_Helpers.UPDATE_ATTENDANCE_STATUS, new
+                            {
+                                message = "El tiempo de asistencia en tiempo real ha terminado."
+                            });
+
                         await db.SaveChangesWithoutAuditAsync();
                     }
                 }
