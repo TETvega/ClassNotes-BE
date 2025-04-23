@@ -631,7 +631,7 @@ namespace ClassNotes.API.Services.Emails
                     .SetTextAlignment(TextAlignment.CENTER)));
 
                 // AM: Agregar la nota del parcial
-                table.AddCell(new Cell().Add(new Paragraph(unit.UnitNote.ToString())
+                table.AddCell(new Cell().Add(new Paragraph(Math.Round((decimal)(unit.UnitNote),2).ToString())
                     .SetTextAlignment(TextAlignment.CENTER)));
             }
 
@@ -651,7 +651,7 @@ namespace ClassNotes.API.Services.Emails
 
             // Celda de valor
             table.AddCell(new Cell(1, 1)
-                .Add(new Paragraph($"{studentCourse.FinalNote}%")
+                .Add(new Paragraph($"{Math.Round((decimal)(studentCourse.FinalNote),2)}%")
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD))
                 .SetFontColor(ColorConstants.BLACK))
@@ -709,7 +709,7 @@ namespace ClassNotes.API.Services.Emails
                 foreach (var unit in course.Units.OrderBy(u => u.UnitNumber))
                 {
 
-                    document.Add(new Paragraph($"Unidad {unit.UnitNumber}:  {(unit.MaxScore/100)*courseSetting.MaximumGrade} %")
+                    document.Add(new Paragraph($"Unidad {unit.UnitNumber}:  {Math.Round((decimal)((unit.MaxScore / 100) * courseSetting.MaximumGrade),2)} %")
                         .SetFontSize(9)
                         .SetTextAlignment(TextAlignment.LEFT)
                         .SetMarginTop(1)

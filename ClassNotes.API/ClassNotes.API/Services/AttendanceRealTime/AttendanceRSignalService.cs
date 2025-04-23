@@ -319,7 +319,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             // la asistencia cuando sea escaneado posteriormente
             if (request.AttendanceType.Qr)
             {
-                qrContent = $"{course.Id}|{locationToUse.X}|{locationToUse.Y}|{request.StrictMode}|{courseSetting.ValidateRangeMeters}|{expiration}";
+                qrContent = $"{course.Id}|{request.StrictMode}|{expiration}";
 
                 using var qrGenerator = new QRCodeGenerator();
                 var qrCodeData = qrGenerator.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.Q);
@@ -387,7 +387,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     course.Name,
                     course.Code,
                     course.Section,
-                    minimumTime = course.CourseSetting.MinimumAttendanceTime+2
+                    minimumAttendanceTime = course.CourseSetting.MinimumAttendanceTime+2
 
                 },
                 Center = new
