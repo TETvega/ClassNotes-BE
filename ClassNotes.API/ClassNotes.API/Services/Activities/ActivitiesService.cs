@@ -277,14 +277,7 @@ namespace ClassNotes.API.Services.Activities
             var activityEntity = await _context.Activities.Include(a => a.CreatedByUser).Include(a => a.Unit).ThenInclude(x => x.Course).FirstOrDefaultAsync(a => a.Id == ActivityId && a.CreatedBy == userId);
 
 
-            //Para el servicio de enviar emails...
-            var emailRequest = new EmailFeedBackRequest
-            {
-                TeacherEntity = activityEntity.CreatedByUser,
-                ActivityEntity = activityEntity,
-                Students = []
-            };
-
+         
             //Verificacion de existencia...
             if (activityEntity == null)
             {
@@ -295,6 +288,13 @@ namespace ClassNotes.API.Services.Activities
                     Message = MessagesConstant.RECORD_NOT_FOUND
                 };
             }
+            //Para el servicio de enviar emails...
+            var emailRequest = new EmailFeedBackRequest
+            {
+                TeacherEntity = activityEntity.CreatedByUser,
+                ActivityEntity = activityEntity,
+                Students = []
+            };
 
             //busca el settings de ese curso, para obtener su configuración de nota...
             var courseSetting = await _context.CoursesSettings.FirstOrDefaultAsync(x => x.Id == activityEntity.Unit.Course.SettingId);
@@ -439,7 +439,7 @@ namespace ClassNotes.API.Services.Activities
                 if (existingStudentActivity != null)
                 {
                     //Se ingresa una entrada a la lista de espera del correo solo si cambio el feedback...
-                    if (activity.Feedback != existingStudentActivity.Feedback)
+                    if (activity.Feedback != existingStudentActivity.Feedback  && !string.IsNullOrWhiteSpace(activity.Feedback))
                     {
                         emailRequest.Students.Add(new EmailFeedBackRequest.StudentInfo
                         {
@@ -461,13 +461,16 @@ namespace ClassNotes.API.Services.Activities
                 {
                     var student = _context.Students.FirstOrDefault(x => x.Id == activity.StudentId);
                     //Tambien se agrega una entrada si es la primera vez que se ingresa algo...
-                    emailRequest.Students.Add(new EmailFeedBackRequest.StudentInfo
+                    if (!string.IsNullOrWhiteSpace(activity.Feedback))
                     {
-                        Name = student.FirstName + " " + student.LastName,
-                        Score = (activity.Note / 100) * activityEntity.MaxScore,
-                        FeedBack = activity.Feedback,
-                        Email = student.Email
-                    });
+                        emailRequest.Students.Add(new EmailFeedBackRequest.StudentInfo
+                        {
+                            Name = student.FirstName + " " + student.LastName,
+                            Score = (activity.Note / 100) * activityEntity.MaxScore,
+                            FeedBack = activity.Feedback,
+                            Email = student.Email
+                        });
+                    }
 
                     _context.StudentsActivitiesNotes.Add(activity);
                     await _context.SaveChangesAsync();

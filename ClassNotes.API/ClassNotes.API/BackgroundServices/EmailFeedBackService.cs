@@ -77,7 +77,6 @@ namespace ClassNotes.API.BackgroundServices
                     foreach (var student in students)
                     {
 
-                        Console.WriteLine("hi");
 
                         var email = new MimeMessage
                         {
@@ -96,12 +95,11 @@ namespace ClassNotes.API.BackgroundServices
                                         </div>
                                         <div style='display: inline-block; background: #D4EDDA; color: #155724; padding: 15px; border-radius: 8px; 
                                             font-size: 18px; font-weight: bold; margin-top: 20px;'>
-                                             🎯 Calificación obtenida: " + student.Score + @" / " + activity.MaxScore + @"
+                                             🎯 Calificación obtenida: " + Math.Round((decimal)(student.Score),2) + @" / " + Math.Round((decimal)(activity.MaxScore), 2) + @"
                                         </div>
                                          </div>" }
                         };
                         acquiredWrapper = await AcquireAccountAsync();
-                        Console.WriteLine(acquiredWrapper.Account.Username);
                         email.From.Add(MailboxAddress.Parse(acquiredWrapper.Account.Username));
                         email.To.Add(MailboxAddress.Parse(student.Email));
 
