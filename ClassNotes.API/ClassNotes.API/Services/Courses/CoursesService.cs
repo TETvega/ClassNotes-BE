@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 using NetTopologySuite.Geometries;
 using NetTopologySuite;
+using MongoDB.Driver;
 
 namespace ClassNotes.API.Services.Courses
 {
@@ -175,161 +176,47 @@ namespace ClassNotes.API.Services.Courses
                 };
             }
 
-            // Validaciones de la configuración del curso
-            if (dto.CourseSetting.EndDate.HasValue && dto.CourseSetting.EndDate <= dto.CourseSetting.StartDate)
+            if(dto.CourseSetting != null)
             {
-                return new ResponseDto<CourseWithSettingDto>
+                // Validaciones de la configuración del curso
+                if (dto.CourseSetting.EndDate.HasValue && dto.CourseSetting.EndDate <= dto.CourseSetting.StartDate)
                 {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = MessagesConstant.CP_INVALID_DATES
-                };
-            }
+                    return new ResponseDto<CourseWithSettingDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = MessagesConstant.CP_INVALID_DATES
+                    };
+                }
 
-            if (dto.CourseSetting.MinimumGrade <= 0 ||
-                dto.CourseSetting.MaximumGrade <= 0 ||
-                dto.CourseSetting.MaximumGrade < dto.CourseSetting.MinimumGrade)
-            {
-                return new ResponseDto<CourseWithSettingDto>
+                if (dto.CourseSetting.MinimumGrade <= 0 ||
+                    dto.CourseSetting.MaximumGrade <= 0 ||
+                    dto.CourseSetting.MaximumGrade < dto.CourseSetting.MinimumGrade)
                 {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = MessagesConstant.CP_INVALID_GRADES
-                };
-            }
-
-            //(Ken) creación de unidades..
-
-            //Valida que se cree correctamente el tipo de puntaje... esos son los valores que se pueden usar...
-            if (dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE &&
-                dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.WEIGHTED_SCORE &&
-                dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.ARITHMETIC_SCORE)
-            {
-                return new ResponseDto<CourseWithSettingDto>
-                {
-                    StatusCode = 405,
-                    Status = false,
-                    Message = $"Los tipos de puntaje válidos son: [ {ScoreTypeConstant.GOLD_SCORE} , {ScoreTypeConstant.WEIGHTED_SCORE} , {ScoreTypeConstant.ARITHMETIC_SCORE}  ]"
-                };
-            }
+                    return new ResponseDto<CourseWithSettingDto>
+                    {
+                        StatusCode = 400,
+                        Status = false,
+                        Message = MessagesConstant.CP_INVALID_GRADES
+                    };
+                }
 
 
-            //Lista de dtos de  unidades...
-            var UnitList = dto.Units;
+                //(Ken) creación de unidades..
 
-            //Evalua que no se reciban null si no es oro...
-            if(UnitList.Select(x => x.MaxScore).ToList().Contains(null) && dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE)
-            {
-                return new ResponseDto<CourseWithSettingDto>
-                {
-                    StatusCode = 405,
-                    Status = false,
-                    Message = "El valor máximo de unidad no debe ir vacío a menos que evalue puntos oro."
-                };
-            }
-
-            //Si es ponderado, la suma de Maxscore de todas las unidades debe ser igual al máximo de el curso...
-            if (UnitList.Select(x => x.MaxScore).ToList().Sum() != dto.CourseSetting.MaximumGrade && dto.CourseSetting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.WEIGHTED_SCORE)
-            {
-                return new ResponseDto<CourseWithSettingDto>
-                {
-                    StatusCode = 405,
-                    Status = false,
-                    Message = "Se ingreso valores de Unidad no válidos"
-                };
-            }
-
-            //En esta lista de guardaran los numeros de unidad para ir verificando que no se repitan...
-            List<int> unitNumbers = [];
-
-            //Esta lista es para hacer addRange de las nuevas entidades de unidad...
-            List<UnitEntity> newUnitEntityList = [];
-            foreach (var unit in UnitList)
-            {
-                //No se puede ingresar valores maximos  de unidad iguales o menores a 0, al menos si no es oro.
-                if (unit.MaxScore <= 0 && dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE)
+                //Valida que se cree correctamente el tipo de puntaje... esos son los valores que se pueden usar...
+                if (dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE &&
+                    dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.WEIGHTED_SCORE &&
+                    dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.ARITHMETIC_SCORE)
                 {
                     return new ResponseDto<CourseWithSettingDto>
                     {
                         StatusCode = 405,
                         Status = false,
-                        Message = "Se ingreso un valor de Unidad no válido"
+                        Message = $"Los tipos de puntaje válidos son: [ {ScoreTypeConstant.GOLD_SCORE} , {ScoreTypeConstant.WEIGHTED_SCORE} , {ScoreTypeConstant.ARITHMETIC_SCORE}  ]"
                     };
                 }
 
-                //Con este if se verifica que no sean repetidos los números de unidad...
-                if (unitNumbers.Contains(unit.UnitNumber))
-                {
-                    return new ResponseDto<CourseWithSettingDto>
-                    {
-                        StatusCode = 405,
-                        Status = false,
-                        Message = "No se puede repetir el número de unidad"
-                    };
-                }
-
-                //Si no lo son, se incluye en la lista para ser verificado en la siguiente iteración
-                unitNumbers.Add(unit.UnitNumber);
-
-
-                float? unitMax = 0;
-
-                //Si es aritmetico, se guarda la nota máxima de la unidad como la divición entre el puntaje maximo del curso
-                // y la cantidad de unidades, para asegurar que sean iguales...
-                if (dto.CourseSetting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.ARITHMETIC_SCORE)
-                {
-                    unitMax = dto.CourseSetting.MaximumGrade/UnitList.Count();
-                }
-                //Si es oro, forzamos null vaya lo que vaya
-                else if(dto.CourseSetting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.GOLD_SCORE)
-                {
-                    unitMax = null;
-                }
-
-                // si no, es aritmetico, se almacena directamente...
-                else
-                {
-                    unitMax = unit.MaxScore;
-                }
-
-                //Mapeo manual para la unidad nueva...
-                var newUnitEntity = new UnitEntity
-                {
-                    UnitNumber = unit.UnitNumber,
-            
-                    MaxScore = unitMax,
-                };
-
-                //Se ingresa a la lista a la que se le hará addRange
-                newUnitEntityList.Add(newUnitEntity);
-            }
-
-
-            // Verificar si ya existe una clase con el mismo nombre, código, hora de inicio y hora de finalización
-            var existingCourse = await _context.Courses
-                .FirstOrDefaultAsync(c =>
-                    c.CreatedBy == userId &&
-                    c.Name.ToLower() == dto.Course.Name.ToLower() &&
-                    c.StartTime == dto.Course.StartTime &&
-                    (c.FinishTime == null && dto.Course.FinishTime == null ||
-                     c.FinishTime != null && dto.Course.FinishTime != null &&
-                     c.FinishTime == dto.Course.FinishTime) &&
-                    (c.Code == null && dto.Course.Code == null ||
-                     c.Code != null && dto.Course.Code != null &&
-                     c.Code.ToLower() == dto.Course.Code.ToLower()) &&
-                    (c.Section == null && dto.Course.Section == null ||
-                     c.Section != null && dto.Course.Section != null &&
-                     c.Section.ToLower() == dto.Course.Section.ToLower())
-                );
-
-            if (existingCourse != null)
-            {
-                return new ResponseDto<CourseWithSettingDto>
-                {
-                    StatusCode = 400,
-                    Status = false,
-                    Message = MessagesConstant.CRS_ALREADY_EXISTS
-                };
             }
 
             // Crear o duplicar la configuración del curso
@@ -402,13 +289,156 @@ namespace ClassNotes.API.Services.Courses
                     MinimumGrade = originalSettingEntity.MinimumGrade,
                     MaximumGrade = originalSettingEntity.MaximumGrade,
                     MinimumAttendanceTime = originalSettingEntity.MinimumAttendanceTime,
-                    ValidateRangeMeters= originalSettingEntity.ValidateRangeMeters,
+                    ValidateRangeMeters = originalSettingEntity.ValidateRangeMeters,
                     GeoLocation = point,
                     CreatedBy = userId,
                     UpdatedBy = userId,
                     IsOriginal = false // La copia siempre es marcada como no original
                 };
             }
+
+            var setting = duplicatedSettingEntity;
+
+            if(setting == null)
+            {
+                var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var point = geometryFactory.CreatePoint(new Coordinate(dto.CourseSetting.GetLocationDto.X, dto.CourseSetting.GetLocationDto.Y));
+                setting = new CourseSettingEntity
+                {
+
+                    Name = dto.CourseSetting.Name,
+                    ScoreType = dto.CourseSetting.ScoreType.ToUpper().Trim(),
+                    StartDate = dto.CourseSetting.StartDate,
+                    EndDate = dto.CourseSetting.EndDate,
+                    MinimumGrade = dto.CourseSetting.MinimumGrade,
+                    MaximumGrade = dto.CourseSetting.MaximumGrade,
+                    MinimumAttendanceTime = dto.CourseSetting.MinimumAttendanceTime,
+                    ValidateRangeMeters = dto.CourseSetting.ValidateRangeMeters,
+                    GeoLocation = point,
+                    CreatedBy = userId,
+                    UpdatedBy = userId,
+                    IsOriginal = false // La copia siempre es marcada como no original
+                }; ;
+            }
+
+            //Lista de dtos de  unidades...
+            var UnitList = dto.Units;
+
+            //Evalua que no se reciban null si no es oro...
+            if(UnitList.Select(x => x.MaxScore).ToList().Contains(null) && dto.CourseSetting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 405,
+                    Status = false,
+                    Message = "El valor máximo de unidad no debe ir vacío a menos que evalue puntos oro."
+                };
+            }
+
+            //Si es ponderado, la suma de Maxscore de todas las unidades debe ser igual al máximo de el curso...
+            if (UnitList.Select(x => x.MaxScore).ToList().Sum() != setting.MaximumGrade && dto.CourseSetting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.WEIGHTED_SCORE)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 405,
+                    Status = false,
+                    Message = "Se ingreso valores de Unidad no válidos"
+                };
+            }
+
+            //En esta lista de guardaran los numeros de unidad para ir verificando que no se repitan...
+            List<int> unitNumbers = [];
+
+            //Esta lista es para hacer addRange de las nuevas entidades de unidad...
+            List<UnitEntity> newUnitEntityList = [];
+            foreach (var unit in UnitList)
+            {
+                //No se puede ingresar valores maximos  de unidad iguales o menores a 0, al menos si no es oro.
+                if (unit.MaxScore <= 0 && setting.ScoreType.ToUpper().Trim() != ScoreTypeConstant.GOLD_SCORE)
+                {
+                    return new ResponseDto<CourseWithSettingDto>
+                    {
+                        StatusCode = 405,
+                        Status = false,
+                        Message = "Se ingreso un valor de Unidad no válido"
+                    };
+                }
+
+                //Con este if se verifica que no sean repetidos los números de unidad...
+                if (unitNumbers.Contains(unit.UnitNumber))
+                {
+                    return new ResponseDto<CourseWithSettingDto>
+                    {
+                        StatusCode = 405,
+                        Status = false,
+                        Message = "No se puede repetir el número de unidad"
+                    };
+                }
+
+                //Si no lo son, se incluye en la lista para ser verificado en la siguiente iteración
+                unitNumbers.Add(unit.UnitNumber);
+
+
+                float? unitMax = 0;
+
+                //Si es aritmetico, se guarda la nota máxima de la unidad como la divición entre el puntaje maximo del curso
+                // y la cantidad de unidades, para asegurar que sean iguales...
+                if (setting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.ARITHMETIC_SCORE)
+                {
+                    unitMax = setting.MaximumGrade/UnitList.Count();
+                }
+                //Si es oro, forzamos null vaya lo que vaya
+                else if(setting.ScoreType.ToUpper().Trim() == ScoreTypeConstant.GOLD_SCORE)
+                {
+                    unitMax = null;
+                }
+
+                // si no, es aritmetico, se almacena directamente...
+                else
+                {
+                    unitMax = unit.MaxScore;
+                }
+
+                //Mapeo manual para la unidad nueva...
+                var newUnitEntity = new UnitEntity
+                {
+                    UnitNumber = unit.UnitNumber,
+            
+                    MaxScore = unitMax,
+                };
+
+                //Se ingresa a la lista a la que se le hará addRange
+                newUnitEntityList.Add(newUnitEntity);
+            }
+
+
+            // Verificar si ya existe una clase con el mismo nombre, código, hora de inicio y hora de finalización
+            var existingCourse = await _context.Courses
+                .FirstOrDefaultAsync(c =>
+                    c.CreatedBy == userId &&
+                    c.Name.ToLower() == dto.Course.Name.ToLower() &&
+                    c.StartTime == dto.Course.StartTime &&
+                    (c.FinishTime == null && dto.Course.FinishTime == null ||
+                     c.FinishTime != null && dto.Course.FinishTime != null &&
+                     c.FinishTime == dto.Course.FinishTime) &&
+                    (c.Code == null && dto.Course.Code == null ||
+                     c.Code != null && dto.Course.Code != null &&
+                     c.Code.ToLower() == dto.Course.Code.ToLower()) &&
+                    (c.Section == null && dto.Course.Section == null ||
+                     c.Section != null && dto.Course.Section != null &&
+                     c.Section.ToLower() == dto.Course.Section.ToLower())
+                );
+
+            if (existingCourse != null)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 400,
+                    Status = false,
+                    Message = MessagesConstant.CRS_ALREADY_EXISTS
+                };
+            }
+
 
             // Guardar la copia en la base de datos
             _context.CoursesSettings.Add(duplicatedSettingEntity);
