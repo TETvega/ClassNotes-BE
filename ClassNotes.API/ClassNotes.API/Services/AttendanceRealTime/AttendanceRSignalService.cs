@@ -319,7 +319,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
             // la asistencia cuando sea escaneado posteriormente
             if (request.AttendanceType.Qr)
             {
-                qrContent = $"{course.Id}|{locationToUse.X}|{locationToUse.Y}|{request.StrictMode}|{courseSetting.ValidateRangeMeters}|{expiration}";
+                qrContent = $"{course.Id}|{request.StrictMode}|{expiration}";
 
                 using var qrGenerator = new QRCodeGenerator();
                 var qrCodeData = qrGenerator.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.Q);
@@ -349,7 +349,7 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     otpCode = _otpService.GenerateOtp(secretKey, courseSetting.MinimumAttendanceTime);
 
                     var emailDto = CreateEmailDto(student, course, otpCode, courseSetting.MinimumAttendanceTime);
-                    // await _emailsService.SendEmailAsync(emailDto);
+                     await _emailsService.SendEmailAsync(emailDto);
                 }
 
                 var memoryEntry = new TemporaryAttendanceEntry
@@ -386,7 +386,9 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                     course.Id,
                     course.Name,
                     course.Code,
-                    course.Section
+                    course.Section,
+                    minimumAttendanceTime = course.CourseSetting.MinimumAttendanceTime+2
+
                 },
                 Center = new
                 {
@@ -425,26 +427,27 @@ namespace ClassNotes.API.Services.AttendanceRealTime
                 To = estudiante.Email,
                 Subject = "📌 Código de Validación de Asistencia",
                 Content = $@"
-            <div style='font-family: Arial, sans-serif; text-align: center;'>
-                <h2 style='color: #4A90E2;'>👋 Hola {estudiante.FirstName},</h2>
-                <p style='font-size: 16px; color: #333;'>
+
+             <div style='font-family: Arial, sans-serif; text-align: center;'>
+                <h2 style='color: #4A90E2; margin-bottom: 1px'>👋 Hola {estudiante.FirstName},</h2>
+                <p style='font-size: 16px; color: #333; margin-bottom: 6'>
                     Para validar tu asistencia a la clase <strong>{clase.Name}</strong>, usa el siguiente código:
                 </p>
-                <div style='display: inline-block; background: #EAF3FF; padding: 15px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 3px;'>
+                <div style='display: inline-block; background: #EAF3FF; padding: 8px; border-radius: 6px; font-size: 24px; font-weight: bold; letter-spacing: 3px;'>
                     {otp}
                 </div>
-                <p style='margin-top: 20px;'>
+                <p style='margin-top: 6px; margin-bottom: 4'>
                     O puedes hacer clic en el siguiente botón para validar tu asistencia automáticamente:
                 </p>
-                <a href='https://tudominio.com/asistencia/{otp}-{clase.Id}' 
-                   style='display: inline-block; background: #4A90E2; color: white; padding: 10px 20px; 
-                          text-decoration: none; border-radius: 5px; font-size: 18px;'>
+                <a href='http://localhost:5173/check-in/email?email={estudiante.Email}&courseId={clase.Id}' 
+                    style='display: inline-block; background: #4A90E2; color: white; padding: 10px 20px; 
+                    text-decoration: none; border-radius: 5px; font-size: 16px; '>
                     ✅ Validar Asistencia
                 </a>
-                <p style='font-size: 14px; color: #777; margin-top: 20px;'>
+                <p style='font-size: 14px; color: #777; margin-top: 7px;'>
                     Este código es válido por {tiempoExpiracion} minutos.
                 </p>
-            </div>"
+             </div>"
             };
         }
         /// <summary>

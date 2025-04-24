@@ -30,8 +30,7 @@ Sige este Enlace [Guia de Contribucion](./contribution.MD  "Contrubution")
 
 ## Descripcion 
 
-**El siguiente Link es un video producido para que los usarios comprendan mejor la herramienta:**
-> - [Click aqui para ver video ](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+
 
 **Documentos que pueden ser de Utilidad para comprender la APLICACION**
 > - [Carpeta Completa:](https://drive.google.com/drive/folders/1kPBFMYXlIRq8aMxl9twHtC5yoGz2SAsU?usp=sharing)
@@ -68,10 +67,10 @@ Entre las funcionalidades principales que hemos implementado se encuentran:
 > - [@Cristian Adonis Gomez Garcia](https://github.com/CristianGmz7) 
 > - [@Josue David Diaz Rodriguez](https://github.com/JDDR200530)
 > - [@Carlos Ovidio Dubon Pineda](https://github.com/Pineda04)
-> - [@Kenneth Leonardo Galdamez Martinez](https://github.com/Kenneth-Galdamez)
+> - [@Kenneth Leonardo Galdamez Guevara](https://github.com/Kenneth-Galdamez)
 > - [@Jeison Omar Arita Melgar](https://github.com/Jey-Arita) 
 > - [@Ever Josue Garcia Leonor](https://github.com/everjosue56)
-
+> - [@Jonathan Isai Vasquez Franco](https://github.com/Jonathaniv43)
 ## Dependencias 
  
  * Entity Framework Core.
