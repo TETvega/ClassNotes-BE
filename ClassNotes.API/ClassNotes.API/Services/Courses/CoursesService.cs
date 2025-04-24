@@ -165,6 +165,8 @@ namespace ClassNotes.API.Services.Courses
         {
             var userId = _auditService.GetUserId();
 
+
+
             // Validaciones básicas del curso
             if (dto.Course.FinishTime.HasValue && dto.Course.FinishTime <= dto.Course.StartTime)
             {
@@ -217,6 +219,16 @@ namespace ClassNotes.API.Services.Courses
                     };
                 }
 
+            }
+
+            if (dto.Units.Count > 9 || dto.Units.Count == 0)
+            {
+                return new ResponseDto<CourseWithSettingDto>
+                {
+                    StatusCode = 405,
+                    Status = false,
+                    Message = "Se ingresó una cantidad de unidades no válida, ingrese al menos 1 y no más de 9."
+                };
             }
 
             // Crear o duplicar la configuración del curso
@@ -342,7 +354,7 @@ namespace ClassNotes.API.Services.Courses
                 {
                     StatusCode = 405,
                     Status = false,
-                    Message = "Se ingreso valores de Unidad no válidos"
+                    Message = "Se ingresó valores de Unidad no válidos"
                 };
             }
 
@@ -360,7 +372,7 @@ namespace ClassNotes.API.Services.Courses
                     {
                         StatusCode = 405,
                         Status = false,
-                        Message = "Se ingreso un valor de Unidad no válido"
+                        Message = "Se ingresó un valor de Unidad no válido"
                     };
                 }
 
