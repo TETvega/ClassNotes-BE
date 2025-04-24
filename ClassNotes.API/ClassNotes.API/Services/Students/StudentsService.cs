@@ -402,7 +402,7 @@ namespace ClassNotes.API.Services.Students
 
                 await CreateStudentCourseRelation(studentEntity.Id, bulkStudentCreateDto.CourseId);
 
-                //await SendWelcomeEmail(studentEntity , courseEntity);
+                await SendWelcomeEmail(studentEntity , courseEntity);
 
                 await transaction.CommitAsync();
 
